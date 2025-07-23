@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Chico Concursos</title>
+  <style>
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      background-color: black;
+      color: #FFD700;
+      font-family: Arial, sans-serif;
+      text-align: center;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: center;
+      background-color: #111;
+      padding: 10px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .top-bar button,
+    .top-bar select {
+      background: none;
+      border: none;
+      color: white;
+      font-size: 1em;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .top-bar select {
+      background-color: #222;
+      border: 1px solid #555;
+      padding: 2px 4px;
+    }
+
+    /* Tooltip para botões do topo */
+    .tooltip:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      top: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 5px 8px;
+      border-radius: 4px;
+      white-space: nowrap;
+      font-size: 0.8em;
+      z-index: 10;
+    }
+
+    #card-container {
+      background-color: white;
+      color: black;
+      width: 96%;
+      height: 70vh;
+      margin: 20px auto;
+      padding: 40px 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      overflow: auto;
+    }
+
+    .bottom-bar {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 0;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .bottom-bar button {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.4em;
+      color: white;
+      position: relative;
+    }
+
+    /* Tooltip para botões da base - aparece e some com JS */
+    .bottom-bar button::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 120%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 0.75em;
+      white-space: nowrap;
+      z-index: 10;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .bottom-bar button.show-tooltip::after {
+      opacity: 1;
+    }
+
+    .bottom-bar input[type="number"] {
+      width: 40px; /* Ajustado de 50px para 40px na última atualização */
+      padding: 3px;
+      font-size: 1em;
+    }
+
+    #timer {
+      cursor: pointer;
+    }
+
+    /* Styles for the help modal */
+    #helpModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+
+    #helpModalContent {
+      background: #222;
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: center;
+    }
+
+    #helpModalContent h2 {
+      color: gold;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+    }
+
+    #iconLegend p {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-bottom: 10px;
+      font-size: 1.1em;
+    }
+
+    #iconLegend p span:first-child {
+      font-size: 1.5em;
+      margin-right: 15px;
+      min-width: 40px;
+      text-align: center;
+    }
+
+    #helpModalContent .close-button {
+      background: gold;
+      color: black;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 30px;
+      font-size: 1.1em;
+      transition: background 0.3s ease;
+    }
+
+    #helpModalContent .close-button:hover {
+      background: #e5c300;
+    }
+
+    #fontSizeFeedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: gold;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 1.5em;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+        pointer-events: none;
+    }
+
+    #shuffleFeedback {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background-color: rgba(0, 0, 0, 0.7);
+        color: gold;
+        padding: 10px 15px;
+        border-radius: 8px;
+        font-size: 1.5em;
+        z-index: 10000;
+        opacity: 0;
+        transition: opacity 0.5s ease-out;
+        pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="top-bar">
+    <button class="tooltip" data-tooltip="Cor do cartão" onclick="toggleCardColorMenu()">🖌️</button>
+    <select id="cardColor" onchange="changeCardColor(this.value)" style="display:none;">
+     <option value="white">Branco</option>
+      <option value="black">Preto</option>
+      <option value="darkblue">Azul Escuro</option>
+      <option value="aqua">Ciano</option>
+      <option value="indigo">Índigo</option>
+      <option value="purple">Roxo</option>
+      <option value="darkred">Vermelho Escuro</option>
+      <option value="gold">Dourado</option>
+    </select>
+
+    <button class="tooltip" data-tooltip="Cor da fonte" onclick="toggleTextColorMenu()">🔤</button>
+    <select id="textColor" onchange="changeTextColor(this.value)" style="display:none;">
+      <option value="black">Preto</option>
+      <option value="white">Branco</option>
+      <option value="darkblue">Azul Escuro</option>
+      <option value="aqua">Ciano</option>
+      <option value="indigo">Indigo</option>
+      <option value="purple">Roxo</option>
+      <option value="darkred">Vermelho Escuro</option>
+      <option value="gold">Dourado</option>
+    </select>
+
+    <button class="tooltip" data-tooltip="Aumentar fonte" onclick="adjustFontSize(1)">A+</button>
+    <button class="tooltip" data-tooltip="Diminuir fonte" onclick="adjustFontSize(-1)">A-</button>
+
+    <span class="tooltip" data-tooltip="Tempo de revisão" onclick="resetTimer()">⏱️ <span id="timer">00:00</span></span>
+    
+    <button class="tooltip" data-tooltip="Ajuda" onclick="toggleHelpModal()">❓</button>
+  </div>
+
+  <div id="fontSizeFeedback"></div>
+  <div id="shuffleFeedback"></div>
+
+  <div id="card-container">
+    Carregando flashcards...
+  </div>
+
+  <div class="bottom-bar">
+    <input type="number" id="goToCard" min="1" placeholder="1" onchange="goToSpecificCard()" />
+    <span id="cardCounter">0/0</span>
+    <button data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
+    <button data-tooltip="Voltar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()">⏪</button>
+    <button data-tooltip="Mostrar resposta" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="flipCard()">⬇️</button>
+    <button data-tooltip="Avançar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="nextCard()">⏩</button>
+    <button id="nextAndShow" data-tooltip="Virar Card / Próximo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()">↪️</button>
+  </div>
+
+  <div id="helpModal" style="display:none;">
+    <div id="helpModalContent">
+      <h2>Ajuda - Significado dos Ícones</h2>
+      <div id="iconLegend">
+        <p><span>🖌️</span> Cor do cartão: Altera a cor de fundo do flashcard.</p>
+        <p><span>🔤</span> Cor da fonte: Altera a cor do texto do flashcard.</p>
+        <p><span>A+</span> Aumentar fonte: Aumenta o tamanho da letra do flashcard.</p>
+        <p><span>A-</span> Diminuir fonte: Diminui o tamanho da letra do flashcard.</p>
+        <p><span>⏱️</span> Tempo de revisão: Exibe o tempo decorrido e zera ao clicar.</p>
+        <p><span>⏪</span> Voltar: Navega para o card anterior.</p>
+        <p><span>🔀</span> Embaralhar cartas: Reorganiza aleatoriamente a ordem dos flashcards.</p>
+        <p><span>⬇️</span> Mostrar resposta: Vira o flashcard para mostrar a resposta (ou pergunta).</p>
+        <p><span>⏩</span> Avançar: Navega para o próximo card.</p>
+        <p><span>↪️</span> Virar Card / Próximo: Vira o card se na pergunta, avança se na resposta.</p>
+      </div>
+      <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
+    </div>
+  </div>
+
+  <script>
+    let initialCards = [];
+    let cards = [];
+    let currentCard = 0;
+    let showingFront = true;
+    let fontSize = 21.6;
+    let timerSeconds = 0;
+    const timerElement = document.getElementById("timer");
+
+    const cardContainer = document.getElementById("card-container");
+    const cardCounter = document.getElementById("cardCounter");
+    const helpModal = document.getElementById("helpModal");
+    const fontSizeFeedback = document.getElementById("fontSizeFeedback");
+    const shuffleFeedback = document.getElementById("shuffleFeedback");
+    let fontSizeDisplayTimeout;
+    let shuffleDisplayTimeout;
+    let isShuffleActive = false;
+
+    // NOVO: Função para obter parâmetros da URL (sheetId e gid)
+    function getQueryParam(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // NOVO: Obter sheetId e gid da URL
+    const SHEET_ID = getQueryParam('sheetId');
+    const GID = getQueryParam('gid') || '0'; // Padrão '0' para a primeira aba
+
+    // NOVO: Função para construir a URL de fetch usando sheetId e gid
+    function buildGoogleSheetCsvUrl(sheetId, gid) {
+        if (!sheetId) {
+            return null; // Retorna null se sheetId não for fornecido
+        }
+        // Este é o formato para exportar diretamente como CSV usando sheetId e gid
+        return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
+    }
+
+    async function loadFlashcardsFromGoogleSheet() {
+        const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
+
+        if (!csvUrl) {
+            cardContainer.textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL. Ex: ?sheetId=SEU_ID_DA_PLANILHA&gid=ID_DA_ABA.";
+            console.error("A URL da planilha não pôde ser construída: sheetId ausente.");
+            cardCounter.textContent = "0/0";
+            return;
+        }
+
+        try {
+            const response = await fetch(csvUrl);
+            if (!response.ok) {
+                // Tenta ler o erro do corpo da resposta, se disponível
+                const errorText = await response.text();
+                throw new Error(`Erro HTTP! Status: ${response.status}. Detalhes: ${errorText.substring(0, 200)}...`);
+            }
+            const text = await response.text();
+            const lines = text.split('\n').slice(1).filter(Boolean);
+            
+            let loadedCards = [];
+            lines.forEach(line => {
+                const cols = line.match(/(?:"([^"]*)")|([^,]+)/g);
+                if (cols && cols.length >= 2) {
+                    let frontText = (cols[0] || '').replace(/^"|"$/g, '').trim();
+                    let backText = (cols[1] || '').replace(/^"|"$/g, '').trim();
+                    loadedCards.push({ front: frontText, back: backText });
+                }
+            });
+
+            if (loadedCards.length === 0) {
+                cardContainer.textContent = "Nenhum flashcard encontrado na planilha. Verifique os dados ou se as colunas estão corretas.";
+                console.warn("Nenhum card carregado da planilha.");
+                cardCounter.textContent = "0/0";
+            } else {
+                initialCards = loadedCards;
+                cards = [...initialCards];
+                currentCard = 0;
+                showingFront = true;
+                updateCard();
+            }
+
+        } catch (error) {
+            console.error("Erro ao carregar os flashcards da planilha:", error);
+            cardContainer.textContent = `Erro ao carregar flashcards: ${error.message}. Verifique sheetId, gid ou permissões da planilha.`;
+            cardCounter.textContent = "0/0";
+        }
+    }
+
+    function updateCard() {
+      if (cards.length === 0) {
+        cardContainer.textContent = "Nenhum flashcard disponível.";
+        cardCounter.textContent = "0/0";
+        return;
+      }
+      const card = cards[currentCard];
+      cardContainer.textContent = showingFront ? card.front : card.back;
+      cardCounter.textContent = `${currentCard + 1}/${cards.length}`;
+      cardContainer.style.fontSize = fontSize + "pt";
+    }
+
+    function nextCard() {
+      currentCard = (currentCard + 1) % cards.length;
+      showingFront = true;
+      updateCard();
+    }
+
+    function prevCard() {
+      currentCard = (currentCard - 1 + cards.length) % cards.length;
+      showingFront = true;
+      updateCard();
+    }
+
+    function flipCard() {
+      showingFront = !showingFront;
+      updateCard();
+    }
+
+    function reviewAndAdvance() {
+      if (showingFront) {
+        showingFront = false;
+      } else {
+        currentCard = (currentCard + 1) % cards.length;
+        showingFront = true;
+      }
+      updateCard();
+    }
+
+    function toggleShuffleMode() {
+      if (!isShuffleActive) {
+        for (let i = cards.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        isShuffleActive = true;
+        shuffleFeedback.textContent = "Modo embaralhar ativado!";
+      } else {
+        cards = [...initialCards];
+        isShuffleActive = false;
+        shuffleFeedback.textContent = "Ordem original restaurada!";
+      }
+
+      currentCard = 0;
+      showingFront = true;
+      updateCard();
+
+      shuffleFeedback.style.opacity = 1;
+      clearTimeout(shuffleDisplayTimeout);
+      shuffleDisplayTimeout = setTimeout(() => {
+        shuffleFeedback.style.opacity = 0;
+      }, 1500);
+    }
+
+    function adjustFontSize(change) {
+      fontSize += change * 1.2;
+      fontSize = Math.max(10, Math.min(48, fontSize));
+      cardContainer.style.fontSize = fontSize + "pt";
+
+      fontSizeFeedback.textContent = `${fontSize.toFixed(1)}pt`;
+      fontSizeFeedback.style.opacity = 1;
+
+      clearTimeout(fontSizeDisplayTimeout);
+      fontSizeDisplayTimeout = setTimeout(() => {
+        fontSizeFeedback.style.opacity = 0;
+      }, 1500);
+    }
+
+    function toggleCardColorMenu() {
+      const menu = document.getElementById("cardColor");
+      menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
+    }
+
+    function toggleTextColorMenu() {
+      const menu = document.getElementById("textColor");
+      menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
+    }
+
+    function changeCardColor(color) {
+      cardContainer.style.backgroundColor = color;
+    }
+
+    function changeTextColor(color) {
+      cardContainer.style.color = color;
+    }
+
+    function resetTimer() {
+      timerSeconds = 0;
+      timerElement.textContent = "00:00";
+    }
+
+    function updateTimer() {
+      timerSeconds++;
+      const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
+      const seconds = String(timerSeconds % 60).padStart(2, '0');
+      timerElement.textContent = `${minutes}:${seconds}`;
+    }
+
+    setInterval(updateTimer, 1000);
+
+    function goToSpecificCard() {
+      const value = document.getElementById("goToCard").value;
+      const number = parseInt(value, 10);
+      if (!isNaN(number) && number >= 1 && number <= cards.length) {
+        currentCard = number - 1;
+        showingFront = true;
+        updateCard();
+      } else {
+        alert("Número do card inválido. Insira um número entre 1 e " + cards.length);
+      }
+      document.getElementById("goToCard").value = '';
+    }
+
+    function showTooltipOnHover(el) {
+      clearTimeout(el.tooltipTimer);
+      el.classList.add("show-tooltip");
+      el.tooltipTimer = setTimeout(() => {
+        el.classList.remove("show-tooltip");
+      }, 1000);
+    }
+
+    function hideTooltipOnLeave(el) {
+      clearTimeout(el.tooltipTimer);
+      el.classList.remove("show-tooltip");
+    }
+
+    function toggleHelpModal() {
+      if (helpModal.style.display === "none") {
+        helpModal.style.display = "flex";
+      } else {
+        helpModal.style.display = "none";
+      }
+    }
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === " " || e.key === "Enter") {
+        e.preventDefault();
+        reviewAndAdvance();
+      }
+    });
+
+    // Chama a função para carregar os cards da planilha usando SHEET_ID e GID
+    loadFlashcardsFromGoogleSheet();
+  </script>
+</body>
+</html>

@@ -27,11 +27,19 @@
       background: none;
       border: none;
       color: white;
-      font-size: 1em;
+      font-size: 1.2em;
       cursor: pointer;
       position: relative;
     }
-
+.top-bar span {
+      font-size: 1.0em; /* NOVO: Tamanho para o ícone e texto do tempo de revisão */
+      color: white; /* Garante que o texto do timer também seja branco */
+    }
+	/* NOVO: Estilo para o ícone do relógio */
+    .top-bar .timer-icon {
+        font-size: 1.0em; /* Torna o ícone maior, como os botões */
+        vertical-align: middle; /* Ajuda a alinhar o ícone com o texto */
+	 }
     .top-bar select {
       background-color: #222;
       border: 1px solid #555;
@@ -111,7 +119,7 @@
     }
 
     .bottom-bar input[type="number"] {
-      width: 40px; /* Ajustado de 50px para 40px na última atualização */
+      width: 50px;
       padding: 3px;
       font-size: 1em;
     }
@@ -267,7 +275,7 @@
     <span id="cardCounter">0/0</span>
     <button data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
     <button data-tooltip="Voltar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()">⏪</button>
-    <button data-tooltip="Mostrar resposta" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="flipCard()">⬇️</button>
+    <button data-tooltip="Resposta/Perg." onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="flipCard()">⬇️</button>
     <button data-tooltip="Avançar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="nextCard()">⏩</button>
     <button id="nextAndShow" data-tooltip="Virar Card / Próximo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()">↪️</button>
   </div>
@@ -283,7 +291,7 @@
         <p><span>⏱️</span> Tempo de revisão: Exibe o tempo decorrido e zera ao clicar.</p>
         <p><span>⏪</span> Voltar: Navega para o card anterior.</p>
         <p><span>🔀</span> Embaralhar cartas: Reorganiza aleatoriamente a ordem dos flashcards.</p>
-        <p><span>⬇️</span> Mostrar resposta: Vira o flashcard para mostrar a resposta (ou pergunta).</p>
+        <p><span>⬇️</span> Resposta/Perg.: Vira o flashcard para mostrar a resposta (ou pergunta).</p>
         <p><span>⏩</span> Avançar: Navega para o próximo card.</p>
         <p><span>↪️</span> Virar Card / Próximo: Vira o card se na pergunta, avança se na resposta.</p>
       </div>

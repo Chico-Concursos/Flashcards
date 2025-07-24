@@ -12,16 +12,16 @@
       font-family: Arial, sans-serif;
       text-align: center;
     }
-
     .top-bar {
       display: flex;
       justify-content: center;
+      align-items: center;
       background-color: #111;
       padding: 10px;
       flex-wrap: wrap;
       gap: 10px;
+      margin-bottom: 5px; /* Nova linha */
     }
-
     .top-bar button,
     .top-bar select {
       background: none;
@@ -31,21 +31,20 @@
       cursor: pointer;
       position: relative;
     }
-.top-bar span {
+    .top-bar span {
       font-size: 1.0em; /* NOVO: Tamanho para o ícone e texto do tempo de revisão */
       color: white; /* Garante que o texto do timer também seja branco */
     }
-	/* NOVO: Estilo para o ícone do relógio */
+    /* NOVO: Estilo para o ícone do relógio */
     .top-bar .timer-icon {
         font-size: 1.0em; /* Torna o ícone maior, como os botões */
         vertical-align: middle; /* Ajuda a alinhar o ícone com o texto */
-	 }
+    }
     .top-bar select {
       background-color: #222;
       border: 1px solid #555;
       padding: 2px 4px;
     }
-
     /* Tooltip para botões do topo */
     .tooltip:hover::after {
       content: attr(data-tooltip);
@@ -61,13 +60,13 @@
       font-size: 0.8em;
       z-index: 10;
     }
-
     #card-container {
       background-color: white;
       color: black;
       width: 96%;
       height: 70vh;
       margin: 20px auto;
+      margin-top: 5px; /* Nova linha */
       padding: 40px 20px;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
@@ -76,7 +75,6 @@
       align-items: center;
       overflow: auto;
     }
-
     .bottom-bar {
       display: flex;
       justify-content: center;
@@ -85,7 +83,6 @@
       flex-wrap: wrap;
       gap: 10px;
     }
-
     .bottom-bar button {
       background: none;
       border: none;
@@ -94,7 +91,6 @@
       color: white;
       position: relative;
     }
-
     /* Tooltip para botões da base - aparece e some com JS */
     .bottom-bar button::after {
       content: attr(data-tooltip);
@@ -113,21 +109,17 @@
       pointer-events: none;
       transition: opacity 0.3s ease;
     }
-
     .bottom-bar button.show-tooltip::after {
       opacity: 1;
     }
-
     .bottom-bar input[type="number"] {
       width: 50px;
       padding: 3px;
       font-size: 1em;
     }
-
     #timer {
       cursor: pointer;
     }
-
     /* Styles for the help modal */
     #helpModal {
       position: fixed;
@@ -143,7 +135,6 @@
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
     }
-
     #helpModalContent {
       background: #222;
       color: white;
@@ -157,13 +148,11 @@
       overflow-y: auto;
       text-align: center;
     }
-
     #helpModalContent h2 {
       color: gold;
       margin-bottom: 20px;
       font-size: 1.8em;
     }
-
     #iconLegend p {
       display: flex;
       align-items: center;
@@ -171,14 +160,12 @@
       margin-bottom: 10px;
       font-size: 1.1em;
     }
-
     #iconLegend p span:first-child {
       font-size: 1.5em;
       margin-right: 15px;
       min-width: 40px;
       text-align: center;
     }
-
     #helpModalContent .close-button {
       background: gold;
       color: black;
@@ -190,11 +177,9 @@
       font-size: 1.1em;
       transition: background 0.3s ease;
     }
-
     #helpModalContent .close-button:hover {
       background: #e5c300;
     }
-
     #fontSizeFeedback {
         position: fixed;
         top: 50%;
@@ -210,7 +195,6 @@
         transition: opacity 0.5s ease-out;
         pointer-events: none;
     }
-
     #shuffleFeedback {
         position: fixed;
         top: 50%;
@@ -226,10 +210,17 @@
         transition: opacity 0.5s ease-out;
         pointer-events: none;
     }
+    /* NOVO: Estilo para o display do tempo do temporizador automático */
+    #autoAdvanceTimerDisplay {
+      font-size: 1.0em; /* Mesmo tamanho dos outros textos na barra */
+      color: white; /* Mesma cor dos outros textos na barra */
+      min-width: 40px; /* Largura mínima para evitar saltos */
+      text-align: center; /* Centraliza o texto */
+    }
+    /* FIM NOVO */
   </style>
 </head>
 <body>
-
   <div class="top-bar">
     <button class="tooltip" data-tooltip="Cor do cartão" onclick="toggleCardColorMenu()">🖌️</button>
     <select id="cardColor" onchange="changeCardColor(this.value)" style="display:none;">
@@ -242,7 +233,6 @@
       <option value="darkred">Vermelho Escuro</option>
       <option value="gold">Dourado</option>
     </select>
-
     <button class="tooltip" data-tooltip="Cor da fonte" onclick="toggleTextColorMenu()">🔤</button>
     <select id="textColor" onchange="changeTextColor(this.value)" style="display:none;">
       <option value="black">Preto</option>
@@ -254,23 +244,23 @@
       <option value="darkred">Vermelho Escuro</option>
       <option value="gold">Dourado</option>
     </select>
-
     <button class="tooltip" data-tooltip="Aumentar fonte" onclick="adjustFontSize(1)">A+</button>
     <button class="tooltip" data-tooltip="Diminuir fonte" onclick="adjustFontSize(-1)">A-</button>
-
     <span class="tooltip" data-tooltip="Tempo de revisão" onclick="resetTimer()">⏱️ <span id="timer">00:00</span></span>
-    
     <button class="tooltip" data-tooltip="Ajuda" onclick="toggleHelpModal()">❓</button>
   </div>
-
   <div id="fontSizeFeedback"></div>
   <div id="shuffleFeedback"></div>
-
   <div id="card-container">
     Carregando flashcards...
   </div>
-
   <div class="bottom-bar">
+    <!-- NOVO: Grupo para o Temporizador Automático -->
+    <div style="display: flex; align-items: center; gap: 5px;">
+      <button id="autoAdvanceButton" data-tooltip="Iniciar/Parar Temporizador" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleAutoAdvance()" style="font-size: 1.2em;">⏳</button>
+      <span id="autoAdvanceTimerDisplay" style="font-size: 1.0em; min-width: 40px;">0s</span>
+    </div>
+    <!-- FIM NOVO -->
     <input type="number" id="goToCard" min="1" placeholder="1" onchange="goToSpecificCard()" />
     <span id="cardCounter">0/0</span>
     <button data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
@@ -279,7 +269,6 @@
     <button data-tooltip="Avançar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="nextCard()">⏩</button>
     <button id="nextAndShow" data-tooltip="Virar Card / Próximo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()">↪️</button>
   </div>
-
   <div id="helpModal" style="display:none;">
     <div id="helpModalContent">
       <h2>Ajuda - Significado dos Ícones</h2>
@@ -294,11 +283,13 @@
         <p><span>⬇️</span> Resposta/Perg.: Vira o flashcard para mostrar a resposta (ou pergunta).</p>
         <p><span>⏩</span> Avançar: Navega para o próximo card.</p>
         <p><span>↪️</span> Virar Card / Próximo: Vira o card se na pergunta, avança se na resposta.</p>
+         <!-- NOVO: Legenda para o ícone de ampulheta -->
+        <p><span>⏳</span> Iniciar/Parar Temporizador: Avança automaticamente para o próximo card após um tempo definido.</p>
+        <!-- FIM NOVO -->
       </div>
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
   </div>
-
   <script>
     let initialCards = [];
     let cards = [];
@@ -307,7 +298,6 @@
     let fontSize = 21.6;
     let timerSeconds = 0;
     const timerElement = document.getElementById("timer");
-
     const cardContainer = document.getElementById("card-container");
     const cardCounter = document.getElementById("cardCounter");
     const helpModal = document.getElementById("helpModal");
@@ -317,16 +307,23 @@
     let shuffleDisplayTimeout;
     let isShuffleActive = false;
 
+    // NOVO: Variáveis para o Temporizador Automático
+    let autoAdvanceInterval = null;
+    let autoAdvanceSeconds = 0;
+    let autoAdvanceDelay = 5; // Tempo padrão em segundos
+    let isAutoAdvanceActive = false;
+    const autoAdvanceButton = document.getElementById("autoAdvanceButton");
+    const autoAdvanceTimerDisplay = document.getElementById("autoAdvanceTimerDisplay");
+    // FIM NOVO
+
     // NOVO: Função para obter parâmetros da URL (sheetId e gid)
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
-
     // NOVO: Obter sheetId e gid da URL
     const SHEET_ID = getQueryParam('sheetId');
     const GID = getQueryParam('gid') || '0'; // Padrão '0' para a primeira aba
-
     // NOVO: Função para construir a URL de fetch usando sheetId e gid
     function buildGoogleSheetCsvUrl(sheetId, gid) {
         if (!sheetId) {
@@ -335,17 +332,14 @@
         // Este é o formato para exportar diretamente como CSV usando sheetId e gid
         return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
     }
-
     async function loadFlashcardsFromGoogleSheet() {
         const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
-
         if (!csvUrl) {
             cardContainer.textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL. Ex: ?sheetId=SEU_ID_DA_PLANILHA&gid=ID_DA_ABA.";
             console.error("A URL da planilha não pôde ser construída: sheetId ausente.");
             cardCounter.textContent = "0/0";
             return;
         }
-
         try {
             const response = await fetch(csvUrl);
             if (!response.ok) {
@@ -355,7 +349,6 @@
             }
             const text = await response.text();
             const lines = text.split('\n').slice(1).filter(Boolean);
-            
             let loadedCards = [];
             lines.forEach(line => {
                 const cols = line.match(/(?:"([^"]*)")|([^,]+)/g);
@@ -365,7 +358,6 @@
                     loadedCards.push({ front: frontText, back: backText });
                 }
             });
-
             if (loadedCards.length === 0) {
                 cardContainer.textContent = "Nenhum flashcard encontrado na planilha. Verifique os dados ou se as colunas estão corretas.";
                 console.warn("Nenhum card carregado da planilha.");
@@ -377,14 +369,12 @@
                 showingFront = true;
                 updateCard();
             }
-
         } catch (error) {
             console.error("Erro ao carregar os flashcards da planilha:", error);
             cardContainer.textContent = `Erro ao carregar flashcards: ${error.message}. Verifique sheetId, gid ou permissões da planilha.`;
             cardCounter.textContent = "0/0";
         }
     }
-
     function updateCard() {
       if (cards.length === 0) {
         cardContainer.textContent = "Nenhum flashcard disponível.";
@@ -395,25 +385,28 @@
       cardContainer.textContent = showingFront ? card.front : card.back;
       cardCounter.textContent = `${currentCard + 1}/${cards.length}`;
       cardContainer.style.fontSize = fontSize + "pt";
-    }
 
+      // NOVO: Reinicia o temporizador automático ao mudar de card
+      if (isAutoAdvanceActive) {
+        autoAdvanceSeconds = autoAdvanceDelay;
+        updateAutoAdvanceDisplay();
+      }
+      // FIM NOVO
+    }
     function nextCard() {
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       updateCard();
     }
-
     function prevCard() {
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
       updateCard();
     }
-
     function flipCard() {
       showingFront = !showingFront;
       updateCard();
     }
-
     function reviewAndAdvance() {
       if (showingFront) {
         showingFront = false;
@@ -423,7 +416,6 @@
       }
       updateCard();
     }
-
     function toggleShuffleMode() {
       if (!isShuffleActive) {
         for (let i = cards.length - 1; i > 0; i--) {
@@ -437,64 +429,51 @@
         isShuffleActive = false;
         shuffleFeedback.textContent = "Ordem original restaurada!";
       }
-
       currentCard = 0;
       showingFront = true;
       updateCard();
-
       shuffleFeedback.style.opacity = 1;
       clearTimeout(shuffleDisplayTimeout);
       shuffleDisplayTimeout = setTimeout(() => {
         shuffleFeedback.style.opacity = 0;
       }, 1500);
     }
-
     function adjustFontSize(change) {
       fontSize += change * 1.2;
       fontSize = Math.max(10, Math.min(48, fontSize));
       cardContainer.style.fontSize = fontSize + "pt";
-
       fontSizeFeedback.textContent = `${fontSize.toFixed(1)}pt`;
       fontSizeFeedback.style.opacity = 1;
-
       clearTimeout(fontSizeDisplayTimeout);
       fontSizeDisplayTimeout = setTimeout(() => {
         fontSizeFeedback.style.opacity = 0;
       }, 1500);
     }
-
     function toggleCardColorMenu() {
       const menu = document.getElementById("cardColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
-
     function toggleTextColorMenu() {
       const menu = document.getElementById("textColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
-
     function changeCardColor(color) {
       cardContainer.style.backgroundColor = color;
     }
-
     function changeTextColor(color) {
       cardContainer.style.color = color;
     }
-
     function resetTimer() {
       timerSeconds = 0;
       timerElement.textContent = "00:00";
     }
-
     function updateTimer() {
       timerSeconds++;
       const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
       const seconds = String(timerSeconds % 60).padStart(2, '0');
       timerElement.textContent = `${minutes}:${seconds}`;
     }
-
     setInterval(updateTimer, 1000);
-
     function goToSpecificCard() {
       const value = document.getElementById("goToCard").value;
       const number = parseInt(value, 10);
@@ -507,7 +486,6 @@
       }
       document.getElementById("goToCard").value = '';
     }
-
     function showTooltipOnHover(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.add("show-tooltip");
@@ -515,12 +493,10 @@
         el.classList.remove("show-tooltip");
       }, 1000);
     }
-
     function hideTooltipOnLeave(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.remove("show-tooltip");
     }
-
     function toggleHelpModal() {
       if (helpModal.style.display === "none") {
         helpModal.style.display = "flex";
@@ -529,13 +505,77 @@
       }
     }
 
+    // NOVO: Funções para o Temporizador Automático
+    function toggleAutoAdvance() {
+      if (isAutoAdvanceActive) {
+        stopAutoAdvance();
+      } else {
+        startAutoAdvance();
+      }
+    }
+
+    function startAutoAdvance() {
+        if (isAutoAdvanceActive) return; // Evita múltiplas inicializações
+
+        // Pede o tempo ao usuário (opcional)
+        const userInput = prompt("Definir tempo de avanço automático (segundos):", autoAdvanceDelay);
+        if (userInput === null) return; // Cancelado
+        const newDelay = parseInt(userInput, 10);
+        if (isNaN(newDelay) || newDelay <= 0) {
+            alert("Por favor, insira um número válido maior que zero.");
+            return;
+        }
+        autoAdvanceDelay = newDelay;
+
+        isAutoAdvanceActive = true;
+        autoAdvanceSeconds = autoAdvanceDelay; // Reinicia o contador visual
+        updateAutoAdvanceDisplay(); // Mostra o tempo inicial
+
+        // Muda o ícone do botão para indicar atividade
+        if (autoAdvanceButton) {
+            autoAdvanceButton.textContent = "⏰"; // Relógio como indicador de atividade
+        }
+
+        autoAdvanceInterval = setInterval(() => {
+            autoAdvanceSeconds--;
+            updateAutoAdvanceDisplay();
+
+            if (autoAdvanceSeconds <= 0) {
+                nextCard(); // Avança para o próximo card
+                autoAdvanceSeconds = autoAdvanceDelay; // Reinicia o contador
+                updateAutoAdvanceDisplay(); // Atualiza o display após avançar
+            }
+        }, 1000);
+    }
+
+    function stopAutoAdvance() {
+        if (!isAutoAdvanceActive) return;
+
+        clearInterval(autoAdvanceInterval);
+        autoAdvanceInterval = null;
+        isAutoAdvanceActive = false;
+        autoAdvanceSeconds = 0; // Zera o contador visual
+        updateAutoAdvanceDisplay(); // Atualiza o display para 0s
+
+        // Restaura o ícone do botão
+        if (autoAdvanceButton) {
+             autoAdvanceButton.textContent = "⏳"; // Ampulheta para indicar parado
+        }
+    }
+
+    function updateAutoAdvanceDisplay() {
+        if (autoAdvanceTimerDisplay) {
+            autoAdvanceTimerDisplay.textContent = `${autoAdvanceSeconds}s`;
+        }
+    }
+    // FIM NOVO
+
     document.addEventListener("keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
         reviewAndAdvance();
       }
     });
-
     // Chama a função para carregar os cards da planilha usando SHEET_ID e GID
     loadFlashcardsFromGoogleSheet();
   </script>

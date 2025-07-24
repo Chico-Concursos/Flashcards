@@ -66,7 +66,7 @@
       width: 96%;
       height: 70vh;
       margin: 20px auto;
-      margin-top: 5px; /* Nova linha */
+      margin-top: 3px; /* Nova linha */
       padding: 40px 20px;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
@@ -514,6 +514,7 @@
       }
     }
 
+    // FUNÇÃO CORRIGIDA
     function startAutoAdvance() {
         if (isAutoAdvanceActive) return; // Evita múltiplas inicializações
 
@@ -541,12 +542,14 @@
             updateAutoAdvanceDisplay();
 
             if (autoAdvanceSeconds <= 0) {
-                nextCard(); // Avança para o próximo card
+                // CORREÇÃO: Usar reviewAndAdvance em vez de nextCard
+                reviewAndAdvance(); // Vira o card ou avança, dependendo do estado atual
                 autoAdvanceSeconds = autoAdvanceDelay; // Reinicia o contador
-                updateAutoAdvanceDisplay(); // Atualiza o display após avançar
+                updateAutoAdvanceDisplay(); // Atualiza o display após a ação
             }
         }, 1000);
     }
+    // FIM CORREÇÃO
 
     function stopAutoAdvance() {
         if (!isAutoAdvanceActive) return;

@@ -433,6 +433,8 @@
                 if (cols && cols.length >= 2) {
                     let frontText = (cols[0] || '').replace(/^"|"$/g, '').trim();
                     let backText = (cols[1] || '').replace(/^"|"$/g, '').trim();
+                    frontText = frontText.replace(/"/g, '*');
+                    backText = backText.replace(/"/g, '*');
                     loadedCards.push({ front: frontText, back: backText });
                 }
             });

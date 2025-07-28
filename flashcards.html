@@ -515,6 +515,7 @@
       cardContainer.textContent = showingFront ? card.front : card.back;
       cardCounter.textContent = `${currentCard + 1}/${cards.length}`;
       cardContainer.style.fontSize = fontSize + "pt";
+
       // NOVO: Reinicia o temporizador automático ao mudar de card
       if (isAutoAdvanceActive) {
         autoAdvanceSeconds = autoAdvanceDelay;

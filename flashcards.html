@@ -474,14 +474,17 @@
                     let frontText = (rawFrontText || '').trim();
                     let backText = (rawBackText || '').trim();
 
-                    // 3. Substituir aspas duplas (") por asteriscos (*)
+                    // 3. NOVO: Substituir o marcador '↳' por quebras de linha '\n'
+                    backText = backText.replace(/↳/g, '\n');
+
+                    // 4. Substituir aspas duplas (") por asteriscos (*) - Mantém a funcionalidade existente
                     frontText = frontText.replace(/"/g, '*');
                     backText = backText.replace(/"/g, '*');
 
-                    // 4. Adicionar ao array de cards
+                    // 5. Adicionar ao array de cards
                     loadedCards.push({ front: frontText, back: backText });
                 } else {
-                     //console.warn("Linha CSV inválida ou incompleta ignorada:", line);
+                     console.warn("Linha CSV inválida ou incompleta ignorada:", line);
                      //console.log("Cols extraídas:", cols);
                 }
             });

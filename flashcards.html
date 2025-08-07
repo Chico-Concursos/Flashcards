@@ -3,7 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Chico Concursos</title>
+  <title>Chico Concursos - Flashcards com Progresso</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * { margin:0; padding:0; box-sizing:border-box; }
     body {
@@ -65,7 +66,7 @@
       width: 96%;
       height: 70vh;
       margin: 1px auto;
-      margin-top: 2px;
+      margin-top: 0px;
       padding: 40px 20px;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
@@ -115,7 +116,7 @@
     }
     .bottom-bar input[type="number"] {
       width: 50px;
-      padding: 3px;
+      padding: 2px;
       font-size: 1em;
     }
     #timer {
@@ -279,6 +280,30 @@
         z-index: 10000;
         display: none;
     }
+    
+    /* NOVO: Estilo para o indicador de progresso salvo */
+    #cardCounter {
+      transition: all 0.5s ease;
+      padding: 3px 10px;
+      border-radius: 15px;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+    
+    #cardCounter.saved {
+      background-color: rgba(0, 128, 0, 0.7);
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+    }
+    
+    #cardCounter .current-card {
+      color: #32CD32; /* Verde limão que se destaca no preto */
+      font-weight: bold;
+      transition: color 0.5s ease;
+    }
+    
+    #cardCounter .saved .current-card {
+      color: #00FF00; /* Verde mais brilhante quando salvo */
+      text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -334,6 +359,7 @@
     </div>
     <!-- FIM NOVO -->
     <input type="number" id="goToCard" min="1" placeholder="1" onchange="goToSpecificCard()" />
+    <!-- NOVO: Contador de cards com classe para indicador de progresso -->
     <span id="cardCounter">0/0</span>
     <button data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
     <button data-tooltip="Voltar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()">⏪</button>
@@ -359,10 +385,13 @@
         <p><span>⏳</span> Iniciar/Parar Temporizador: Avança automaticamente para o próximo card após um tempo definido.</p>
         <!-- Legenda para a Barra de Espaço -->
         <p><span>⏘</span> Barra de Espaço: Vira o card se na pergunta, avança se na resposta (mesma ação do botão ↪️).</p>
+        <!-- NOVO: Legenda para o indicador de progresso -->
+        <p><span>💚</span> Indicador Verde: O número em verde mostra que seu progresso foi salvo.</p>
       </div>
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
   </div>
+  
   <script>
     let initialCards = [];
     let cards = [];
@@ -440,6 +469,53 @@
         return result;
     }
 
+    // NOVO: Funções para salvar e carregar o estado
+    function saveFlashcardState() {
+      const state = {
+        currentCard,
+        showingFront,
+        fontSize,
+        isShuffleActive,
+        deckId: `${SHEET_ID}_${GID}` // Identificador único do deck
+      };
+      localStorage.setItem('flashcardState', JSON.stringify(state));
+      
+      // NOVO: Feedback visual - destacar o contador de cards
+      cardCounter.classList.add('saved');
+      setTimeout(() => cardCounter.classList.remove('saved'), 1000);
+    }
+
+    function loadFlashcardState() {
+      const savedState = localStorage.getItem('flashcardState');
+      if (!savedState) return false;
+      
+      try {
+        const state = JSON.parse(savedState);
+        
+        // Só carrega se for o mesmo deck
+        if (state.deckId === `${SHEET_ID}_${GID}`) {
+          currentCard = state.currentCard >= cards.length ? 0 : state.currentCard;
+          showingFront = state.showingFront;
+          fontSize = state.fontSize;
+          
+          // Atualiza o estado do shuffle
+          if (state.isShuffleActive !== isShuffleActive) {
+            isShuffleActive = state.isShuffleActive;
+            if (isShuffleActive) {
+              // Re-embaralha mantendo a mesma ordem relativa
+              cards = [...cards].sort(() => Math.random() - 0.5);
+            } else {
+              cards = [...initialCards];
+            }
+          }
+          
+          return true;
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estado:", e);
+      }
+      return false;
+    }
 
     async function loadFlashcardsFromGoogleSheet() {
         const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
@@ -474,17 +550,14 @@
                     let frontText = (rawFrontText || '').trim();
                     let backText = (rawBackText || '').trim();
 
-                    // 3. NOVO: Substituir o marcador '↳' por quebras de linha '\n'
-                    backText = backText.replace(/↳/g, '\n');
-
-                    // 4. Substituir aspas duplas (") por asteriscos (*) - Mantém a funcionalidade existente
+                    // 3. Substituir aspas duplas (") por asteriscos (*)
                     frontText = frontText.replace(/"/g, '*');
                     backText = backText.replace(/"/g, '*');
 
-                    // 5. Adicionar ao array de cards
+                    // 4. Adicionar ao array de cards
                     loadedCards.push({ front: frontText, back: backText });
                 } else {
-                     console.warn("Linha CSV inválida ou incompleta ignorada:", line);
+                     //console.warn("Linha CSV inválida ou incompleta ignorada:", line);
                      //console.log("Cols extraídas:", cols);
                 }
             });
@@ -496,8 +569,16 @@
             } else {
                 initialCards = loadedCards;
                 cards = [...initialCards];
-                currentCard = 0;
-                showingFront = true;
+                
+                // NOVO: Tenta carregar estado salvo
+                const hasSavedState = loadFlashcardState();
+                
+                // Se não encontrou estado salvo válido, inicia do zero
+                if (!hasSavedState) {
+                  currentCard = 0;
+                  showingFront = true;
+                }
+                
                 updateCard();
             }
         } catch (error) {
@@ -515,7 +596,10 @@
       }
       const card = cards[currentCard];
       cardContainer.textContent = showingFront ? card.front : card.back;
-      cardCounter.textContent = `${currentCard + 1}/${cards.length}`;
+      
+      // NOVO: Atualiza o contador com formatação especial
+      cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
+      
       cardContainer.style.fontSize = fontSize + "pt";
 
       // Reinicia o temporizador automático ao mudar de card
@@ -529,17 +613,23 @@
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       updateCard();
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function prevCard() {
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
       updateCard();
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function flipCard() {
       showingFront = !showingFront;
       updateCard();
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function reviewAndAdvance() {
@@ -550,6 +640,8 @@
         showingFront = true;
       }
       updateCard();
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function toggleShuffleMode() {
@@ -573,6 +665,8 @@
       shuffleDisplayTimeout = setTimeout(() => {
         shuffleFeedback.style.opacity = 0;
       }, 1500);
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function adjustFontSize(change) {
@@ -585,6 +679,8 @@
       fontSizeDisplayTimeout = setTimeout(() => {
         fontSizeFeedback.style.opacity = 0;
       }, 1500);
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function toggleCardColorMenu() {
@@ -599,10 +695,14 @@
 
     function changeCardColor(color) {
       cardContainer.style.backgroundColor = color;
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function changeTextColor(color) {
       cardContainer.style.color = color;
+      // NOVO: Salvar o estado
+      saveFlashcardState();
     }
 
     function resetTimer() {
@@ -625,6 +725,8 @@
         currentCard = number - 1;
         showingFront = true;
         updateCard();
+        // NOVO: Salvar o estado
+        saveFlashcardState();
       } else {
         alert("Número do card inválido. Insira um número entre 1 e " + cards.length);
       }
@@ -762,13 +864,9 @@
 
     // Chama a função para carregar os cards da planilha usando SHEET_ID e GID
     loadFlashcardsFromGoogleSheet();
+    
+    // Salvar estado quando a página for fechada
+    window.addEventListener('beforeunload', saveFlashcardState);
   </script>
 </body>
 </html>
-
-
-
-
-
-
-

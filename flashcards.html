@@ -377,6 +377,53 @@
       min-width: 70px;
       text-align: right;
     }
+    
+    /* NOVO: Estilos para a tela de fim */
+    #end-screen {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100%;
+      width: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: white;
+      border-radius: 10px;
+      z-index: 5;
+    }
+    
+    #end-message {
+      font-size: 3em;
+      font-weight: bold;
+      margin-bottom: 30px;
+      text-align: center;
+      color: #FFD700;
+      text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+      background: linear-gradient(45deg, #FFD700, #D4AF37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      padding: 20px;
+    }
+    
+    #restart-button {
+      background: linear-gradient(to bottom, #FFD700, #D4AF37);
+      color: black;
+      border: none;
+      padding: 15px 30px;
+      font-size: 1.2em;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: bold;
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+    
+    #restart-button:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+    }
   </style>
 </head>
 <body>
@@ -424,7 +471,14 @@
   <div id="autoAdvanceOverlay" onclick="cancelAutoAdvanceDelay()"></div>
   <!-- FIM NOVO -->
   <div id="card-container">
-    Carregando flashcards...
+    <div id="flashcard-content">
+      Carregando flashcards...
+    </div>
+    <!-- NOVO: Tela de fim -->
+    <div id="end-screen">
+      <div id="end-message">Chico Concursos<br>Fim</div>
+      <button id="restart-button">RECOMEÇAR</button>
+    </div>
   </div>
   <div class="bottom-bar">
     <!-- Grupo para o Temporizador Automático -->
@@ -460,6 +514,7 @@
         <p><span>⏳</span> Iniciar/Parar Temporizador: Avança automaticamente para o próximo card após um tempo definido.</p>
         <p><span>⏘</span> Barra de Espaço: Vira o card se na pergunta, avança se na resposta (mesma ação do botão ↪️).</p>
         <p><span>💚</span> Indicador Verde: O número em verde mostra que seu progresso foi salvo.</p>
+        <p><span>🏁</span> Tela Final: Exibida quando todos os flashcards são revisados.</p>
       </div>
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
@@ -514,6 +569,9 @@
     let cardResponseTimes = {};
     let lastAccessDate = null;
     let cardShowTime = 0; // Tempo (em ms) quando o card atual foi mostrado
+    
+    // NOVO: Estado para controlar se chegou ao fim
+    let isFinished = false;
 
     // Função para obter parâmetros da URL (sheetId e gid)
     function getQueryParam(name) {
@@ -618,7 +676,7 @@
     async function loadFlashcardsFromGoogleSheet() {
         const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
         if (!csvUrl) {
-            cardContainer.textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL. Ex: ?sheetId=SEU_ID_DA_PLANILHA&gid=ID_DA_ABA.";
+            document.getElementById("flashcard-content").textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL. Ex: ?sheetId=SEU_ID_DA_PLANILHA&gid=ID_DA_ABA.";
             console.error("A URL da planilha não pôde ser construída: sheetId ausente.");
             cardCounter.textContent = "0/0";
             return;
@@ -661,7 +719,7 @@
             });
 
             if (loadedCards.length === 0) {
-                cardContainer.textContent = "Nenhum flashcard encontrado na planilha. Verifique os dados ou se as colunas estão corretas.";
+                document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha. Verifique os dados ou se as colunas estão corretas.";
                 console.warn("Nenhum card carregado da planilha.");
                 cardCounter.textContent = "0/0";
             } else {
@@ -687,24 +745,23 @@
             }
         } catch (error) {
             console.error("Erro ao carregar os flashcards da planilha:", error);
-            cardContainer.textContent = `Erro ao carregar flashcards: ${error.message}. Verifique sheetId, gid ou permissões da planilha.`;
+            document.getElementById("flashcard-content").textContent = `Erro ao carregar flashcards: ${error.message}. Verifique sheetId, gid ou permissões da planilha.`;
             cardCounter.textContent = "0/0";
         }
     }
 
     function updateCard() {
-      if (cards.length === 0) {
-        cardContainer.textContent = "Nenhum flashcard disponível.";
-        cardCounter.textContent = "0/0";
+      if (cards.length === 0 || isFinished) {
         return;
       }
+      
       const card = cards[currentCard];
-      cardContainer.textContent = showingFront ? card.front : card.back;
+      document.getElementById("flashcard-content").textContent = showingFront ? card.front : card.back;
       
       // NOVO: Atualiza o contador com formatação especial
       cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
       
-      cardContainer.style.fontSize = fontSize + "pt";
+      document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
 
       // Reinicia o temporizador automático ao mudar de card
       if (isAutoAdvanceActive) {
@@ -717,6 +774,15 @@
     }
 
     function nextCard() {
+      if (isFinished) return;
+      
+      if (currentCard === cards.length - 1) {
+        // NOVO: Chegou ao último card - mostrar tela de fim
+        showEndScreen();
+        saveFlashcardState();
+        return;
+      }
+      
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       updateCard();
@@ -725,6 +791,8 @@
     }
 
     function prevCard() {
+      if (isFinished) return;
+      
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
       updateCard();
@@ -733,6 +801,8 @@
     }
 
     function flipCard() {
+      if (isFinished) return;
+      
       // Calcular tempo gasto antes de virar
       if (showingFront) {
         const timeSpent = Math.round((performance.now() - cardShowTime) / 1000);
@@ -745,6 +815,8 @@
     }
 
     function reviewAndAdvance() {
+      if (isFinished) return;
+      
       // Calcular tempo gasto antes de virar se estiver na frente
       if (showingFront) {
         const timeSpent = Math.round((performance.now() - cardShowTime) / 1000);
@@ -753,15 +825,16 @@
       
       if (showingFront) {
         showingFront = false;
+        updateCard();
       } else {
-        currentCard = (currentCard + 1) % cards.length;
-        showingFront = true;
+        nextCard();
       }
-      updateCard();
       saveFlashcardState();
     }
 
     function toggleShuffleMode() {
+      if (isFinished) return;
+      
       if (!isShuffleActive) {
         for (let i = cards.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -788,7 +861,7 @@
     function adjustFontSize(change) {
       fontSize += change * 1.2;
       fontSize = Math.max(10, Math.min(48, fontSize));
-      cardContainer.style.fontSize = fontSize + "pt";
+      document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
       fontSizeFeedback.textContent = `${fontSize.toFixed(1)}pt`;
       fontSizeFeedback.style.opacity = 1;
       clearTimeout(fontSizeDisplayTimeout);
@@ -814,7 +887,7 @@
     }
 
     function changeTextColor(color) {
-      cardContainer.style.color = color;
+      document.getElementById("flashcard-content").style.color = color;
       saveFlashcardState();
     }
 
@@ -832,6 +905,8 @@
     setInterval(updateTimer, 1000);
 
     function goToSpecificCard() {
+      if (isFinished) return;
+      
       const value = document.getElementById("goToCard").value;
       const number = parseInt(value, 10);
       if (!isNaN(number) && number >= 1 && number <= cards.length) {
@@ -1078,6 +1153,24 @@
         reviewList.appendChild(item);
       });
     }
+    
+    // NOVO: Função para mostrar a tela de fim
+    function showEndScreen() {
+      document.getElementById('flashcard-content').style.display = 'none';
+      document.getElementById('end-screen').style.display = 'flex';
+      isFinished = true;
+    }
+    
+    // NOVO: Função para recomeçar os flashcards
+    function restartFlashcards() {
+      document.getElementById('end-screen').style.display = 'none';
+      document.getElementById('flashcard-content').style.display = 'block';
+      currentCard = 0;
+      showingFront = true;
+      isFinished = false;
+      updateCard();
+      saveFlashcardState();
+    }
 
     document.addEventListener("keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {
@@ -1091,6 +1184,9 @@
     
     // Salvar estado quando a página for fechada
     window.addEventListener('beforeunload', saveFlashcardState);
+    
+    // NOVO: Adicionar evento ao botão de recomeçar
+    document.getElementById('restart-button').addEventListener('click', restartFlashcards);
   </script>
 </body>
 </html>

@@ -304,6 +304,79 @@
       color: #00FF00; /* Verde mais brilhante quando salvo */
       text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
     }
+    
+    /* NOVO: Estilos para o modal de estatísticas */
+    #statsModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 9999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+    }
+    
+    #statsModalContent {
+      background: #222;
+      color: white;
+      padding: 30px;
+      border-radius: 10px;
+      max-width: 600px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
+      position: relative;
+      max-height: 80vh;
+      overflow-y: auto;
+      text-align: left;
+    }
+    
+    #statsModalContent h2 {
+      color: gold;
+      margin-bottom: 20px;
+      font-size: 1.8em;
+      text-align: center;
+    }
+    
+    .stats-section {
+      margin-bottom: 20px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid #444;
+    }
+    
+    .stats-section h3 {
+      color: #FFD700;
+      margin-bottom: 10px;
+    }
+    
+    .card-review-item {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 5px;
+      border-bottom: 1px solid #333;
+    }
+    
+    .card-review-item:nth-child(odd) {
+      background-color: rgba(255, 215, 0, 0.1);
+    }
+    
+    .card-review-content {
+      flex-grow: 1;
+      margin-right: 15px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .card-review-time {
+      color: gold;
+      font-weight: bold;
+      min-width: 70px;
+      text-align: right;
+    }
   </style>
 </head>
 <body>
@@ -333,6 +406,8 @@
     <button class="tooltip" data-tooltip="Aumentar fonte" onclick="adjustFontSize(1)">A+</button>
     <button class="tooltip" data-tooltip="Diminuir fonte" onclick="adjustFontSize(-1)">A-</button>
     <span class="tooltip" data-tooltip="Tempo de revisão" onclick="resetTimer()">⏱️ <span id="timer">00:00</span></span>
+    <!-- NOVO: Botão de estatísticas -->
+    <button class="tooltip" data-tooltip="Estatísticas" onclick="toggleStatsModal()">📈</button>
     <button class="tooltip" data-tooltip="Ajuda" onclick="toggleHelpModal()">❓</button>
   </div>
   <div id="fontSizeFeedback"></div>
@@ -376,19 +451,37 @@
         <p><span>A+</span> Aumentar fonte: Aumenta o tamanho da letra do flashcard.</p>
         <p><span>A-</span> Diminuir fonte: Diminui o tamanho da letra do flashcard.</p>
         <p><span>⏱️</span> Tempo de revisão: Exibe o tempo decorrido e zera ao clicar.</p>
+        <p><span>📈</span> Estatísticas: Mostra seu desempenho e cards para revisão.</p>
         <p><span>⏪</span> Voltar: Navega para o card anterior.</p>
         <p><span>🔀</span> Embaralhar cartas: Reorganiza aleatoriamente a ordem dos flashcards.</p>
         <p><span>⬇️</span> Resposta/Perg.: Vira o flashcard para mostrar a resposta (ou pergunta).</p>
         <p><span>⏩</span> Avançar: Navega para o próximo card.</p>
         <p><span>↪️</span> Virar Card / Próximo: Vira o card se na pergunta, avança se na resposta.</p>
-        <!-- Legenda para o ícone de ampulheta -->
         <p><span>⏳</span> Iniciar/Parar Temporizador: Avança automaticamente para o próximo card após um tempo definido.</p>
-        <!-- Legenda para a Barra de Espaço -->
         <p><span>⏘</span> Barra de Espaço: Vira o card se na pergunta, avança se na resposta (mesma ação do botão ↪️).</p>
-        <!-- NOVO: Legenda para o indicador de progresso -->
         <p><span>💚</span> Indicador Verde: O número em verde mostra que seu progresso foi salvo.</p>
       </div>
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
+    </div>
+  </div>
+  
+  <!-- NOVO: Modal de estatísticas -->
+  <div id="statsModal" style="display:none;">
+    <div id="statsModalContent">
+      <h2>Estatísticas de Estudo</h2>
+      
+      <div class="stats-section">
+        <h3>Último Acesso</h3>
+        <p id="lastAccessDate">Carregando...</p>
+      </div>
+      
+      <div class="stats-section">
+        <h3>Cards para Revisão</h3>
+        <p>Baseado no seu tempo de resposta</p>
+        <div id="reviewCardsList"></div>
+      </div>
+      
+      <button class="close-button" onclick="toggleStatsModal()">Fechar</button>
     </div>
   </div>
   
@@ -416,6 +509,11 @@
     let isAutoAdvanceActive = false;
     const autoAdvanceButton = document.getElementById("autoAdvanceButton");
     const autoAdvanceTimerDisplay = document.getElementById("autoAdvanceTimerDisplay");
+
+    // NOVO: Variáveis para estatísticas
+    let cardResponseTimes = {};
+    let lastAccessDate = null;
+    let cardShowTime = 0; // Tempo (em ms) quando o card atual foi mostrado
 
     // Função para obter parâmetros da URL (sheetId e gid)
     function getQueryParam(name) {
@@ -579,6 +677,12 @@
                   showingFront = true;
                 }
                 
+                // NOVO: Carregar estatísticas
+                loadStatsFromStorage();
+                // Atualizar data do último acesso
+                lastAccessDate = new Date();
+                saveStatsToStorage();
+                
                 updateCard();
             }
         } catch (error) {
@@ -607,6 +711,9 @@
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
       }
+      
+      // NOVO: Registrar o momento em que o card foi mostrado
+      cardShowTime = performance.now();
     }
 
     function nextCard() {
@@ -626,13 +733,24 @@
     }
 
     function flipCard() {
+      // Calcular tempo gasto antes de virar
+      if (showingFront) {
+        const timeSpent = Math.round((performance.now() - cardShowTime) / 1000);
+        recordResponseTime(currentCard, timeSpent);
+      }
+      
       showingFront = !showingFront;
       updateCard();
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
     function reviewAndAdvance() {
+      // Calcular tempo gasto antes de virar se estiver na frente
+      if (showingFront) {
+        const timeSpent = Math.round((performance.now() - cardShowTime) / 1000);
+        recordResponseTime(currentCard, timeSpent);
+      }
+      
       if (showingFront) {
         showingFront = false;
       } else {
@@ -640,7 +758,6 @@
         showingFront = true;
       }
       updateCard();
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
@@ -665,7 +782,6 @@
       shuffleDisplayTimeout = setTimeout(() => {
         shuffleFeedback.style.opacity = 0;
       }, 1500);
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
@@ -679,7 +795,6 @@
       fontSizeDisplayTimeout = setTimeout(() => {
         fontSizeFeedback.style.opacity = 0;
       }, 1500);
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
@@ -695,13 +810,11 @@
 
     function changeCardColor(color) {
       cardContainer.style.backgroundColor = color;
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
     function changeTextColor(color) {
       cardContainer.style.color = color;
-      // NOVO: Salvar o estado
       saveFlashcardState();
     }
 
@@ -725,7 +838,6 @@
         currentCard = number - 1;
         showingFront = true;
         updateCard();
-        // NOVO: Salvar o estado
         saveFlashcardState();
       } else {
         alert("Número do card inválido. Insira um número entre 1 e " + cards.length);
@@ -853,7 +965,119 @@
             autoAdvanceTimerDisplay.textContent = `${autoAdvanceSeconds}s`;
         }
     }
-    // FIM NOVO
+    
+    // NOVO: Função para registrar tempo de resposta
+    function recordResponseTime(cardIndex, timeSpent) {
+      if (!cardResponseTimes[cardIndex]) {
+        cardResponseTimes[cardIndex] = {
+          times: [],
+          avgTime: 0
+        };
+      }
+      
+      cardResponseTimes[cardIndex].times.push(timeSpent);
+      
+      // Calcular nova média
+      const times = cardResponseTimes[cardIndex].times;
+      const sum = times.reduce((a, b) => a + b, 0);
+      cardResponseTimes[cardIndex].avgTime = Math.round(sum / times.length);
+      
+      // Atualizar armazenamento
+      saveStatsToStorage();
+    }
+    
+    // NOVO: Função para salvar estatísticas
+    function saveStatsToStorage() {
+      const stats = {
+        responseTimes: cardResponseTimes,
+        lastAccess: new Date().toISOString()
+      };
+      
+      localStorage.setItem(`flashcardStats_${SHEET_ID}_${GID}`, JSON.stringify(stats));
+    }
+    
+    // NOVO: Função para carregar estatísticas
+    function loadStatsFromStorage() {
+      const savedStats = localStorage.getItem(`flashcardStats_${SHEET_ID}_${GID}`);
+      if (!savedStats) return;
+      
+      try {
+        const stats = JSON.parse(savedStats);
+        cardResponseTimes = stats.responseTimes || {};
+        
+        if (stats.lastAccess) {
+          lastAccessDate = new Date(stats.lastAccess);
+        }
+      } catch (e) {
+        console.error("Erro ao carregar estatísticas:", e);
+      }
+    }
+    
+    // NOVO: Função para abrir/fechar modal de estatísticas
+    function toggleStatsModal() {
+      const modal = document.getElementById("statsModal");
+      if (modal.style.display === "none") {
+        modal.style.display = "flex";
+        updateStatsModal();
+      } else {
+        modal.style.display = "none";
+      }
+    }
+    
+    // NOVO: Função para atualizar conteúdo do modal de estatísticas
+    function updateStatsModal() {
+      // Atualizar data do último acesso
+      const lastAccessElement = document.getElementById("lastAccessDate");
+      if (lastAccessDate) {
+        lastAccessElement.textContent = lastAccessDate.toLocaleString();
+      } else {
+        lastAccessElement.textContent = "Nenhum registro encontrado";
+      }
+      
+      // Gerar lista de cards para revisão
+      const reviewList = document.getElementById("reviewCardsList");
+      reviewList.innerHTML = "";
+      
+      // Criar array de cards com tempo médio
+      const cardsWithTimes = [];
+      for (const [index, data] of Object.entries(cardResponseTimes)) {
+        cardsWithTimes.push({
+          index: parseInt(index),
+          avgTime: data.avgTime,
+          content: initialCards[index].front // Usar a frente do card como conteúdo
+        });
+      }
+      
+      // Ordenar por tempo médio (maiores primeiro)
+      cardsWithTimes.sort((a, b) => b.avgTime - a.avgTime);
+      
+      // Mostrar os top 5
+      const topCards = cardsWithTimes.slice(0, 5);
+      
+      if (topCards.length === 0) {
+        reviewList.innerHTML = "<p>Nenhum dado de estudo disponível ainda.</p>";
+        return;
+      }
+      
+      topCards.forEach(card => {
+        const item = document.createElement("div");
+        item.className = "card-review-item";
+        
+        const content = document.createElement("div");
+        content.className = "card-review-content";
+        content.textContent = card.content.length > 60 
+          ? card.content.substring(0, 60) + "..." 
+          : card.content;
+          
+        const time = document.createElement("div");
+        time.className = "card-review-time";
+        time.textContent = `${card.avgTime}s`;
+        
+        item.appendChild(content);
+        item.appendChild(time);
+        reviewList.appendChild(item);
+      });
+    }
 
     document.addEventListener("keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {

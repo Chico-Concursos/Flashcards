@@ -117,7 +117,7 @@
     }
     .bottom-bar input[type="number"] {
       width: 50px;
-      padding: 1px;
+      padding: 2px;
       font-size: 1em;
     }
     #timer {
@@ -572,8 +572,7 @@
 
     // NOVO: Variáveis para estatísticas
     let cardResponseTimes = {};
-    let lastAccessDate = null;
-    let cardShowTime = 0; // Tempo (em ms) quando o card atual foi mostrado
+    let lastAccessDate = null; // Armazenará a data do último acesso (da sessão anterior)
     
     // NOVO: Estado para controlar se chegou ao fim
     let isFinished = false;
@@ -740,11 +739,8 @@
                   showingFront = true;
                 }
                 
-                // NOVO: Carregar estatísticas
+                // NOVO: Carregar estatísticas (isso carregará a data do último acesso anterior)
                 loadStatsFromStorage();
-                // Atualizar data do último acesso
-                lastAccessDate = new Date();
-                saveStatsToStorage();
                 
                 updateCard();
             }
@@ -1061,16 +1057,13 @@
       const times = cardResponseTimes[cardIndex].times;
       const sum = times.reduce((a, b) => a + b, 0);
       cardResponseTimes[cardIndex].avgTime = Math.round(sum / times.length);
-      
-      // Atualizar armazenamento
-      saveStatsToStorage();
     }
     
-    // NOVO: Função para salvar estatísticas
+    // NOVO: Função para salvar estatísticas (agora chamada apenas no fechamento)
     function saveStatsToStorage() {
       const stats = {
         responseTimes: cardResponseTimes,
-        lastAccess: new Date().toISOString()
+        lastAccess: new Date().toISOString() // Salva a data atual como último acesso
       };
       
       localStorage.setItem(`flashcardStats_${SHEET_ID}_${GID}`, JSON.stringify(stats));
@@ -1085,12 +1078,33 @@
         const stats = JSON.parse(savedStats);
         cardResponseTimes = stats.responseTimes || {};
         
+        // Usa a data de último acesso salva (da sessão anterior)
         if (stats.lastAccess) {
           lastAccessDate = new Date(stats.lastAccess);
         }
       } catch (e) {
         console.error("Erro ao carregar estatísticas:", e);
       }
+    }
+    
+    // NOVO: Função para formatar o conteúdo do card (para o modal de estatísticas)
+    function formatCardContent(content, cardNumber) {
+      // Extrai o conteúdo após o último colchete ]
+      const lastBracketIndex = content.lastIndexOf(']');
+      let extractedContent = content;
+      
+      if (lastBracketIndex !== -1) {
+        extractedContent = content.substring(lastBracketIndex + 1).trim();
+      }
+      
+      // Trunca no ponto de interrogação se existir
+      const questionMarkIndex = extractedContent.indexOf('?');
+      if (questionMarkIndex !== -1) {
+        extractedContent = extractedContent.substring(0, questionMarkIndex + 1);
+      }
+      
+      // Adiciona número do card
+      return `${cardNumber} - ${extractedContent}`;
     }
     
     // NOVO: Função para abrir/fechar modal de estatísticas
@@ -1106,7 +1120,7 @@
     
     // NOVO: Função para atualizar conteúdo do modal de estatísticas
     function updateStatsModal() {
-      // Atualizar data do último acesso
+      // Atualizar data do último acesso (mostra o da sessão anterior)
       const lastAccessElement = document.getElementById("lastAccessDate");
       if (lastAccessDate) {
         lastAccessElement.textContent = lastAccessDate.toLocaleString();
@@ -1120,35 +1134,42 @@
       
       // Criar array de cards com tempo médio
       const cardsWithTimes = [];
+      let totalTime = 0;
+      let count = 0;
+      
       for (const [index, data] of Object.entries(cardResponseTimes)) {
         cardsWithTimes.push({
           index: parseInt(index),
           avgTime: data.avgTime,
-          content: initialCards[index].front // Usar a frente do card como conteúdo
+          content: initialCards[index].front
         });
+        
+        totalTime += data.avgTime;
+        count++;
       }
+      
+      // Calcular média geral
+      const overallAvg = count > 0 ? Math.round(totalTime / count) : 0;
       
       // Ordenar por tempo médio (maiores primeiro)
       cardsWithTimes.sort((a, b) => b.avgTime - a.avgTime);
       
-      // Mostrar os top 5
-      const topCards = cardsWithTimes.slice(0, 5);
-      
-      if (topCards.length === 0) {
+      if (cardsWithTimes.length === 0) {
         reviewList.innerHTML = "<p>Nenhum dado de estudo disponível ainda.</p>";
         return;
       }
       
-      topCards.forEach(card => {
+      // Mostrar todos os cards
+      cardsWithTimes.forEach(card => {
         const item = document.createElement("div");
         item.className = "card-review-item";
         
         const content = document.createElement("div");
         content.className = "card-review-content";
-        content.textContent = card.content.length > 60 
-          ? card.content.substring(0, 60) + "..." 
-          : card.content;
-          
+        
+        // Formata o conteúdo do card
+        content.textContent = formatCardContent(card.content, card.index + 1);
+        
         const time = document.createElement("div");
         time.className = "card-review-time";
         time.textContent = `${card.avgTime}s`;
@@ -1157,6 +1178,24 @@
         item.appendChild(time);
         reviewList.appendChild(item);
       });
+      
+      // Adicionar linha de média geral
+      const footer = document.createElement("div");
+      footer.className = "card-review-item";
+      footer.style.fontWeight = "bold";
+      footer.style.borderTop = "2px solid gold";
+      
+      const footerContent = document.createElement("div");
+      footerContent.className = "card-review-content";
+      footerContent.textContent = "Média Geral:";
+      
+      const footerTime = document.createElement("div");
+      footerTime.className = "card-review-time";
+      footerTime.textContent = `${overallAvg}s`;
+      
+      footer.appendChild(footerContent);
+      footer.appendChild(footerTime);
+      reviewList.appendChild(footer);
     }
     
     // NOVO: Função para mostrar a tela de fim
@@ -1188,11 +1227,13 @@
     loadFlashcardsFromGoogleSheet();
     
     // Salvar estado quando a página for fechada
-    window.addEventListener('beforeunload', saveFlashcardState);
+    window.addEventListener('beforeunload', function() {
+      saveFlashcardState();
+      saveStatsToStorage(); // Salva as estatísticas (incluindo a data atual como último acesso)
+    });
     
     // NOVO: Adicionar evento ao botão de recomeçar
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
   </script>
 </body>
 </html>
-

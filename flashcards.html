@@ -77,7 +77,7 @@
       align-items: center;
       overflow-y: auto;
       overflow-x: hidden;
-      white-space: pre-wrap;
+      white-space: pre-wrap; /* Permite quebras de linha dentro do conteúdo */
     }
     #flashcard-content {
       text-align: center;
@@ -292,7 +292,6 @@
         z-index: 10000;
         display: none;
     }
-    
     /* NOVO: Estilo para o indicador de progresso salvo */
     #cardCounter {
       transition: all 0.5s ease;
@@ -300,23 +299,19 @@
       border-radius: 15px;
       background-color: rgba(0, 0, 0, 0.5);
     }
-    
     #cardCounter.saved {
       background-color: rgba(0, 128, 0, 0.7);
       box-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
     }
-    
     #cardCounter .current-card {
       color: #32CD32;
       font-weight: bold;
       transition: color 0.5s ease;
     }
-    
     #cardCounter .saved .current-card {
       color: #00FF00;
       text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
     }
-    
     /* NOVO: Estilos para o modal de estatísticas */
     #statsModal {
       position: fixed;
@@ -332,7 +327,6 @@
       backdrop-filter: blur(5px);
       -webkit-backdrop-filter: blur(5px);
     }
-    
     #statsModalContent {
       background: #222;
       color: white;
@@ -346,50 +340,42 @@
       overflow-y: auto;
       text-align: left;
     }
-    
     #statsModalContent h2 {
       color: gold;
       margin-bottom: 20px;
       font-size: 1.8em;
       text-align: center;
     }
-    
     .stats-section {
       margin-bottom: 20px;
       padding-bottom: 15px;
       border-bottom: 1px solid #444;
     }
-    
     .stats-section h3 {
       color: #FFD700;
       margin-bottom: 10px;
     }
-    
     .card-review-item {
       display: flex;
       justify-content: space-between;
       padding: 8px 5px;
       border-bottom: 1px solid #333;
     }
-    
     .card-review-item:nth-child(odd) {
       background-color: rgba(255, 215, 0, 0.1);
     }
-    
     .card-review-content {
       flex-grow: 1;
       margin-right: 15px;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    
     .card-review-time {
       color: gold;
       font-weight: bold;
       min-width: 70px;
       text-align: right;
     }
-    
     /* NOVO: Estilos para a tela de fim */
     #end-screen {
       display: none;
@@ -408,7 +394,6 @@
       z-index: 10;
       text-align: center;
     }
-    
     #end-message {
       font-size: 3em;
       font-weight: bold;
@@ -421,7 +406,6 @@
       -webkit-text-fill-color: transparent;
       padding: 20px;
     }
-    
     #restart-button {
       background: linear-gradient(to bottom, #FFD700, #D4AF37);
       color: black;
@@ -434,12 +418,10 @@
       box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
       transition: all 0.3s ease;
     }
-    
     #restart-button:hover {
       transform: scale(1.05);
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
     }
-
     /* NOVO: Estilos para o modal de login */
     #loginModal {
       position: fixed;
@@ -453,7 +435,6 @@
       justify-content: center;
       align-items: center;
     }
-
     .login-container {
       background-color: #111;
       padding: 30px;
@@ -462,28 +443,23 @@
       max-width: 400px;
       box-shadow: 0 0 20px rgba(255,215,0,0.5);
     }
-
     .login-container h2 {
       color: #FFD700;
       text-align: center;
       margin-bottom: 20px;
     }
-
     .login-form {
       display: flex;
       flex-direction: column;
     }
-
     .form-group {
       margin-bottom: 15px;
     }
-
     .form-group label {
       display: block;
       color: white;
       margin-bottom: 5px;
     }
-
     .form-group input {
       width: 100%;
       padding: 10px;
@@ -492,7 +468,6 @@
       background-color: #222;
       color: white;
     }
-
     .login-button {
       width: 100%;
       padding: 12px;
@@ -506,12 +481,10 @@
       position: relative;
       transition: all 0.3s ease;
     }
-
     .login-button:disabled {
       opacity: 0.8;
       cursor: not-allowed;
     }
-
     .login-button .spinner {
       display: none;
       width: 20px;
@@ -526,18 +499,15 @@
       margin-left: -10px;
       margin-top: -10px;
     }
-
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
-
     #loginError {
       color: #ff5555;
       margin-top: 15px;
       text-align: center;
       display: none;
     }
-
     /* NOVO: Estilo para o botão de logout */
     .logout-button {
       background: linear-gradient(to bottom, #ff3333, #cc0000);
@@ -551,11 +521,9 @@
       align-items: center;
       gap: 5px;
     }
-
     .logout-button:hover {
       background: linear-gradient(to bottom, #ff5555, #dd0000);
     }
-
     /* NOVO: Indicador de carregamento */
     .loading-indicator {
       display: none;
@@ -566,7 +534,6 @@
       z-index: 10001;
       text-align: center;
     }
-
     .loading-spinner {
       width: 50px;
       height: 50px;
@@ -576,12 +543,10 @@
       animation: spin 1s ease-in-out infinite;
       margin: 0 auto 15px;
     }
-
     .loading-text {
       color: #FFD700;
       font-size: 1.2em;
     }
-
     @keyframes pulseSuccess {
       0% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
       50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
@@ -694,32 +659,26 @@
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
   </div>
-  
   <!-- NOVO: Modal de estatísticas -->
   <div id="statsModal" style="display:none;">
     <div id="statsModalContent">
       <h2>Estatísticas de Estudo</h2>
-      
       <div class="stats-section">
         <h3>Último Acesso</h3>
         <p id="lastAccessDate">Carregando...</p>
       </div>
-      
       <div class="stats-section">
         <h3>Resumo de Desempenho</h3>
         <p id="performanceSummary">Carregando...</p>
       </div>
-      
       <div class="stats-section">
         <h3>Cards para Revisão</h3>
         <p>Baseado no seu tempo de resposta</p>
         <div id="reviewCardsList"></div>
       </div>
-      
       <button class="close-button" onclick="toggleStatsModal()">Fechar</button>
     </div>
   </div>
-  
   <!-- NOVO: Modal de Login -->
   <div id="loginModal" style="display: flex;">
     <div class="login-container">
@@ -741,19 +700,16 @@
       <div id="loginError"></div>
     </div>
   </div>
-
   <!-- NOVO: Indicador de carregamento -->
   <div class="loading-indicator" id="loadingIndicator">
     <div class="loading-spinner"></div>
     <div class="loading-text">Carregando flashcards...</div>
   </div>
-
   <script>
     // --- CONFIGURAÇÃO INICIAL ---
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfeIybUQvl-cb_VEBITzKF9Nbw97FgWMGWVF6pW-McV5MwVpJOoytWcVKl5dIApOjGZw/exec";
     let isAuthenticated = false;
     let userEmail = '';
-
     let initialCards = [];
     let cards = [];
     let currentCard = 0;
@@ -769,7 +725,6 @@
     let fontSizeDisplayTimeout;
     let shuffleDisplayTimeout;
     let isShuffleActive = false;
-
     // Variáveis para o Temporizador Automático
     let autoAdvanceInterval = null;
     let autoAdvanceSeconds = 0;
@@ -777,34 +732,27 @@
     let isAutoAdvanceActive = false;
     const autoAdvanceButton = document.getElementById("autoAdvanceButton");
     const autoAdvanceTimerDisplay = document.getElementById("autoAdvanceTimerDisplay");
-
     // NOVO: Variáveis para estatísticas
     let cardResponseTimes = {};
     let lastAccessDate = null;
-    
     // NOVO: Estado para controlar se chegou ao fim
     let isFinished = false;
-    
     // NOVO: Variáveis para categorias
     let categories = [];
     let currentCategory = "Todas";
-    
     // NOVO: Variáveis para medição de tempo de resposta
     let cardViewStartTime = 0;
-
     // --- FUNÇÕES DE AUTENTICAÇÃO ---
     function showLoginError(message) {
       const errorElement = document.getElementById('loginError');
       errorElement.textContent = message;
       errorElement.style.display = 'block';
     }
-
     function hideLoginModal() {
       document.getElementById('loginModal').style.display = 'none';
       isAuthenticated = true;
       document.getElementById("flashcard-content").textContent = "Carregando flashcards...";
     }
-
     // NOVO: Função para mostrar/ocultar indicador de carregamento
     function showLoadingIndicator(message = "Carregando...") {
       const indicator = document.getElementById('loadingIndicator');
@@ -812,17 +760,14 @@
       text.textContent = message;
       indicator.style.display = 'block';
     }
-
     function hideLoadingIndicator() {
       document.getElementById('loadingIndicator').style.display = 'none';
     }
-
     // NOVO: Função para mostrar/ocultar spinner no botão de login
     function setLoginButtonLoading(isLoading) {
       const button = document.getElementById('loginSubmitBtn');
       const spinner = document.getElementById('loginSpinner');
       const text = document.getElementById('loginBtnText');
-      
       if (isLoading) {
         button.disabled = true;
         text.style.visibility = 'hidden';
@@ -833,53 +778,42 @@
         spinner.style.display = 'none';
       }
     }
-
     // NOVO: Função de logout sem confirmação
     function logout() {
       // Limpar dados de autenticação
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userEmail');
-      
       // Redefinir estado
       isAuthenticated = false;
       userEmail = '';
-      
       // Mostrar tela de login
       document.getElementById('loginModal').style.display = 'flex';
       document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
       cardCounter.textContent = "0/0";
-      
       // Parar temporizador automático se estiver ativo
       if (isAutoAdvanceActive) {
         stopAutoAdvance();
       }
     }
-
     async function login(event) {
       if (event) event.preventDefault();
-      
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
-      
       if (!email || !password) {
         showLoginError('Por favor, preencha todos os campos.');
         return;
       }
-
       // NOVO: Feedback visual imediato
       setLoginButtonLoading(true);
       document.getElementById('loginError').style.display = 'none';
-
       try {
         // Usando application/x-www-form-urlencoded como especificado no código original
         const formData = new URLSearchParams();
         formData.append('email', email);
         formData.append('password', password);
-        
         // NOVO: Usando AbortController para timeout
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout de 10 segundos
-        
         const response = await fetch(WEB_APP_URL, {
           method: 'POST',
           headers: {
@@ -888,35 +822,27 @@
           body: formData,
           signal: controller.signal
         });
-        
         clearTimeout(timeoutId);
-        
         // Verificar se a resposta é válida
         if (!response.ok) {
           throw new Error(`Erro HTTP: ${response.status}`);
         }
-        
         // Tentar analisar a resposta como JSON
         const result = await response.json();
-        
         if (result.success) {
           userEmail = email;
           // Salvar autenticação no localStorage
           localStorage.setItem('isAuthenticated', 'true');
           localStorage.setItem('userEmail', userEmail);
           hideLoginModal();
-          
           // NOVO: Mostrar indicador de carregamento imediatamente
           showLoadingIndicator();
-          
           // NOVO: Mostra feedback visual de sucesso
           cardContainer.style.animation = 'none';
           void cardContainer.offsetWidth; // Trigger reflow
           cardContainer.style.animation = 'pulseSuccess 2s';
-          
           // Carrega os flashcards após autenticação
           await loadFlashcardsFromGoogleSheet();
-          
           // NOVO: Esconder indicador de carregamento após carregar os cards
           hideLoadingIndicator();
         } else {
@@ -933,7 +859,6 @@
         setLoginButtonLoading(false);
       }
     }
-
     // Função para verificar autenticação ao carregar a página
     function checkAuthentication() {
       const savedAuth = localStorage.getItem('isAuthenticated');
@@ -952,23 +877,19 @@
         document.getElementById('loginModal').style.display = 'flex';
       }
     }
-
     // --- FUNÇÕES PRINCIPAIS ---
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
-
     // Obter sheetId e gid da URL
     const SHEET_ID = getQueryParam('sheetId');
     const GID = getQueryParam('gid') || '0';
-
     // Função para construir a URL de fetch usando sheetId và gid
     function buildGoogleSheetCsvUrl(sheetId, gid) {
         if (!sheetId) return null;
         return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
     }
-
     // Parser CSV robusto
     function parseCSVLine(line) {
         const result = [];
@@ -977,7 +898,6 @@
         for (let i = 0; i < line.length; i++) {
             const char = line[i];
             const nextChar = line[i + 1];
-
             if (char === '"' && !inQuotes) {
                 inQuotes = true;
             } else if (char === '"' && nextChar === '"' && inQuotes) {
@@ -995,11 +915,51 @@
         result.push(current.trim());
         return result;
     }
+    // --- FUNÇÕES AUXILIARES PARA O PARSER CSV ---
+    // NOVA FUNÇÃO: Divide o texto CSV em registros (linhas), respeitando as aspas
+    function splitCSVRecords(csvText) {
+        const records = [];
+        let currentRecord = '';
+        let inQuotes = false;
+        let i = 0;
 
+        while (i < csvText.length) {
+            const char = csvText[i];
+            const nextChar = csvText[i + 1];
+
+            if (char === '"' && !inQuotes) {
+                inQuotes = true;
+            } else if (char === '"' && nextChar === '"' && inQuotes) {
+                // Aspas duplas dentro de um campo entre aspas são escapadas como ""
+                currentRecord += '""'; // Adiciona as duas aspas ao registro
+                i += 2; // Pula as duas aspas
+                continue;
+            } else if (char === '"' && inQuotes) {
+                inQuotes = false;
+            } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !inQuotes) {
+                // Encontrou uma quebra de linha fora das aspas, finaliza o registro
+                if (char === '\r') {
+                    i++; // Pula o \r para \r\n
+                }
+                records.push(currentRecord);
+                currentRecord = '';
+                i++;
+                continue;
+            }
+            currentRecord += char;
+            i++;
+        }
+
+        // Adiciona o último registro se não terminar com uma quebra de linha
+        if (currentRecord !== '') {
+            records.push(currentRecord);
+        }
+
+        return records;
+    }
     // NOVO: Funções para salvar e carregar o estado
     function saveFlashcardState() {
       if (!isAuthenticated) return;
-      
       const state = {
         currentCard,
         showingFront,
@@ -1012,11 +972,9 @@
       cardCounter.classList.add('saved');
       setTimeout(() => cardCounter.classList.remove('saved'), 1000);
     }
-
     function loadFlashcardState() {
       const savedState = localStorage.getItem('flashcardState');
       if (!savedState) return false;
-      
       try {
         const state = JSON.parse(savedState);
         if (state.deckId === `${SHEET_ID}_${GID}`) {
@@ -1024,7 +982,6 @@
           showingFront = state.showingFront;
           fontSize = state.fontSize;
           currentCategory = state.currentCategory || "Todas";
-          
           if (state.isShuffleActive !== isShuffleActive) {
             isShuffleActive = state.isShuffleActive;
             if (isShuffleActive) {
@@ -1040,14 +997,12 @@
       }
       return false;
     }
-
     async function loadFlashcardsFromGoogleSheet() {
       if (!isAuthenticated) {
         document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
         cardCounter.textContent = "0/0";
         return;
       }
-      
       const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
       if (!csvUrl) {
           document.getElementById("flashcard-content").textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL.";
@@ -1058,37 +1013,37 @@
           // NOVO: Usando AbortController para timeout no carregamento dos cards
           const controller = new AbortController();
           const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout de 15 segundos
-          
           const response = await fetch(csvUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
-          
           if (!response.ok) {
               const errorText = await response.text();
               throw new Error(`Erro HTTP! Status: ${response.status}. Detalhes: ${errorText.substring(0, 200)}...`);
           }
           const text = await response.text();
-          const lines = text.split(/\r?\n/).slice(1).filter(line => line.trim() !== "");
-          let loadedCards = [];
 
+          // --- ALTERAÇÃO PRINCIPAL ---
+          // Usa a nova função para dividir o CSV corretamente
+          const lines = splitCSVRecords(text).slice(1).filter(line => line.trim() !== "");
+
+          let loadedCards = [];
           lines.forEach(line => {
+              // Usa a função parseCSVLine existente para processar cada linha lógica
               const cols = parseCSVLine(line);
               if (cols && cols.length >= 2) {
                   let rawFrontText = cols[0];
                   let rawBackText = cols[1];
                   let frontText = (rawFrontText || '').trim();
                   let backText = (rawBackText || '').trim();
-                  frontText = frontText.replace(/"/g, '*');
-                  backText = backText.replace(/"/g, '*');
-                  
+
                   // NOVO: Extrair categoria da coluna C
                   let category = "Geral";
                   if (cols.length >= 3) {
                     category = (cols[2] || "Geral").trim();
                   }
-
                   loadedCards.push({ front: frontText, back: backText, category: category });
               }
           });
+          // --- FIM DA ALTERAÇÃO PRINCIPAL ---
 
           if (loadedCards.length === 0) {
               document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
@@ -1096,12 +1051,10 @@
           } else {
               initialCards = loadedCards;
               cards = [...initialCards];
-              
               // NOVO: Extrair categorias únicas
               categories = ["Todas", ...new Set(loadedCards.map(card => card.category))];
               const categorySelect = document.getElementById("categoryFilter");
               categorySelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-              
               const hasSavedState = loadFlashcardState();
               if (!hasSavedState) {
                 currentCard = 0;
@@ -1111,7 +1064,6 @@
                 // Aplica o filtro de categoria salvo
                 filterByCategory(currentCategory, true);
               }
-              
               // Carregar estatísticas ANTES de atualizar o card
               loadStatsFromStorage();
               updateCard();
@@ -1122,100 +1074,78 @@
           cardCounter.textContent = "0/0";
       }
     }
-
     // NOVO: Função para filtrar por categoria
     function filterByCategory(category, skipSave = false) {
       if (!isAuthenticated) return;
-      
       currentCategory = category;
       const categorySelect = document.getElementById("categoryFilter");
       categorySelect.value = category;
-      
       if (category === "Todas") {
         cards = [...initialCards];
       } else {
         cards = initialCards.filter(card => card.category === category);
       }
-      
       if (isShuffleActive) {
         cards = [...cards].sort(() => Math.random() - 0.5);
       }
-      
       // Não resetar o currentCard se skipSave for true (estamos carregando um estado)
       if (!skipSave) {
         currentCard = 0;
         showingFront = true;
       }
-      
       updateCard();
-      
       if (!skipSave) {
         saveFlashcardState();
       }
     }
-
     function updateCard() {
+      // CORREÇÃO: Conserta a linha de verificação que estava danificada
       if (!isAuthenticated || cards.length === 0 || isFinished) return;
-      
       const card = cards[currentCard];
-      
       document.getElementById("flashcard-content").textContent = showingFront ? card.front : card.back;
-      
       cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
       document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
-
       // Iniciar medição de tempo para a pergunta
       if (showingFront) {
         startResponseTimeMeasurement();
       }
-
       if (isAutoAdvanceActive) {
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
       }
     }
-
     function nextCard() {
       if (!isAuthenticated || isFinished) return;
-      
       if (currentCard === cards.length - 1) {
         showEndScreen();
         saveFlashcardState();
         return;
       }
-      
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       updateCard();
       saveFlashcardState();
     }
-
     function prevCard() {
       if (!isAuthenticated || isFinished) return;
-      
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
       updateCard();
       saveFlashcardState();
     }
-
     function flipCard() {
       if (!isAuthenticated || isFinished) return;
-      
       // Se está virando para ver a resposta, registrar o tempo
       if (showingFront) {
         endResponseTimeMeasurement();
       }
-      
       showingFront = !showingFront;
       updateCard();
       saveFlashcardState();
     }
-
     // NOVA FUNÇÃO: Virar Card / Anterior (comportamento inverso do reviewAndAdvance)
     function reviewAndRetreat() {
       if (!isAuthenticated || isFinished) return;
-      
       if (!showingFront) {
         // Se está na resposta, vira para a pergunta do mesmo card
         showingFront = true;
@@ -1234,10 +1164,8 @@
       }
       saveFlashcardState();
     }
-
     function reviewAndAdvance() {
       if (!isAuthenticated || isFinished) return;
-      
       if (showingFront) {
         // Se está na pergunta, virar para resposta e registrar tempo
         endResponseTimeMeasurement();
@@ -1249,10 +1177,8 @@
       }
       saveFlashcardState();
     }
-
     function toggleShuffleMode() {
       if (!isAuthenticated || isFinished) return;
-      
       if (!isShuffleActive) {
         for (let i = cards.length - 1; i > 0; i--) {
           const j = Math.floor(Math.random() * (i + 1));
@@ -1279,10 +1205,8 @@
       }, 1500);
       saveFlashcardState();
     }
-
     function adjustFontSize(change) {
       if (!isAuthenticated) return;
-      
       fontSize += change * 1.2;
       fontSize = Math.max(10, Math.min(48, fontSize));
       document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
@@ -1294,54 +1218,40 @@
       }, 1500);
       saveFlashcardState();
     }
-
     function toggleCardColorMenu() {
       if (!isAuthenticated) return;
-      
       const menu = document.getElementById("cardColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
-
     function toggleTextColorMenu() {
       if (!isAuthenticated) return;
-      
       const menu = document.getElementById("textColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
-
     function changeCardColor(color) {
       if (!isAuthenticated) return;
-      
       cardContainer.style.backgroundColor = color;
       saveFlashcardState();
     }
-
     function changeTextColor(color) {
       if (!isAuthenticated) return;
-      
       document.getElementById("flashcard-content").style.color = color;
       saveFlashcardState();
     }
-
     function resetTimer() {
       if (!isAuthenticated) return;
-      
       timerSeconds = 0;
       timerElement.textContent = "00:00";
     }
-
     function updateTimer() {
       if (!isAuthenticated) return;
-      
       timerSeconds++;
       const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
       const seconds = String(timerSeconds % 60).padStart(2, '0');
       timerElement.textContent = `${minutes}:${seconds}`;
     }
-
     function goToSpecificCard() {
       if (!isAuthenticated || isFinished) return;
-      
       const value = document.getElementById("goToCard").value;
       const number = parseInt(value, 10);
       if (!isNaN(number) && number >= 1 && number <= cards.length) {
@@ -1354,7 +1264,6 @@
       }
       document.getElementById("goToCard").value = '';
     }
-
     function showTooltipOnHover(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.add("show-tooltip");
@@ -1362,37 +1271,30 @@
         el.classList.remove("show-tooltip");
       }, 1000);
     }
-
     function hideTooltipOnLeave(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.remove("show-tooltip");
     }
-
     function toggleHelpModal() {
       helpModal.style.display = helpModal.style.display === "none" ? "flex" : "none";
     }
-
     // Funções para o Temporizador Automático
     function toggleAutoAdvance() {
       if (!isAuthenticated) return;
-      
       if (isAutoAdvanceActive) stopAutoAdvance();
       else startAutoAdvance();
     }
-
     function startAutoAdvance() {
         if (isAutoAdvanceActive) return;
         document.getElementById("autoAdvanceDelayInput").value = autoAdvanceDelay;
         document.getElementById("autoAdvanceSetup").style.display = "flex";
         document.getElementById("autoAdvanceOverlay").style.display = "block";
     }
-
     function confirmAutoAdvanceDelay() {
         const userInput = document.getElementById("autoAdvanceDelayInput").value;
         const newDelay = parseInt(userInput, 10);
         document.getElementById("autoAdvanceSetup").style.display = "none";
         document.getElementById("autoAdvanceOverlay").style.display = "none";
-
         if (isNaN(newDelay) || newDelay <= 0) {
             const feedback = document.createElement('div');
             feedback.textContent = "Número inválido!";
@@ -1414,9 +1316,7 @@
         isAutoAdvanceActive = true;
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
-
         if (autoAdvanceButton) autoAdvanceButton.textContent = "⏰";
-
         autoAdvanceInterval = setInterval(() => {
             autoAdvanceSeconds--;
             updateAutoAdvanceDisplay();
@@ -1427,12 +1327,10 @@
             }
         }, 1000);
     }
-
     function cancelAutoAdvanceDelay() {
         document.getElementById("autoAdvanceSetup").style.display = "none";
         document.getElementById("autoAdvanceOverlay").style.display = "none";
     }
-
     function stopAutoAdvance() {
         if (!isAutoAdvanceActive) return;
         clearInterval(autoAdvanceInterval);
@@ -1442,15 +1340,12 @@
         updateAutoAdvanceDisplay();
         if (autoAdvanceButton) autoAdvanceButton.textContent = "⏳";
     }
-
     function updateAutoAdvanceDisplay() {
         if (autoAdvanceTimerDisplay) autoAdvanceTimerDisplay.textContent = `${autoAdvanceSeconds}s`;
     }
-    
     // NOVO: Função para registrar tempo de resposta
     function recordResponseTime(cardIndex, timeSpent) {
       if (!isAuthenticated) return;
-      
       if (!cardResponseTimes[cardIndex]) {
         cardResponseTimes[cardIndex] = { times: [], avgTime: 0 };
       }
@@ -1459,18 +1354,15 @@
       const sum = times.reduce((a, b) => a + b, 0);
       cardResponseTimes[cardIndex].avgTime = Math.round(sum / times.length);
     }
-    
     // NOVO: Função para salvar estatísticas
     function saveStatsToStorage() {
       if (!isAuthenticated) return;
-      
       const stats = {
         responseTimes: cardResponseTimes,
         lastAccess: new Date().toISOString()
       };
       localStorage.setItem(`flashcardStats_${SHEET_ID}_${GID}`, JSON.stringify(stats));
     }
-    
     // NOVO: Função para carregar estatísticas
     function loadStatsFromStorage() {
       const savedStats = localStorage.getItem(`flashcardStats_${SHEET_ID}_${GID}`);
@@ -1483,12 +1375,10 @@
         console.error("Erro ao carregar estatísticas:", e);
       }
     }
-    
     // NOVO: Iniciar medição de tempo quando um card é mostrado
     function startResponseTimeMeasurement() {
       cardViewStartTime = Date.now();
     }
-
     // NOVO: Finalizar medição de tempo quando o card é virado
     function endResponseTimeMeasurement() {
       if (cardViewStartTime > 0) {
@@ -1498,11 +1388,9 @@
         cardViewStartTime = 0;
       }
     }
-    
     // NOVO: Função para preencher o modal de estatísticas
     function updateStatsModal() {
       if (!isAuthenticated) return;
-      
       // Atualiza a data do último acesso
       const lastAccessElement = document.getElementById("lastAccessDate");
       if (lastAccessDate) {
@@ -1510,43 +1398,34 @@
       } else {
         lastAccessElement.textContent = "Nenhum registro encontrado.";
       }
-      
       // Calcula e exibe o resumo de desempenho
       const performanceElement = document.getElementById("performanceSummary");
       const cardEntries = Object.entries(cardResponseTimes);
-      
       if (cardEntries.length === 0) {
         performanceElement.innerHTML = '<p>Nenhum dado de desempenho disponível.</p>';
       } else {
         // Calcula a média geral de tempo
         let totalTime = 0;
         let totalCards = 0;
-        
         cardEntries.forEach(([cardIndex, data]) => {
           totalTime += data.avgTime * data.times.length;
           totalCards += data.times.length;
         });
-        
         const avgTime = totalCards > 0 ? Math.round(totalTime / totalCards) : 0;
-        
         performanceElement.innerHTML = `
           <p>Total de cards revisados: <strong>${cardEntries.length}</strong></p>
           <p>Tempo médio por card: <strong>${avgTime}s</strong></p>
         `;
       }
-      
       // Cria a lista de cards para revisão (ordenados pelo tempo médio de resposta, decrescente)
       const reviewCardsListElement = document.getElementById("reviewCardsList");
       reviewCardsListElement.innerHTML = '';
-      
       if (cardEntries.length === 0) {
         reviewCardsListElement.innerHTML = '<p>Nenhum dado de tempo de resposta disponível.</p>';
         return;
       }
-      
       // Ordena pelos cards com maior tempo médio de resposta
       cardEntries.sort((a, b) => b[1].avgTime - a[1].avgTime);
-      
       cardEntries.forEach(([cardIndex, data]) => {
         const card = initialCards[cardIndex];
         if (card) {
@@ -1562,11 +1441,9 @@
         }
       });
     }
-    
     // NOVO: Função para abrir/fechar modal de estatísticas
     function toggleStatsModal() {
       if (!isAuthenticated) return;
-      
       const modal = document.getElementById("statsModal");
       if (modal.style.display === "none") {
         modal.style.display = "flex";
@@ -1575,20 +1452,16 @@
         modal.style.display = "none";
       }
     }
-    
     // NOVO: Função para mostrar a tela de fim
     function showEndScreen() {
       if (!isAuthenticated) return;
-      
       document.getElementById('flashcard-content').style.display = 'none';
       document.getElementById('end-screen').style.display = 'flex';
       isFinished = true;
     }
-    
     // NOVO: Função para recomeçar os flashcards
     function restartFlashcards() {
       if (!isAuthenticated) return;
-      
       document.getElementById('end-screen').style.display = 'none';
       document.getElementById('flashcard-content').style.display = 'block';
       currentCard = 0;
@@ -1597,30 +1470,24 @@
       updateCard();
       saveFlashcardState();
     }
-
     // --- INICIALIZAÇÃO ---
     document.addEventListener("keydown", (e) => {
       if (e.key === " " || e.key === "Enter") {
         e.preventDefault();
         reviewAndAdvance();
       }
-      
       // NOVO: Tecla Alt para a função Virar Card / Anterior
       if (e.key === "Alt") {
         e.preventDefault();
         reviewAndRetreat();
       }
     });
-
     // Configura o temporizador
     setInterval(updateTimer, 1000);
-    
     // Adiciona evento de submit ao formulário de login
     document.getElementById('loginForm').addEventListener('submit', login);
-    
     // Verifica autenticação quando a página carrega
     document.addEventListener('DOMContentLoaded', checkAuthentication);
-    
     // Evento para botão de recomeçar
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
   </script>

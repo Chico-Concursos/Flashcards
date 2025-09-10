@@ -22,7 +22,6 @@
       padding: 0px;
       flex-wrap: wrap;
       gap: 10px;
-      margin-bottom: 0px;
     }
     .top-bar button,
     .top-bar select {
@@ -37,16 +36,11 @@
       font-size: 1.0em;
       color: white;
     }
-    .top-bar .timer-icon {
-        font-size: 1.0em;
-        vertical-align: middle;
-    }
     .top-bar select {
       background-color: #222;
       border: 1px solid #555;
       padding: 2px 4px;
     }
-    /* Tooltip para botões do topo */
     .tooltip:hover::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -67,8 +61,7 @@
       color: black;
       width: 96%;
       height: 75vh;
-      margin: 1px auto;
-      margin-top: 0px;
+      margin: 0px auto;
       padding: 40px 20px;
       border-radius: 10px;
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
@@ -77,7 +70,7 @@
       align-items: center;
       overflow-y: auto;
       overflow-x: hidden;
-      white-space: pre-wrap; /* Permite quebras de linha dentro do conteúdo */
+      white-space: pre-wrap;
     }
     #flashcard-content {
       text-align: center;
@@ -105,7 +98,6 @@
       color: white;
       position: relative;
     }
-    /* Tooltip para botões da base - aparece e some com JS */
     .bottom-bar button::after {
       content: attr(data-tooltip);
       position: absolute;
@@ -127,14 +119,13 @@
       opacity: 1;
     }
     .bottom-bar input[type="number"] {
-      width: 50px;
-      padding: 2px;
+      width: 55px;
+      padding: 1,5px;
       font-size: 1em;
     }
     #timer {
       cursor: pointer;
     }
-    /* Styles for the help modal */
     #helpModal {
       position: fixed;
       top: 0;
@@ -209,29 +200,12 @@
         transition: opacity 0.5s ease-out;
         pointer-events: none;
     }
-    #shuffleFeedback {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background-color: rgba(0, 0, 0, 0.7);
-        color: gold;
-        padding: 10px 15px;
-        border-radius: 8px;
-        font-size: 1.5em;
-        z-index: 10000;
-        opacity: 0;
-        transition: opacity 0.5s ease-out;
-        pointer-events: none;
-    }
-    /* Estilo para o display do tempo do temporizador automático */
     #autoAdvanceTimerDisplay {
       font-size: 1.0em;
       color: white;
       min-width: 40px;
       text-align: center;
     }
-    /* Estilos para o modal de configuração do temporizador */
     #autoAdvanceSetup {
         position: fixed;
         top: 50%;
@@ -280,7 +254,7 @@
         color: black;
     }
     #autoAdvanceSetup button:first-child:hover {
-        background-color: 'none';
+        background-color: #e5c300;
     }
     #autoAdvanceOverlay {
         position: fixed;
@@ -292,7 +266,6 @@
         z-index: 10000;
         display: none;
     }
-    /* NOVO: Estilo para o indicador de progresso salvo */
     #cardCounter {
       transition: all 0.5s ease;
       padding: 3px 10px;
@@ -312,7 +285,6 @@
       color: #00FF00;
       text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
     }
-    /* NOVO: Estilos para o modal de estatísticas */
     #statsModal {
       position: fixed;
       top: 0;
@@ -376,7 +348,6 @@
       min-width: 70px;
       text-align: right;
     }
-    /* NOVO: Estilos para a tela de fim */
     #end-screen {
       display: none;
       flex-direction: column;
@@ -422,7 +393,6 @@
       transform: scale(1.05);
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
     }
-    /* NOVO: Estilos para o modal de login */
     #loginModal {
       position: fixed;
       top: 0;
@@ -508,7 +478,6 @@
       text-align: center;
       display: none;
     }
-    /* NOVO: Estilo para o botão de logout */
     .logout-button {
       background: linear-gradient(to bottom, #ff3333, #cc0000);
       color: white;
@@ -524,7 +493,6 @@
     .logout-button:hover {
       background: linear-gradient(to bottom, #ff5555, #dd0000);
     }
-    /* NOVO: Indicador de carregamento */
     .loading-indicator {
       display: none;
       position: fixed;
@@ -551,6 +519,116 @@
       0% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
       50% { box-shadow: 0 0 20px rgba(0, 255, 0, 0.8); }
       100% { box-shadow: 0 0 5px rgba(0, 255, 0, 0.5); }
+    }
+    #sessionExpiredModal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.9);
+      z-index: 10000;
+      display: none;
+      justify-content: center;
+      align-items: center;
+    }
+    .session-expired-container {
+      background-color: #111;
+      padding: 30px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 0 20px rgba(255,0,0,0.5);
+      text-align: center;
+    }
+    .session-expired-container h2 {
+      color: #ff5555;
+      margin-bottom: 20px;
+    }
+    .session-expired-container p {
+      color: white;
+      margin-bottom: 20px;
+    }
+    .accuracy-button {
+      font-size: 1.4em !important;
+      transition: all 0.3s ease;
+    }
+    .accuracy-button.correct {
+      color: #4CAF50 !important;
+      text-shadow: 0 0 10px rgba(76, 175, 80, 0.7);
+    }
+    .accuracy-button.incorrect {
+      color: #F44336 !important;
+      text-shadow: 0 0 10px rgba(244, 67, 54, 0.7);
+    }
+    .stats-tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #444;
+    }
+    .stats-tab {
+      padding: 10px 20px;
+      cursor: pointer;
+      background-color: #333;
+      margin-right: 5px;
+      border-radius: 5px 5px 0 0;
+      transition: all 0.3s ease;
+    }
+    .stats-tab.active {
+      background-color: #FFD700;
+      color: black;
+      font-weight: bold;
+    }
+    .stats-content {
+      display: none;
+    }
+    .stats-content.active {
+      display: block;
+    }
+    .accuracy-summary {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .accuracy-meter {
+      display: flex;
+      height: 30px;
+      background-color: #333;
+      border-radius: 15px;
+      overflow: hidden;
+      margin: 15px 0;
+    }
+    .correct-portion {
+      background-color: #4CAF50;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .incorrect-portion {
+      background-color: #F44336;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+    }
+    .review-option {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: rgba(255, 215, 0, 0.1);
+      border-radius: 5px;
+      text-align: center;
+    }
+    .review-button {
+      background: linear-gradient(to bottom, #FFD700, #D4AF37);
+      color: black;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 10px;
     }
   </style>
 </head>
@@ -581,22 +659,17 @@
     <button class="tooltip" data-tooltip="Aumentar fonte" onclick="adjustFontSize(1)">A+</button>
     <button class="tooltip" data-tooltip="Diminuir fonte" onclick="adjustFontSize(-1)">A-</button>
     <span class="tooltip" data-tooltip="Tempo de revisão" onclick="resetTimer()">⏱️ <span id="timer">00:00</span></span>
-    <!-- NOVO: Botão de estatísticas -->
     <button class="tooltip" data-tooltip="Estatísticas" onclick="toggleStatsModal()">📈</button>
-    <!-- NOVO: Seletor de Categoria -->
     <select id="categoryFilter" class="tooltip" data-tooltip="Filtrar por categoria" onchange="filterByCategory(this.value)">
       <option value="Todas">Todas Categorias</option>
-      <!-- Opções serão preenchidas dinamicamente -->
     </select>
-    <!-- NOVO: Botão de Logout -->
+    <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar apenas cards com erro" onclick="toggleReviewErrors()" style="display:none;">🔍</button>
     <button class="logout-button" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
     <button class="tooltip" data-tooltip="Ajuda" onclick="toggleHelpModal()">❓</button>
   </div>
   <div id="fontSizeFeedback"></div>
-  <div id="shuffleFeedback"></div>
-  <!-- Elementos para definir o tempo do temporizador -->
   <div id="autoAdvanceSetup">
       <h3>Tempo Automático (segundos)</h3>
       <input type="number" id="autoAdvanceDelayInput" min="1" value="5" />
@@ -610,21 +683,22 @@
     <div id="flashcard-content">
       Por favor, faça login para acessar os flashcards.
     </div>
-    <!-- NOVO: Tela de fim -->
     <div id="end-screen">
       <div id="end-message">Chico Concursos<br>Fim</div>
+      <div id="accuracy-results" style="margin-bottom: 20px; font-size: 1.5em;"></div>
       <button id="restart-button">RECOMEÇAR</button>
+      <button id="review-errors-button" class="review-button" style="margin-top: 15px; display: none;">REVISAR ERROS</button>
     </div>
   </div>
   <div class="bottom-bar">
-    <!-- Grupo para o Temporizador Automático -->
     <div style="display: flex; align-items: center; gap: 5px;">
       <button id="autoAdvanceButton" data-tooltip="Iniciar/Parar Temporizador" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleAutoAdvance()" style="font-size: 1.2em;">⏳</button>
       <span id="autoAdvanceTimerDisplay" style="font-size: 1.0em; min-width: 40px;">0s</span>
     </div>
     <input type="number" id="goToCard" min="1" placeholder="1" onchange="goToSpecificCard()" />
-    <!-- NOVO: Contador de cards com classe para indicador de progresso -->
     <span id="cardCounter">0/0</span>
+    <button class="accuracy-button" data-tooltip="Acertei (Tecla 1)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="markAsCorrect()" id="correctButton">✅</button>
+    <button class="accuracy-button" data-tooltip="Errei (Tecla 2)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="markAsIncorrect()" id="incorrectButton">❌</button>
     <button data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
 	<button data-tooltip="Virar Card / Anterior (Alt)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndRetreat()">↩️</button>
     <button data-tooltip="Voltar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()">⏪</button>
@@ -643,6 +717,9 @@
         <p><span>⏱️</span> Tempo de revisão: Exibe o tempo decorrido e zera ao clicar.</p>
         <p><span>📈</span> Estatísticas: Mostra seu desempenho and cards para revisão.</p>
         <p><span>📂</span> Categoria: Filtra os cards por categoria.</p>
+        <p><span>🔍</span> Revisar Erros: Filtra apenas os cards marcados como erro.</p>
+        <p><span>✅</span> Acertei: Marca o card atual como respondido corretamente.</p>
+        <p><span>❌</span> Errei: Marca o card atual como respondido incorretamente.</p>
         <p><span>⏪</span> Voltar: Navega para o card anterior.</p>
         <p><span>↩️</span> Virar Card / Anterior: Vira o card se na resposta, retrocede se na pergunta (tecla Alt).</p>
         <p><span>🔀</span> Embaralhar cartas: Reorganiza aleatoriamente a ordem dos flashcards.</p>
@@ -652,6 +729,8 @@
         <p><span>⏳</span> Iniciar/Parar Temporizador: Avança automaticamente para o próximo card após um tempo definido.</p>
         <p><span>⏘</span> Barra de Espaço: Vira o card se na pergunta, avança se na resposta (mesma ação do botão ↪️).</p>
 		<p><span>Alt</span> Virar Card / Anterior: Vira o card se na resposta, retrocede se na pergunta (tecla Alt).</p>
+    <p><span>1</span> Tecla 1: Marca o card como acerto.</p>
+    <p><span>2</span> Tecla 2: Marca o card como erro.</p>
         <p><span>💚</span> Indicador Verde: O número em verde mostra que seu progresso foi salvo.</p>
         <p><span>🚪</span> Sair: Encerra a sessão atual e retorna à tela de login.</p>
         <p><span>🏁</span> Tela Final: Exibida quando todos os flashcards são revisados.</p>
@@ -659,27 +738,58 @@
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
   </div>
-  <!-- NOVO: Modal de estatísticas -->
   <div id="statsModal" style="display:none;">
     <div id="statsModalContent">
       <h2>Estatísticas de Estudo</h2>
-      <div class="stats-section">
-        <h3>Último Acesso</h3>
-        <p id="lastAccessDate">Carregando...</p>
+      
+      <div class="stats-tabs">
+        <div class="stats-tab active" onclick="changeStatsTab('time')">Tempo por Card</div>
+        <div class="stats-tab" onclick="changeStatsTab('accuracy')">Acertos</div>
       </div>
-      <div class="stats-section">
-        <h3>Resumo de Desempenho</h3>
-        <p id="performanceSummary">Carregando...</p>
+      
+      <div class="stats-content active" id="timeStats">
+        <div class="stats-section">
+          <h3>Último Acesso</h3>
+          <p id="lastAccessDate">Carregando...</p>
+        </div>
+        <div class="stats-section">
+          <h3>Resumo de Desempenho</h3>
+          <p id="performanceSummary">Carregando...</p>
+        </div>
+        <div class="stats-section">
+          <h3>Cards para Revisão</h3>
+          <p>Baseado no seu tempo de resposta</p>
+          <div id="reviewCardsList"></div>
+        </div>
       </div>
-      <div class="stats-section">
-        <h3>Cards para Revisão</h3>
-        <p>Baseado no seu tempo de resposta</p>
-        <div id="reviewCardsList"></div>
+      
+      <div class="stats-content" id="accuracyStats">
+        <div class="stats-section">
+          <h3>Desempenho de Acertos</h3>
+          <div class="accuracy-summary">
+            <p>Total de cards: <span id="totalCardsCount">0</span></p>
+            <p>Acertos: <span id="correctCount">0</span> | Erros: <span id="incorrectCount">0</span></p>
+            <div class="accuracy-meter">
+              <div class="correct-portion" id="correctMeter" style="width: 0%">0%</div>
+              <div class="incorrect-portion" id="incorrectMeter" style="width: 0%">0%</div>
+            </div>
+            <p>Taxa de acerto: <span id="accuracyRate">0%</span></p>
+          </div>
+        </div>
+        <div class="stats-section">
+          <h3>Cards com Erro</h3>
+          <p>Estes são os cards que você marcado como incorretos:</p>
+          <div id="incorrectCardsList"></div>
+        </div>
+        <div class="review-option">
+          <p>Quer revisar apenas os cards que errou?</p>
+          <button class="review-button" onclick="reviewIncorrectCards(); toggleStatsModal();">Revisar Cards com Erro</button>
+        </div>
       </div>
+      
       <button class="close-button" onclick="toggleStatsModal()">Fechar</button>
     </div>
   </div>
-  <!-- NOVO: Modal de Login -->
   <div id="loginModal" style="display: flex;">
     <div class="login-container">
       <h2><i class="fas fa-lock"></i> Acesso aos Flashcards</h2>
@@ -700,10 +810,16 @@
       <div id="loginError"></div>
     </div>
   </div>
-  <!-- NOVO: Indicador de carregamento -->
   <div class="loading-indicator" id="loadingIndicator">
     <div class="loading-spinner"></div>
     <div class="loading-text">Carregando flashcards...</div>
+  </div>
+  <div id="sessionExpiredModal" style="display:none;">
+    <div class="session-expired-container">
+      <h2><i class="fas fa-exclamation-triangle"></i> Sessão Expirada</h2>
+      <p>Sua sessão expirou devido à inatividade. Por favor, faça login novamente.</p>
+      <button class="login-button" onclick="location.reload()">Fazer Login Novamente</button>
+    </div>
   </div>
   <script>
     // --- CONFIGURAÇÃO INICIAL ---
@@ -721,49 +837,113 @@
     const cardCounter = document.getElementById("cardCounter");
     const helpModal = document.getElementById("helpModal");
     const fontSizeFeedback = document.getElementById("fontSizeFeedback");
-    const shuffleFeedback = document.getElementById("shuffleFeedback");
     let fontSizeDisplayTimeout;
-    let shuffleDisplayTimeout;
     let isShuffleActive = false;
     // Variáveis para o Temporizador Automático
     let autoAdvanceInterval = null;
     let autoAdvanceSeconds = 0;
-    let autoAdvanceDelay = 5; // Tempo padrão em segundos
+    let autoAdvanceDelay = 5;
     let isAutoAdvanceActive = false;
     const autoAdvanceButton = document.getElementById("autoAdvanceButton");
     const autoAdvanceTimerDisplay = document.getElementById("autoAdvanceTimerDisplay");
-    // NOVO: Variáveis para estatísticas
+    // Variáveis para estatísticas
     let cardResponseTimes = {};
     let lastAccessDate = null;
-    // NOVO: Estado para controlar se chegou ao fim
+    // Estado para controlar se chegou ao fim
     let isFinished = false;
-    // NOVO: Variáveis para categorias
+    // Variáveis para categorias
     let categories = [];
     let currentCategory = "Todas";
-    // NOVO: Variáveis para medição de tempo de resposta
+    // Variáveis para medição de tempo de resposta
     let cardViewStartTime = 0;
+    
+    // Variáveis para controle de expiração de sessão
+    const SESSION_DURATION = 3 * 60 * 60 * 1000;
+    let sessionTimer = null;
+
+    // Variáveis para controle de acertos/erros
+    let cardAccuracy = {};
+    let isReviewErrorsMode = false;
+
+    // Função para verificar autenticação e sessão
+    function requireAuth() {
+      if (!isAuthenticated) {
+        return false;
+      }
+      if (isSessionExpired()) {
+        expireSession();
+        return false;
+      }
+      return true;
+    }
+
+    // Função para resetar a UI após logout
+    function resetUIForLogout() {
+      document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
+      cardCounter.textContent = "0/0";
+      document.getElementById('end-screen').style.display = 'none';
+      document.getElementById('flashcard-content').style.display = 'block';
+      cardContainer.style.backgroundColor = "white";
+      document.getElementById("flashcard-content").style.color = "black";
+      document.getElementById('reviewErrorsButton').style.display = 'none';
+      document.getElementById('reviewErrorsButton').style.color = 'white';
+      document.getElementById('reviewErrorsButton').style.textShadow = 'none';
+      document.getElementById('loginEmail').value = '';
+      document.getElementById('loginPassword').value = '';
+      document.getElementById('loginError').style.display = 'none';
+      
+      if (isAutoAdvanceActive) {
+        stopAutoAdvance();
+      }
+      
+      document.getElementById('statsModal').style.display = 'none';
+      document.getElementById('helpModal').style.display = 'none';
+      document.getElementById('sessionExpiredModal').style.display = 'none';
+      document.getElementById('autoAdvanceSetup').style.display = 'none';
+      document.getElementById('autoAdvanceOverlay').style.display = 'none';
+      document.getElementById('correctButton').classList.remove('correct');
+      document.getElementById('incorrectButton').classList.remove('incorrect');
+      document.getElementById('loginModal').style.display = 'flex';
+      
+      initialCards = [];
+      cards = [];
+      currentCard = 0;
+      showingFront = true;
+      isFinished = false;
+      isShuffleActive = false;
+      isReviewErrorsMode = false;
+      cardAccuracy = {};
+      cardResponseTimes = {};
+      currentCategory = "Todas";
+      
+      const categorySelect = document.getElementById("categoryFilter");
+      categorySelect.innerHTML = '<option value="Todas">Todas Categorias</option>';
+    }
+
     // --- FUNÇÕES DE AUTENTICAÇÃO ---
     function showLoginError(message) {
       const errorElement = document.getElementById('loginError');
       errorElement.textContent = message;
       errorElement.style.display = 'block';
     }
+
     function hideLoginModal() {
       document.getElementById('loginModal').style.display = 'none';
       isAuthenticated = true;
       document.getElementById("flashcard-content").textContent = "Carregando flashcards...";
     }
-    // NOVO: Função para mostrar/ocultar indicador de carregamento
+
     function showLoadingIndicator(message = "Carregando...") {
       const indicator = document.getElementById('loadingIndicator');
       const text = indicator.querySelector('.loading-text');
       text.textContent = message;
       indicator.style.display = 'block';
     }
+
     function hideLoadingIndicator() {
       document.getElementById('loadingIndicator').style.display = 'none';
     }
-    // NOVO: Função para mostrar/ocultar spinner no botão de login
+
     function setLoginButtonLoading(isLoading) {
       const button = document.getElementById('loginSubmitBtn');
       const spinner = document.getElementById('loginSpinner');
@@ -778,23 +958,69 @@
         spinner.style.display = 'none';
       }
     }
-    // NOVO: Função de logout sem confirmação
-    function logout() {
-      // Limpar dados de autenticação
-      localStorage.removeItem('isAuthenticated');
-      localStorage.removeItem('userEmail');
-      // Redefinir estado
-      isAuthenticated = false;
-      userEmail = '';
-      // Mostrar tela de login
-      document.getElementById('loginModal').style.display = 'flex';
-      document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
-      cardCounter.textContent = "0/0";
-      // Parar temporizador automático se estiver ativo
+
+    function saveLoginTime() {
+      localStorage.setItem('loginTime', Date.now().toString());
+    }
+
+    function isSessionExpired() {
+      const loginTime = localStorage.getItem('loginTime');
+      if (!loginTime) return true;
+      
+      const currentTime = Date.now();
+      const elapsedTime = currentTime - parseInt(loginTime);
+      
+      return elapsedTime > SESSION_DURATION;
+    }
+
+    function startSessionTimer() {
+      if (sessionTimer) {
+        clearInterval(sessionTimer);
+      }
+      
+      sessionTimer = setInterval(() => {
+        if (isSessionExpired()) {
+          clearInterval(sessionTimer);
+          expireSession();
+        }
+      }, 60000);
+    }
+
+    function expireSession() {
       if (isAutoAdvanceActive) {
         stopAutoAdvance();
       }
+      
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('loginTime');
+      
+      isAuthenticated = false;
+      userEmail = '';
+      
+      document.getElementById('sessionExpiredModal').style.display = 'flex';
+      document.getElementById("flashcard-content").textContent = "Sessão expirada. Por favor, faça login novamente.";
+      cardCounter.textContent = "0/0";
     }
+
+    function logout() {
+      if (sessionTimer) {
+        clearInterval(sessionTimer);
+        sessionTimer = null;
+      }
+      
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('loginTime');
+      localStorage.removeItem('flashcardState');
+      localStorage.removeItem(`flashcardStats_${SHEET_ID}_${GID}`);
+      
+      isAuthenticated = false;
+      userEmail = '';
+      
+      resetUIForLogout();
+    }
+
     async function login(event) {
       if (event) event.preventDefault();
       const email = document.getElementById('loginEmail').value.trim();
@@ -803,17 +1029,18 @@
         showLoginError('Por favor, preencha todos os campos.');
         return;
       }
-      // NOVO: Feedback visual imediato
+      
       setLoginButtonLoading(true);
       document.getElementById('loginError').style.display = 'none';
+      
       try {
-        // Usando application/x-www-form-urlencoded como especificado no código original
         const formData = new URLSearchParams();
         formData.append('email', email);
         formData.append('password', password);
-        // NOVO: Usando AbortController para timeout
+        
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000); // Timeout de 10 segundos
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        
         const response = await fetch(WEB_APP_URL, {
           method: 'POST',
           headers: {
@@ -822,28 +1049,28 @@
           body: formData,
           signal: controller.signal
         });
+        
         clearTimeout(timeoutId);
-        // Verificar se a resposta é válida
+        
         if (!response.ok) {
           throw new Error(`Erro HTTP: ${response.status}`);
         }
-        // Tentar analisar a resposta como JSON
+        
         const result = await response.json();
         if (result.success) {
           userEmail = email;
-          // Salvar autenticação no localStorage
           localStorage.setItem('isAuthenticated', 'true');
           localStorage.setItem('userEmail', userEmail);
+          saveLoginTime();
+          startSessionTimer();
           hideLoginModal();
-          // NOVO: Mostrar indicador de carregamento imediatamente
           showLoadingIndicator();
-          // NOVO: Mostra feedback visual de sucesso
+          
           cardContainer.style.animation = 'none';
-          void cardContainer.offsetWidth; // Trigger reflow
+          void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
-          // Carrega os flashcards após autenticação
+          
           await loadFlashcardsFromGoogleSheet();
-          // NOVO: Esconder indicador de carregamento após carregar os cards
           hideLoadingIndicator();
         } else {
           showLoginError(result.error || 'Erro durante a autenticação.');
@@ -859,16 +1086,23 @@
         setLoginButtonLoading(false);
       }
     }
-    // Função para verificar autenticação ao carregar a página
+
     function checkAuthentication() {
       const savedAuth = localStorage.getItem('isAuthenticated');
       const savedEmail = localStorage.getItem('userEmail');
+      
       if (savedAuth === 'true' && savedEmail) {
+        if (isSessionExpired()) {
+          expireSession();
+          return;
+        }
+        
         isAuthenticated = true;
         userEmail = savedEmail;
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById("flashcard-content").textContent = "Carregando flashcards...";
-        // NOVO: Mostrar indicador de carregamento
+        startSessionTimer();
+        
         showLoadingIndicator();
         loadFlashcardsFromGoogleSheet().then(() => {
           hideLoadingIndicator();
@@ -877,20 +1111,21 @@
         document.getElementById('loginModal').style.display = 'flex';
       }
     }
+
     // --- FUNÇÕES PRINCIPAIS ---
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
       return urlParams.get(name);
     }
-    // Obter sheetId e gid da URL
+
     const SHEET_ID = getQueryParam('sheetId');
     const GID = getQueryParam('gid') || '0';
-    // Função para construir a URL de fetch usando sheetId và gid
+
     function buildGoogleSheetCsvUrl(sheetId, gid) {
         if (!sheetId) return null;
         return `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&gid=${gid}`;
     }
-    // Parser CSV robusto
+
     function parseCSVLine(line) {
         const result = [];
         let current = '';
@@ -915,8 +1150,7 @@
         result.push(current.trim());
         return result;
     }
-    // --- FUNÇÕES AUXILIARES PARA O PARSER CSV ---
-    // NOVA FUNÇÃO: Divide o texto CSV em registros (linhas), respeitando as aspas
+
     function splitCSVRecords(csvText) {
         const records = [];
         let currentRecord = '';
@@ -930,16 +1164,14 @@
             if (char === '"' && !inQuotes) {
                 inQuotes = true;
             } else if (char === '"' && nextChar === '"' && inQuotes) {
-                // Aspas duplas dentro de um campo entre aspas são escapadas como ""
-                currentRecord += '""'; // Adiciona as duas aspas ao registro
-                i += 2; // Pula as duas aspas
+                currentRecord += '""';
+                i += 2;
                 continue;
             } else if (char === '"' && inQuotes) {
                 inQuotes = false;
             } else if ((char === '\n' || (char === '\r' && nextChar === '\n')) && !inQuotes) {
-                // Encontrou uma quebra de linha fora das aspas, finaliza o registro
                 if (char === '\r') {
-                    i++; // Pula o \r para \r\n
+                    i++;
                 }
                 records.push(currentRecord);
                 currentRecord = '';
@@ -950,31 +1182,36 @@
             i++;
         }
 
-        // Adiciona o último registro se não terminar com uma quebra de linha
         if (currentRecord !== '') {
             records.push(currentRecord);
         }
 
         return records;
     }
-    // NOVO: Funções para salvar e carregar o estado
+
     function saveFlashcardState() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       const state = {
         currentCard,
         showingFront,
         fontSize,
         isShuffleActive,
         deckId: `${SHEET_ID}_${GID}`,
-        currentCategory
+        currentCategory,
+        cardAccuracy,
+        isReviewErrorsMode
       };
+      
       localStorage.setItem('flashcardState', JSON.stringify(state));
       cardCounter.classList.add('saved');
       setTimeout(() => cardCounter.classList.remove('saved'), 1000);
     }
+
     function loadFlashcardState() {
       const savedState = localStorage.getItem('flashcardState');
       if (!savedState) return false;
+      
       try {
         const state = JSON.parse(savedState);
         if (state.deckId === `${SHEET_ID}_${GID}`) {
@@ -982,6 +1219,17 @@
           showingFront = state.showingFront;
           fontSize = state.fontSize;
           currentCategory = state.currentCategory || "Todas";
+          
+          if (state.cardAccuracy) cardAccuracy = state.cardAccuracy;
+          if (state.isReviewErrorsMode !== undefined) {
+            isReviewErrorsMode = state.isReviewErrorsMode;
+            document.getElementById('reviewErrorsButton').style.display = isReviewErrorsMode ? 'inline-block' : 'none';
+            if (isReviewErrorsMode) {
+              document.getElementById('reviewErrorsButton').style.color = '#ff5555';
+              document.getElementById('reviewErrorsButton').style.textShadow = '0 0 10px rgba(255, 85, 85, 0.7)';
+            }
+          }
+          
           if (state.isShuffleActive !== isShuffleActive) {
             isShuffleActive = state.isShuffleActive;
             if (isShuffleActive) {
@@ -997,216 +1245,385 @@
       }
       return false;
     }
+
     async function loadFlashcardsFromGoogleSheet() {
       if (!isAuthenticated) {
         document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
         cardCounter.textContent = "0/0";
         return;
       }
+      
+      if (isSessionExpired()) {
+        expireSession();
+        return;
+      }
+      
       const csvUrl = buildGoogleSheetCsvUrl(SHEET_ID, GID);
       if (!csvUrl) {
           document.getElementById("flashcard-content").textContent = "Erro: 'sheetId' não foi fornecido nos parâmetros da URL.";
           cardCounter.textContent = "0/0";
           return;
       }
+      
       try {
-          // NOVO: Usando AbortController para timeout no carregamento dos cards
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 15000); // Timeout de 15 segundos
-          const response = await fetch(csvUrl, { signal: controller.signal });
-          clearTimeout(timeoutId);
-          if (!response.ok) {
-              const errorText = await response.text();
-              throw new Error(`Erro HTTP! Status: ${response.status}. Detalhes: ${errorText.substring(0, 200)}...`);
-          }
-          const text = await response.text();
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        const response = await fetch(csvUrl, { signal: controller.signal });
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Erro HTTP! Status: ${response.status}. Detalhes: ${errorText.substring(0, 200)}...`);
+        }
+        
+        const text = await response.text();
+        const lines = splitCSVRecords(text).slice(1).filter(line => line.trim() !== "");
 
-          // --- ALTERAÇÃO PRINCIPAL ---
-          // Usa a nova função para dividir o CSV corretamente
-          const lines = splitCSVRecords(text).slice(1).filter(line => line.trim() !== "");
+        let loadedCards = [];
+        lines.forEach(line => {
+            const cols = parseCSVLine(line);
+            if (cols && cols.length >= 2) {
+                let rawFrontText = cols[0];
+                let rawBackText = cols[1];
+                let frontText = (rawFrontText || '').trim();
+                let backText = (rawBackText || '').trim();
 
-          let loadedCards = [];
-          lines.forEach(line => {
-              // Usa a função parseCSVLine existente para processar cada linha lógica
-              const cols = parseCSVLine(line);
-              if (cols && cols.length >= 2) {
-                  let rawFrontText = cols[0];
-                  let rawBackText = cols[1];
-                  let frontText = (rawFrontText || '').trim();
-                  let backText = (rawBackText || '').trim();
+                let category = "Geral";
+                if (cols.length >= 3) {
+                  category = (cols[2] || "Geral").trim();
+                }
+                loadedCards.push({ front: frontText, back: backText, category: category });
+            }
+        });
 
-                  // NOVO: Extrair categoria da coluna C
-                  let category = "Geral";
-                  if (cols.length >= 3) {
-                    category = (cols[2] || "Geral").trim();
-                  }
-                  loadedCards.push({ front: frontText, back: backText, category: category });
-              }
-          });
-          // --- FIM DA ALTERAÇÃO PRINCIPAL ---
-
-          if (loadedCards.length === 0) {
-              document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
-              cardCounter.textContent = "0/0";
-          } else {
-              initialCards = loadedCards;
-              cards = [...initialCards];
-              // NOVO: Extrair categorias únicas
-              categories = ["Todas", ...new Set(loadedCards.map(card => card.category))];
-              const categorySelect = document.getElementById("categoryFilter");
-              categorySelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
-              const hasSavedState = loadFlashcardState();
-              if (!hasSavedState) {
-                currentCard = 0;
-                showingFront = true;
-                currentCategory = "Todas";
-              } else {
-                // Aplica o filtro de categoria salvo
-                filterByCategory(currentCategory, true);
-              }
-              // Carregar estatísticas ANTES de atualizar o card
-              loadStatsFromStorage();
-              updateCard();
-          }
+        if (loadedCards.length === 0) {
+            document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
+            cardCounter.textContent = "0/0";
+        } else {
+            initialCards = loadedCards;
+            cards = [...initialCards];
+            categories = ["Todas", ...new Set(loadedCards.map(card => card.category))];
+            const categorySelect = document.getElementById("categoryFilter");
+            categorySelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
+            
+            const hasSavedState = loadFlashcardState();
+            if (!hasSavedState) {
+              currentCard = 0;
+              showingFront = true;
+              currentCategory = "Todas";
+              cardAccuracy = {};
+              isReviewErrorsMode = false;
+            } else {
+              filterByCategory(currentCategory, true);
+            }
+            
+            loadStatsFromStorage();
+            updateCard();
+        }
       } catch (error) {
           console.error("Erro ao carregar os flashcards:", error);
           document.getElementById("flashcard-content").textContent = `Erro ao carregar flashcards: ${error.message}`;
           cardCounter.textContent = "0/0";
       }
     }
-    // NOVO: Função para filtrar por categoria
+
     function filterByCategory(category, skipSave = false) {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       currentCategory = category;
       const categorySelect = document.getElementById("categoryFilter");
       categorySelect.value = category;
+      
       if (category === "Todas") {
         cards = [...initialCards];
       } else {
         cards = initialCards.filter(card => card.category === category);
       }
+      
+      if (isReviewErrorsMode) {
+        cards = cards.filter((card, index) => {
+          const originalIndex = initialCards.indexOf(card);
+          return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+        });
+      }
+      
       if (isShuffleActive) {
         cards = [...cards].sort(() => Math.random() - 0.5);
       }
-      // Não resetar o currentCard se skipSave for true (estamos carregando um estado)
+      
       if (!skipSave) {
         currentCard = 0;
         showingFront = true;
       }
+      
       updateCard();
       if (!skipSave) {
         saveFlashcardState();
       }
     }
+
     function updateCard() {
-      // CORREÇÃO: Conserta a linha de verificação que estava danificada
-      if (!isAuthenticated || cards.length === 0 || isFinished) return;
+      if (!requireAuth() || cards.length === 0 || isFinished) return;
+      
       const card = cards[currentCard];
       document.getElementById("flashcard-content").textContent = showingFront ? card.front : card.back;
       cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
       document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
-      // Iniciar medição de tempo para a pergunta
+      
+      updateAccuracyButtons();
+      
       if (showingFront) {
         startResponseTimeMeasurement();
       }
+      
       if (isAutoAdvanceActive) {
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
       }
     }
+
+    function updateAccuracyButtons() {
+      const correctButton = document.getElementById('correctButton');
+      const incorrectButton = document.getElementById('incorrectButton');
+      
+      const currentOriginalCard = initialCards.indexOf(cards[currentCard]);
+      
+      if (currentOriginalCard !== -1 && cardAccuracy[currentOriginalCard]) {
+        if (cardAccuracy[currentOriginalCard].correct > 0) {
+          correctButton.classList.add('correct');
+          incorrectButton.classList.remove('incorrect');
+        } else if (cardAccuracy[currentOriginalCard].incorrect > 0) {
+          incorrectButton.classList.add('incorrect');
+          correctButton.classList.remove('correct');
+        } else {
+          correctButton.classList.remove('correct');
+          incorrectButton.classList.remove('incorrect');
+        }
+      } else {
+        correctButton.classList.remove('correct');
+        incorrectButton.classList.remove('incorrect');
+      }
+    }
+
     function nextCard() {
-      if (!isAuthenticated || isFinished) return;
+      if (!requireAuth() || isFinished) return;
+      
       if (currentCard === cards.length - 1) {
         showEndScreen();
         saveFlashcardState();
         return;
       }
+      
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       updateCard();
       saveFlashcardState();
     }
+
     function prevCard() {
-      if (!isAuthenticated || isFinished) return;
+      if (!requireAuth() || isFinished) return;
+      
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
       updateCard();
       saveFlashcardState();
     }
+
     function flipCard() {
-      if (!isAuthenticated || isFinished) return;
-      // Se está virando para ver a resposta, registrar o tempo
+      if (!requireAuth() || isFinished) return;
+      
       if (showingFront) {
         endResponseTimeMeasurement();
       }
+      
       showingFront = !showingFront;
       updateCard();
       saveFlashcardState();
     }
-    // NOVA FUNÇÃO: Virar Card / Anterior (comportamento inverso do reviewAndAdvance)
+
     function reviewAndRetreat() {
-      if (!isAuthenticated || isFinished) return;
+      if (!requireAuth() || isFinished) return;
+      
       if (!showingFront) {
-        // Se está na resposta, vira para a pergunta do mesmo card
         showingFront = true;
         updateCard();
       } else {
-        // Se está na pergunta, retrocede para o card anterior
         if (currentCard === 0) {
-          // Se é o primeiro card, vai para o último
           currentCard = cards.length - 1;
         } else {
           currentCard--;
         }
-        // Mostra a resposta do card anterior
         showingFront = false;
         updateCard();
       }
       saveFlashcardState();
     }
+
     function reviewAndAdvance() {
-      if (!isAuthenticated || isFinished) return;
+      if (!requireAuth() || isFinished) return;
+      
       if (showingFront) {
-        // Se está na pergunta, virar para resposta e registrar tempo
         endResponseTimeMeasurement();
         showingFront = false;
         updateCard();
       } else {
-        // Se está na resposta, avançar para próxima pergunta
         nextCard();
       }
       saveFlashcardState();
     }
-    function toggleShuffleMode() {
-      if (!isAuthenticated || isFinished) return;
-      if (!isShuffleActive) {
-        for (let i = cards.length - 1; i > 0; i--) {
-          const j = Math.floor(Math.random() * (i + 1));
-          [cards[i], cards[j]] = [cards[j], cards[i]];
+
+    function markAsCorrect() {
+      if (!requireAuth() || isFinished) return;
+      
+      const currentOriginalCard = initialCards.indexOf(cards[currentCard]);
+      
+      if (currentOriginalCard !== -1) {
+        if (!cardAccuracy[currentOriginalCard]) {
+          cardAccuracy[currentOriginalCard] = { correct: 0, incorrect: 0 };
         }
-        isShuffleActive = true;
-        shuffleFeedback.textContent = "Modo embaralhar ativado!";
+        
+        cardAccuracy[currentOriginalCard].correct++;
+        updateAccuracyButtons();
+        nextCard();
+        saveFlashcardState();
+      }
+    }
+
+    function markAsIncorrect() {
+      if (!requireAuth() || isFinished) return;
+      
+      const currentOriginalCard = initialCards.indexOf(cards[currentCard]);
+      
+      if (currentOriginalCard !== -1) {
+        if (!cardAccuracy[currentOriginalCard]) {
+          cardAccuracy[currentOriginalCard] = { correct: 0, incorrect: 0 };
+        }
+        
+        cardAccuracy[currentOriginalCard].incorrect++;
+        updateAccuracyButtons();
+        nextCard();
+        saveFlashcardState();
+      }
+    }
+
+    function toggleReviewErrors() {
+      if (!requireAuth()) return;
+      
+      isReviewErrorsMode = !isReviewErrorsMode;
+      
+      if (isReviewErrorsMode) {
+        cards = cards.filter((card, index) => {
+          const originalIndex = initialCards.indexOf(card);
+          return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+        });
+        
+        if (cards.length === 0) {
+          alert("Não há cards marcados como incorretos para revisão.");
+          isReviewErrorsMode = false;
+          cards = [...initialCards];
+          if (currentCategory !== "Todas") {
+            cards = initialCards.filter(card => card.category === currentCategory);
+          }
+          document.getElementById('reviewErrorsButton').style.display = 'none';
+          return;
+        }
+        
+        document.getElementById('reviewErrorsButton').style.color = '#ff5555';
+        document.getElementById('reviewErrorsButton').style.textShadow = '0 0 10px rgba(255, 85, 85, 0.7)';
       } else {
         if (currentCategory === "Todas") {
           cards = [...initialCards];
         } else {
           cards = initialCards.filter(card => card.category === currentCategory);
         }
-        isShuffleActive = false;
-        shuffleFeedback.textContent = "Ordem original restaurada!";
+        
+        document.getElementById('reviewErrorsButton').style.color = 'white';
+        document.getElementById('reviewErrorsButton').style.textShadow = 'none';
       }
+      
+      if (isShuffleActive) {
+        cards = [...cards].sort(() => Math.random() - 0.5);
+      }
+      
       currentCard = 0;
       showingFront = true;
       updateCard();
-      shuffleFeedback.style.opacity = 1;
-      clearTimeout(shuffleDisplayTimeout);
-      shuffleDisplayTimeout = setTimeout(() => {
-        shuffleFeedback.style.opacity = 0;
-      }, 1500);
       saveFlashcardState();
     }
+
+    function reviewIncorrectCards() {
+      isReviewErrorsMode = true;
+      document.getElementById('reviewErrorsButton').style.display = 'inline-block';
+      document.getElementById('reviewErrorsButton').style.color = '#ff5555';
+      document.getElementById('reviewErrorsButton').style.textShadow = '0 0 10px rgba(255, 85, 85, 0.7)';
+      
+      if (currentCategory === "Todas") {
+        cards = [...initialCards];
+      } else {
+        cards = initialCards.filter(card => card.category === currentCategory);
+      }
+      
+      cards = cards.filter((card, index) => {
+        const originalIndex = initialCards.indexOf(card);
+        return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+      });
+      
+      if (cards.length === 0) {
+        alert("Não há cards marcados como incorretos para revisão.");
+        isReviewErrorsMode = false;
+        cards = [...initialCards];
+        if (currentCategory !== "Todas") {
+          cards = initialCards.filter(card => card.category === currentCategory);
+        }
+        document.getElementById('reviewErrorsButton').style.display = 'none';
+        return;
+      }
+      
+      if (isShuffleActive) {
+        cards = [...cards].sort(() => Math.random() - 0.5);
+      }
+      
+      currentCard = 0;
+      showingFront = true;
+      updateCard();
+      saveFlashcardState();
+    }
+
+    function toggleShuffleMode() {
+      if (!requireAuth() || isFinished) return;
+      
+      if (!isShuffleActive) {
+        for (let i = cards.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() - 0.5);
+          [cards[i], cards[j]] = [cards[j], cards[i]];
+        }
+        isShuffleActive = true;
+      } else {
+        if (currentCategory === "Todas") {
+          cards = [...initialCards];
+        } else {
+          cards = initialCards.filter(card => card.category === currentCategory);
+        }
+        
+        if (isReviewErrorsMode) {
+          cards = cards.filter((card, index) => {
+            const originalIndex = initialCards.indexOf(card);
+            return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+          });
+        }
+        
+        isShuffleActive = false;
+      }
+      
+      currentCard = 0;
+      showingFront = true;
+      updateCard();
+      saveFlashcardState();
+    }
+
     function adjustFontSize(change) {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       fontSize += change * 1.2;
       fontSize = Math.max(10, Math.min(48, fontSize));
       document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
@@ -1218,31 +1635,42 @@
       }, 1500);
       saveFlashcardState();
     }
+
     function toggleCardColorMenu() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       const menu = document.getElementById("cardColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
+
     function toggleTextColorMenu() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       const menu = document.getElementById("textColor");
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
+
     function changeCardColor(color) {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       cardContainer.style.backgroundColor = color;
       saveFlashcardState();
     }
+
     function changeTextColor(color) {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       document.getElementById("flashcard-content").style.color = color;
       saveFlashcardState();
     }
+
     function resetTimer() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       timerSeconds = 0;
       timerElement.textContent = "00:00";
     }
+
     function updateTimer() {
       if (!isAuthenticated) return;
       timerSeconds++;
@@ -1250,8 +1678,10 @@
       const seconds = String(timerSeconds % 60).padStart(2, '0');
       timerElement.textContent = `${minutes}:${seconds}`;
     }
+
     function goToSpecificCard() {
-      if (!isAuthenticated || isFinished) return;
+      if (!requireAuth() || isFinished) return;
+      
       const value = document.getElementById("goToCard").value;
       const number = parseInt(value, 10);
       if (!isNaN(number) && number >= 1 && number <= cards.length) {
@@ -1260,10 +1690,11 @@
         updateCard();
         saveFlashcardState();
       } else {
-        alert("Número do card inválido. Insira um número entre 1 e " + cards.length);
+        alert("Número do card inválido. Insira um número entre 1 and " + cards.length);
       }
       document.getElementById("goToCard").value = '';
     }
+
     function showTooltipOnHover(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.add("show-tooltip");
@@ -1271,30 +1702,41 @@
         el.classList.remove("show-tooltip");
       }, 1000);
     }
+
     function hideTooltipOnLeave(el) {
       clearTimeout(el.tooltipTimer);
       el.classList.remove("show-tooltip");
     }
+
     function toggleHelpModal() {
       helpModal.style.display = helpModal.style.display === "none" ? "flex" : "none";
     }
+
     // Funções para o Temporizador Automático
     function toggleAutoAdvance() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       if (isAutoAdvanceActive) stopAutoAdvance();
       else startAutoAdvance();
     }
+
     function startAutoAdvance() {
+        if (!requireAuth()) return;
+        
         if (isAutoAdvanceActive) return;
         document.getElementById("autoAdvanceDelayInput").value = autoAdvanceDelay;
         document.getElementById("autoAdvanceSetup").style.display = "flex";
         document.getElementById("autoAdvanceOverlay").style.display = "block";
     }
+
     function confirmAutoAdvanceDelay() {
+        if (!requireAuth()) return;
+        
         const userInput = document.getElementById("autoAdvanceDelayInput").value;
         const newDelay = parseInt(userInput, 10);
         document.getElementById("autoAdvanceSetup").style.display = "none";
         document.getElementById("autoAdvanceOverlay").style.display = "none";
+        
         if (isNaN(newDelay) || newDelay <= 0) {
             const feedback = document.createElement('div');
             feedback.textContent = "Número inválido!";
@@ -1312,11 +1754,13 @@
             setTimeout(() => document.body.removeChild(feedback), 2000);
             return;
         }
+        
         autoAdvanceDelay = newDelay;
         isAutoAdvanceActive = true;
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
         if (autoAdvanceButton) autoAdvanceButton.textContent = "⏰";
+        
         autoAdvanceInterval = setInterval(() => {
             autoAdvanceSeconds--;
             updateAutoAdvanceDisplay();
@@ -1327,10 +1771,12 @@
             }
         }, 1000);
     }
+
     function cancelAutoAdvanceDelay() {
         document.getElementById("autoAdvanceSetup").style.display = "none";
         document.getElementById("autoAdvanceOverlay").style.display = "none";
     }
+
     function stopAutoAdvance() {
         if (!isAutoAdvanceActive) return;
         clearInterval(autoAdvanceInterval);
@@ -1340,91 +1786,171 @@
         updateAutoAdvanceDisplay();
         if (autoAdvanceButton) autoAdvanceButton.textContent = "⏳";
     }
+
     function updateAutoAdvanceDisplay() {
         if (autoAdvanceTimerDisplay) autoAdvanceTimerDisplay.textContent = `${autoAdvanceSeconds}s`;
     }
-    // NOVO: Função para registrar tempo de resposta
+
     function recordResponseTime(cardIndex, timeSpent) {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       if (!cardResponseTimes[cardIndex]) {
         cardResponseTimes[cardIndex] = { times: [], avgTime: 0 };
       }
+      
       cardResponseTimes[cardIndex].times.push(timeSpent);
       const times = cardResponseTimes[cardIndex].times;
       const sum = times.reduce((a, b) => a + b, 0);
       cardResponseTimes[cardIndex].avgTime = Math.round(sum / times.length);
     }
-    // NOVO: Função para salvar estatísticas
+
     function saveStatsToStorage() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       const stats = {
         responseTimes: cardResponseTimes,
-        lastAccess: new Date().toISOString()
+        lastAccess: new Date().toISOString(),
+        cardAccuracy: cardAccuracy
       };
+      
       localStorage.setItem(`flashcardStats_${SHEET_ID}_${GID}`, JSON.stringify(stats));
     }
-    // NOVO: Função para carregar estatísticas
+
     function loadStatsFromStorage() {
       const savedStats = localStorage.getItem(`flashcardStats_${SHEET_ID}_${GID}`);
       if (!savedStats) return;
+      
       try {
         const stats = JSON.parse(savedStats);
         cardResponseTimes = stats.responseTimes || {};
         if (stats.lastAccess) lastAccessDate = new Date(stats.lastAccess);
+        if (stats.cardAccuracy) cardAccuracy = stats.cardAccuracy;
       } catch (e) {
         console.error("Erro ao carregar estatísticas:", e);
       }
     }
-    // NOVO: Iniciar medição de tempo quando um card é mostrado
+
     function startResponseTimeMeasurement() {
       cardViewStartTime = Date.now();
     }
-    // NOVO: Finalizar medição de tempo quando o card é virado
+
     function endResponseTimeMeasurement() {
       if (cardViewStartTime > 0) {
-        const timeSpent = Math.round((Date.now() - cardViewStartTime) / 1000); // em segundos
+        const timeSpent = Math.round((Date.now() - cardViewStartTime) / 1000);
         recordResponseTime(currentCard, timeSpent);
         saveStatsToStorage();
         cardViewStartTime = 0;
       }
     }
-    // NOVO: Função para preencher o modal de estatísticas
+
+    function changeStatsTab(tabName) {
+      document.querySelectorAll('.stats-tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelectorAll('.stats-content').forEach(content => {
+        content.classList.remove('active');
+      });
+      
+      document.querySelector(`.stats-tab:nth-child(${tabName === 'time' ? 1 : 2})`).classList.add('active');
+      document.getElementById(`${tabName}Stats`).classList.add('active');
+      
+      if (tabName === 'accuracy') {
+        updateAccuracyStats();
+      }
+    }
+
+    function updateAccuracyStats() {
+      if (!requireAuth()) return;
+      
+      let totalCorrect = 0;
+      let totalIncorrect = 0;
+      let totalCards = initialCards.length;
+      
+      Object.values(cardAccuracy).forEach(accuracy => {
+        totalCorrect += accuracy.correct || 0;
+        totalIncorrect += accuracy.incorrect || 0;
+      });
+      
+      const totalAttempts = totalCorrect + totalIncorrect;
+      const accuracyRate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+      
+      document.getElementById('totalCardsCount').textContent = totalCards;
+      document.getElementById('correctCount').textContent = totalCorrect;
+      document.getElementById('incorrectCount').textContent = totalIncorrect;
+      document.getElementById('accuracyRate').textContent = `${accuracyRate}%`;
+      
+      const correctPercentage = totalAttempts > 0 ? (totalCorrect / totalAttempts) * 100 : 0;
+      const incorrectPercentage = totalAttempts > 0 ? (totalIncorrect / totalAttempts) * 100 : 0;
+      
+      document.getElementById('correctMeter').style.width = `${correctPercentage}%`;
+      document.getElementById('correctMeter').textContent = `${Math.round(correctPercentage)}%`;
+      document.getElementById('incorrectMeter').style.width = `${incorrectPercentage}%`;
+      document.getElementById('incorrectMeter').textContent = `${Math.round(incorrectPercentage)}%`;
+      
+      const incorrectCardsList = document.getElementById('incorrectCardsList');
+      incorrectCardsList.innerHTML = '';
+      
+      let hasIncorrectCards = false;
+      
+      initialCards.forEach((card, index) => {
+        if (cardAccuracy[index] && cardAccuracy[index].incorrect > 0) {
+          hasIncorrectCards = true;
+          const item = document.createElement('div');
+          item.className = 'card-review-item';
+          item.innerHTML = `
+            <div class="card-review-content">
+              <strong>Card #${index + 1}:</strong> ${card.front.substring(0, 50)}${card.front.length > 50 ? '...' : ''}
+            </div>
+            <div class="card-review-time">${cardAccuracy[index].incorrect} ❌</div>
+          `;
+          incorrectCardsList.appendChild(item);
+        }
+      });
+      
+      if (!hasIncorrectCards) {
+        incorrectCardsList.innerHTML = '<p>Nenhum card marcado como incorreto.</p>';
+      }
+    }
+
     function updateStatsModal() {
-      if (!isAuthenticated) return;
-      // Atualiza a data do último acesso
+      if (!requireAuth()) return;
+      
       const lastAccessElement = document.getElementById("lastAccessDate");
       if (lastAccessDate) {
         lastAccessElement.textContent = lastAccessDate.toLocaleString();
       } else {
         lastAccessElement.textContent = "Nenhum registro encontrado.";
       }
-      // Calcula e exibe o resumo de desempenho
+      
       const performanceElement = document.getElementById("performanceSummary");
       const cardEntries = Object.entries(cardResponseTimes);
+      
       if (cardEntries.length === 0) {
         performanceElement.innerHTML = '<p>Nenhum dado de desempenho disponível.</p>';
       } else {
-        // Calcula a média geral de tempo
         let totalTime = 0;
         let totalCards = 0;
         cardEntries.forEach(([cardIndex, data]) => {
           totalTime += data.avgTime * data.times.length;
           totalCards += data.times.length;
         });
+        
         const avgTime = totalCards > 0 ? Math.round(totalTime / totalCards) : 0;
         performanceElement.innerHTML = `
           <p>Total de cards revisados: <strong>${cardEntries.length}</strong></p>
           <p>Tempo médio por card: <strong>${avgTime}s</strong></p>
         `;
       }
-      // Cria a lista de cards para revisão (ordenados pelo tempo médio de resposta, decrescente)
+      
       const reviewCardsListElement = document.getElementById("reviewCardsList");
       reviewCardsListElement.innerHTML = '';
+      
       if (cardEntries.length === 0) {
         reviewCardsListElement.innerHTML = '<p>Nenhum dado de tempo de resposta disponível.</p>';
         return;
       }
-      // Ordena pelos cards com maior tempo médio de resposta
+      
       cardEntries.sort((a, b) => b[1].avgTime - a[1].avgTime);
       cardEntries.forEach(([cardIndex, data]) => {
         const card = initialCards[cardIndex];
@@ -1441,27 +1967,53 @@
         }
       });
     }
-    // NOVO: Função para abrir/fechar modal de estatísticas
+
     function toggleStatsModal() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       const modal = document.getElementById("statsModal");
       if (modal.style.display === "none") {
         modal.style.display = "flex";
         updateStatsModal();
+        updateAccuracyStats();
       } else {
         modal.style.display = "none";
       }
     }
-    // NOVO: Função para mostrar a tela de fim
+
     function showEndScreen() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       document.getElementById('flashcard-content').style.display = 'none';
       document.getElementById('end-screen').style.display = 'flex';
       isFinished = true;
+      
+      let totalCorrect = 0;
+      let totalIncorrect = 0;
+      
+      Object.values(cardAccuracy).forEach(accuracy => {
+        totalCorrect += accuracy.correct || 0;
+        totalIncorrect += accuracy.incorrect || 0;
+      });
+      
+      const totalAttempts = totalCorrect + totalIncorrect;
+      const accuracyRate = totalAttempts > 0 ? Math.round((totalCorrect / totalAttempts) * 100) : 0;
+      
+      document.getElementById('accuracy-results').innerHTML = `
+        <p>Acertos: ${totalCorrect} | Erros: ${totalIncorrect}</p>
+        <p>Taxa de acerto: ${accuracyRate}%</p>
+      `;
+      
+      if (totalIncorrect > 0) {
+        document.getElementById('review-errors-button').style.display = 'block';
+      } else {
+        document.getElementById('review-errors-button').style.display = 'none';
+      }
     }
-    // NOVO: Função para recomeçar os flashcards
+
     function restartFlashcards() {
-      if (!isAuthenticated) return;
+      if (!requireAuth()) return;
+      
       document.getElementById('end-screen').style.display = 'none';
       document.getElementById('flashcard-content').style.display = 'block';
       currentCard = 0;
@@ -1470,26 +2022,55 @@
       updateCard();
       saveFlashcardState();
     }
+
+    function reviewErrorsFromEndScreen() {
+      document.getElementById('end-screen').style.display = 'none';
+      document.getElementById('flashcard-content').style.display = 'block';
+      isFinished = false;
+      reviewIncorrectCards();
+    }
+
     // --- INICIALIZAÇÃO ---
     document.addEventListener("keydown", (e) => {
-      if (e.key === " " || e.key === "Enter") {
-        e.preventDefault();
-        reviewAndAdvance();
-      }
-      // NOVO: Tecla Alt para a função Virar Card / Anterior
-      if (e.key === "Alt") {
-        e.preventDefault();
-        reviewAndRetreat();
+  // Verificar se o campo de entrada está em foco
+  const activeElement = document.activeElement;
+  const isInputFocused = activeElement.id === 'goToCard';
+  
+  if (isInputFocused) {
+    // Permitir digitação normal no campo
+    return;
+  }
+
+    if (e.key === " " || e.key === "Enter") {
+    e.preventDefault();
+    reviewAndAdvance();
+    }
+  
+    if (e.key === "Alt") {
+    e.preventDefault();
+    reviewAndRetreat();
+    }
+  
+    if (e.key === "1") {
+    e.preventDefault();
+    markAsCorrect();
+    }
+  
+    if (e.key === "2") {
+    e.preventDefault();
+    markAsIncorrect();
       }
     });
-    // Configura o temporizador
+
     setInterval(updateTimer, 1000);
-    // Adiciona evento de submit ao formulário de login
+
     document.getElementById('loginForm').addEventListener('submit', login);
-    // Verifica autenticação quando a página carrega
+
     document.addEventListener('DOMContentLoaded', checkAuthentication);
-    // Evento para botão de recomeçar
+
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
+
+    document.getElementById('review-errors-button').addEventListener('click', reviewErrorsFromEndScreen);
   </script>
 </body>
 </html>

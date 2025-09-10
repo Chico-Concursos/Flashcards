@@ -2032,35 +2032,41 @@
 
     // --- INICIALIZAÇÃO ---
     document.addEventListener("keydown", (e) => {
+  // Verificar se o modal de login está visível
+  const loginModal = document.getElementById('loginModal');
+  if (window.getComputedStyle(loginModal).display === 'flex') {
+    return; // Não fazer nada se o modal de login estiver aberto
+  }
+
   // Verificar se o campo de entrada está em foco
   const activeElement = document.activeElement;
-  const isInputFocused = activeElement.id === 'goToCard';
+  const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT';
   
   if (isInputFocused) {
     // Permitir digitação normal no campo
     return;
   }
 
-    if (e.key === " " || e.key === "Enter") {
+  if (e.key === " ") {
     e.preventDefault();
     reviewAndAdvance();
-    }
+  }
   
-    if (e.key === "Alt") {
+  if (e.key === "Alt") {
     e.preventDefault();
     reviewAndRetreat();
-    }
+  }
   
-    if (e.key === "1") {
+  if (e.key === "1") {
     e.preventDefault();
     markAsCorrect();
-    }
+  }
   
-    if (e.key === "2") {
+  if (e.key === "2") {
     e.preventDefault();
     markAsIncorrect();
-      }
-    });
+  }
+});
 
     setInterval(updateTimer, 1000);
 

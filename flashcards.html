@@ -348,6 +348,11 @@
       min-width: 70px;
       text-align: right;
     }
+	#accuracy-results {
+    display: none; /* Inicialmente oculto */
+    font-size: 1.5em;
+    margin-bottom: 20px; /* Espaçamento aplicado somente quando visível */
+    }
     #end-screen {
       display: none;
       flex-direction: column;
@@ -376,6 +381,7 @@
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       padding: 20px;
+	  margin-bottom: 20px
     }
     #restart-button {
       background: linear-gradient(to bottom, #FFD700, #D4AF37);
@@ -685,8 +691,8 @@
     </div>
     <div id="end-screen">
       <div id="end-message">Chico Concursos<br>Fim</div>
-      <div id="accuracy-results" style="margin-bottom: 20px; font-size: 1.5em;"></div>
       <button id="restart-button">RECOMEÇAR</button>
+	  <div id="accuracy-results" style="font-size: 1.5em;"></div>
       <button id="review-errors-button" class="review-button" style="margin-top: 15px; display: none;">REVISAR ERROS</button>
     </div>
   </div>

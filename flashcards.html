@@ -636,6 +636,14 @@
       font-weight: bold;
       margin-top: 10px;
     }
+		.highlight-asterisk {
+      color: #0000FF !important;
+      font-weight: bold;
+    }
+    .highlight-asterisk-gold {
+      color: #FFD700 !important;
+      font-weight: bold;
+    }
   </style>
 </head>
 <body>
@@ -673,6 +681,7 @@
     <button class="logout-button" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
     </button>
+	<button class="tooltip" data-tooltip="Destacar *palavras*" onclick="toggleHighlightAsterisks()">✨</button>
     <button class="tooltip" data-tooltip="Ajuda" onclick="toggleHelpModal()">❓</button>
   </div>
   <div id="fontSizeFeedback"></div>
@@ -724,6 +733,7 @@
         <p><span>📈</span> Estatísticas: Mostra seu desempenho and cards para revisão.</p>
         <p><span>📂</span> Categoria: Filtra os cards por categoria.</p>
         <p><span>🔍</span> Revisar Erros: Filtra apenas os cards marcados como erro.</p>
+		<p><span>✨</span> Cor destaque: Muda a cor dos termos entre astériscos, fundo preto-cor dourado, fundo branco-cor azul.</p>
         <p><span>✅</span> Acertei: Marca o card atual como respondido corretamente.</p>
         <p><span>❌</span> Errei: Marca o card atual como respondido incorretamente.</p>
         <p><span>⏪</span> Voltar: Navega para o card anterior.</p>
@@ -846,6 +856,9 @@
     const fontSizeFeedback = document.getElementById("fontSizeFeedback");
     let fontSizeDisplayTimeout;
     let isShuffleActive = false;
+	let currentCardColor = 'white'; // Cor padrão
+    let currentTextColor = 'black'; // Cor padrão
+	let isHighlightModeActive = false;
     // Variáveis para o Temporizador Automático
     let autoAdvanceInterval = null;
     let autoAdvanceSeconds = 0;
@@ -1208,24 +1221,26 @@
         return records;
     }
 
-    function saveFlashcardState() {
-      if (!requireAuth()) return;
-      
-      const state = {
-        currentCard,
-        showingFront,
-        fontSize,
-        isShuffleActive,
-        deckId: `${SHEET_ID}_${GID}`,
-        currentCategory,
-        cardAccuracy,
-        isReviewErrorsMode
-      };
-      
-      localStorage.setItem('flashcardState', JSON.stringify(state));
-      cardCounter.classList.add('saved');
-      setTimeout(() => cardCounter.classList.remove('saved'), 1000);
-    }
+   function saveFlashcardState() {
+  if (!requireAuth()) return;
+  
+  const state = {
+    currentCard,
+    showingFront,
+    fontSize,
+    isShuffleActive,
+    deckId: `${SHEET_ID}_${GID}`,
+    currentCategory,
+    cardAccuracy,
+    isReviewErrorsMode,       // ← Vírgula adicionada aqui
+    currentCardColor,         // ← Agora OK
+    currentTextColor          // ← OK (não precisa de vírgula na última linha, mas pode ter)
+  };
+  
+  localStorage.setItem('flashcardState', JSON.stringify(state));
+  cardCounter.classList.add('saved');
+  setTimeout(() => cardCounter.classList.remove('saved'), 1000);
+}
 
     function loadFlashcardState() {
       const savedState = localStorage.getItem('flashcardState');
@@ -1257,6 +1272,16 @@
               cards = [...initialCards];
             }
           }
+		if (state.currentCardColor !== undefined) {
+        currentCardColor = state.currentCardColor;
+        cardContainer.style.backgroundColor = currentCardColor;
+        document.getElementById("cardColor").value = currentCardColor;
+      }
+      if (state.currentTextColor !== undefined) {
+        currentTextColor = state.currentTextColor;
+        document.getElementById("flashcard-content").style.color = currentTextColor;
+        document.getElementById("textColor").value = currentTextColor;
+      }
           return true;
         }
       } catch (e) {
@@ -1381,23 +1406,23 @@
       }
     }
 
-    function updateCard() {
+        function updateCard() {
       if (!requireAuth() || cards.length === 0 || isFinished) return;
-      
       const card = cards[currentCard];
-      document.getElementById("flashcard-content").textContent = showingFront ? card.front : card.back;
+      const contentElement = document.getElementById("flashcard-content");
+      contentElement.textContent = showingFront ? card.front : card.back;
       cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
-      document.getElementById("flashcard-content").style.fontSize = fontSize + "pt";
-      
+      contentElement.style.fontSize = fontSize + "pt";
       updateAccuracyButtons();
-      
       if (showingFront) {
         startResponseTimeMeasurement();
       }
-      
       if (isAutoAdvanceActive) {
         autoAdvanceSeconds = autoAdvanceDelay;
         updateAutoAdvanceDisplay();
+      }
+      if (isHighlightModeActive) {
+        applyAsteriskHighlight();
       }
     }
 
@@ -1669,19 +1694,19 @@
       menu.style.display = menu.style.display === "none" ? "inline-block" : "none";
     }
 
-    function changeCardColor(color) {
-      if (!requireAuth()) return;
-      
-      cardContainer.style.backgroundColor = color;
-      saveFlashcardState();
-    }
+ function changeCardColor(color) {
+  if (!requireAuth()) return;
+  cardContainer.style.backgroundColor = color;
+  currentCardColor = color; // Salva a cor atual
+  saveFlashcardState();
+}
 
-    function changeTextColor(color) {
-      if (!requireAuth()) return;
-      
-      document.getElementById("flashcard-content").style.color = color;
-      saveFlashcardState();
-    }
+function changeTextColor(color) {
+  if (!requireAuth()) return;
+  document.getElementById("flashcard-content").style.color = color;
+  currentTextColor = color; // Salva a cor atual
+  saveFlashcardState();
+}
 
     function resetTimer() {
       if (!requireAuth()) return;
@@ -2096,6 +2121,36 @@
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
 
     document.getElementById('review-errors-button').addEventListener('click', reviewErrorsFromEndScreen);
+   function toggleHighlightAsterisks() {
+      isHighlightModeActive = !isHighlightModeActive;
+      if (isHighlightModeActive) {
+        applyAsteriskHighlight();
+      } else {
+        const contentElement = document.getElementById("flashcard-content");
+        const currentText = showingFront ? cards[currentCard].front : cards[currentCard].back;
+        contentElement.textContent = currentText;
+      }
+    }
+
+    function applyAsteriskHighlight() {
+      if (!requireAuth() || cards.length === 0 || !isHighlightModeActive) return;
+
+      const container = document.getElementById("card-container");
+      const contentElement = document.getElementById("flashcard-content");
+      const currentText = showingFront ? cards[currentCard].front : cards[currentCard].back;
+
+      const bgColor = window.getComputedStyle(container).backgroundColor;
+      let targetClass = '';
+
+      if (bgColor === 'rgb(0, 0, 0)' || bgColor === 'black') {
+        targetClass = 'highlight-asterisk-gold';
+      } else {
+        targetClass = 'highlight-asterisk';
+      }
+
+      const highlightedText = currentText.replace(/\*([^*]+)\*/g, `<span class="${targetClass}">*$1*</span>`);
+      contentElement.innerHTML = highlightedText;
+    }
   </script>
 </body>
 </html>

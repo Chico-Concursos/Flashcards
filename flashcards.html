@@ -938,7 +938,9 @@
     // Variáveis para medição de tempo de resposta
     let cardViewStartTime = 0;
     let isAutoAdvancePaused = false;
-let lastAutoAdvanceDelay = 5; // Mantém o último tempo usado
+let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay') 
+  ? parseInt(localStorage.getItem('lastAutoAdvanceDelay'), 10) 
+  : 0;
 
     // Variáveis para controle de expiração de sessão
     const SESSION_DURATION = 3 * 60 * 60 * 1000;
@@ -1862,14 +1864,14 @@ function changeTextColor(color) {
     return;
   }
   
+    lastAutoAdvanceDelay = newDelay;
+  localStorage.setItem('lastAutoAdvanceDelay', newDelay.toString());
   if (isAutoAdvanceActive) {
-    // Apenas altera o tempo se já estiver ativo
     autoAdvanceDelay = newDelay;
     autoAdvanceSeconds = newDelay;
     updateAutoAdvanceDisplay();
     showFeedback(`Tempo alterado para ${newDelay}s`, "gold");
   } else {
-    // Inicia com o novo tempo
     startAutoAdvanceWithDelay(newDelay);
     showFeedback(`Temporizador iniciado (${newDelay}s)`, "gold");
   }

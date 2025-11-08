@@ -2382,6 +2382,56 @@ function updateAutoAdvanceUI() {
     activeGroup.style.display = 'none';
   }
 }
+ </script>
+   <!-- Código para prevenir rolagem para fora do container -->
+  <script>
+    // Previne que o scroll do container afete a página do Google Sites
+    document.addEventListener('DOMContentLoaded', function() {
+      const cardContainer = document.getElementById('card-container');
+      
+      if (cardContainer) {
+        // Adiciona evento para quando o mouse entra no container
+        cardContainer.addEventListener('mouseenter', function() {
+          this.dataset.scrollLocked = 'true';
+        });
+        
+        // Adiciona evento para quando o mouse sai do container
+        cardContainer.addEventListener('mouseleave', function() {
+          delete this.dataset.scrollLocked;
+        });
+        
+        // Previne o scroll da página pai quando atinge os limites do container
+        cardContainer.addEventListener('wheel', function(e) {
+          if (this.scrollHeight <= this.clientHeight) return;
+          
+          const atTop = this.scrollTop === 0;
+          const atBottom = this.scrollTop + this.clientHeight >= this.scrollHeight - 1;
+          
+          if ((atTop && e.deltaY < 0) || (atBottom && e.deltaY > 0)) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+        
+        // Previne touch scroll na página pai quando atinge os limites
+        cardContainer.addEventListener('touchstart', function(e) {
+          this.startY = e.touches[0].clientY;
+        });
+        
+        cardContainer.addEventListener('touchmove', function(e) {
+          if (!this.startY) return;
+          
+          const deltaY = e.touches[0].clientY - this.startY;
+          const atTop = this.scrollTop === 0;
+          const atBottom = this.scrollTop + this.clientHeight >= this.scrollHeight - 1;
+          
+          if ((atTop && deltaY > 0) || (atBottom && deltaY < 0)) {
+            e.preventDefault();
+          }
+          
+          this.startY = e.touches[0].clientY;
+        }, { passive: false });
+      }
+    });
   </script>
 </body>
 </html>

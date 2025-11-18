@@ -1477,9 +1477,7 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       const card = cards[currentCard];
       const contentElement = document.getElementById("flashcard-content");
       contentElement.textContent = showingFront ? card.front : card.back;
-      const originalIndex = initialCards.indexOf(cards[currentCard]);
-const originalNumber = originalIndex !== -1 ? originalIndex + 1 : '?';
-cardCounter.innerHTML = `<span class="current-card">${originalNumber}</span>/<span>${initialCards.length}</span>`;
+     cardCounter.innerHTML = `<span class="current-card">${currentCard + 1}</span>/<span>${cards.length}</span>`;
       contentElement.style.fontSize = fontSize + "pt";
       updateAccuracyButtons();
       if (showingFront) {

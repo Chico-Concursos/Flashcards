@@ -695,6 +695,30 @@
       border: 1px solid #555 !important;
       padding: 2px 4px !important;
     }
+	/* --- CORREÇÕES PARA CELULAR (LOGIN E LAYOUT) --- */
+    @media (max-width: 768px) or (max-height: 600px) {
+      /* 1. Conserta o Login cortado pelo teclado */
+      #loginModal {
+        align-items: flex-start !important; /* Alinha no topo, não no centro */
+        overflow-y: auto !important;        /* Permite rolar a tela se o teclado subir */
+        padding-top: 20px;
+      }
+      .login-container {
+        margin: 20px auto 50px auto; /* Dá espaço para rolar até o botão */
+        max-height: none;
+      }
+
+      /* 2. Conserta o tamanho exagerado do card na foto */
+      #card-container {
+        height: 58vh; /* Reduz altura para caber barras do navegador móvel */
+        width: 95%;   /* Margem lateral segura */
+      }
+      
+      /* Ajusta botões para não quebrarem linha desnecessariamente */
+      .top-bar button, .bottom-bar button {
+        font-size: 1.1em;
+      }
+    }
   </style>
 </head>
 <body>
@@ -908,7 +932,8 @@
     let cards = [];
     let currentCard = 0;
     let showingFront = true;
-    let fontSize = 21.6;
+    // MUDANÇA: Detecta a largura da tela. Se for menor que 600px (celular), usa fonte 14pt, senão usa 22pt
+    let fontSize = window.innerWidth < 600 ? 14 : 22;
     let timerSeconds = 0;
     const timerElement = document.getElementById("timer");
     const cardContainer = document.getElementById("card-container");

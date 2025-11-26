@@ -1046,9 +1046,19 @@
     <button class="tooltip" data-tooltip="Estatísticas" onclick="toggleStatsModal()">📈</button>
     <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar apenas cards com erro" onclick="toggleReviewErrors()" style="display:none;">🔍</button>
     </button>
-	<select id="categoryFilter" class="tooltip" data-tooltip="Filtrar por Tópico" onchange="filterByCategory(this.value)">
-      <option value="Todas">Todos os Tópicos</option>
+	<select id="mainFilterSelect" autocomplete="off" class="tooltip" data-tooltip="Modo de Visualização" onchange="handleMainFilterChange(this.value)" style="background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; width: auto;">
+      <option value="" disabled selected hidden>Seleção</option>
+      <option value="all">Tudo</option>
+      <option value="topic">Tópicos</option>
     </select>
+
+<select id="topicSelect" class="tooltip" data-tooltip="Escolha o Tópico" onchange="handleTopicChange(this.value)" style="display:none; background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; max-width: 150px;">
+  <option value="">Escolha o Tópico...</option>
+</select>
+
+<select id="focoSelect" class="tooltip" data-tooltip="Escolha o Foco" onchange="handleFocoChange(this.value)" style="display:none; background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; max-width: 150px;">
+  <option value="todos">Todos os Focos</option>
+</select>
 	<button class="logout-button" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
   </div>
@@ -1187,7 +1197,6 @@
   <!-- INÍCIO DO NOVO MODAL DE CONFIGURAÇÕES (COLE AQUI) -->
   <div id="settingsModal" style="display:none;">
     <div id="settingsModalContent">
-   <div id="settingsModalContent">
       <h2 style="margin-top:0; margin-bottom: 15px;">Configurações de Estudo</h2>
       
       <div class="settings-section">
@@ -1296,6 +1305,7 @@
         <button class="close-button" onclick="closeSettingsModal()">Fechar</button>
       </div>
     </div>
+	</div>
   <!-- FIM DO NOVO MODAL DE CONFIGURAÇÕES -->
   <div id="loginModal" style="display: flex;">
     <div class="login-container">
@@ -1888,22 +1898,20 @@ loadFlashcardsFromGoogleSheet(SHEET_ID, GID).then(() => {
         } else {
             initialCards = loadedCards;
             cards = [...initialCards];
-            
-            // Popula o filtro usando os TÓPICOS (Coluna E)
-            categories = ["Todas", ...new Set(loadedCards.map(card => card.topico).filter(c => c))];
-            const categorySelect = document.getElementById("categoryFilter");
-            categorySelect.innerHTML = categories.map(cat => `<option value="${cat}">${cat === 'Todas' ? 'Todos os Tópicos' : cat}</option>`).join('');
-            
             const hasSavedState = loadFlashcardState();
+            
+            // CORREÇÃO: Forçamos o reset para evitar buscar menus que não existem mais
+            currentCategory = "Todas";
+            cards = [...initialCards];
+            
+            // Se não tinha estado salvo, zera variáveis críticas
             if (!hasSavedState) {
               currentCard = 0;
               showingFront = true;
-              currentCategory = "Todas";
               cardAccuracy = {};
               isReviewErrorsMode = false;
-            } else {
-              filterByCategory(currentCategory, true);
             }
+            // Removemos o 'else' que chamava o filtro antigo
             
             loadStatsFromStorage();
             
@@ -1918,7 +1926,7 @@ loadFlashcardsFromGoogleSheet(SHEET_ID, GID).then(() => {
                     btn.classList.remove("settings-highlight");
                 }, 10000);
             }
-
+            document.getElementById("mainFilterSelect").value = "";
             updateCard();
         }
         return loadedCards;
@@ -1934,8 +1942,9 @@ loadFlashcardsFromGoogleSheet(SHEET_ID, GID).then(() => {
       if (!requireAuth()) return;
       
       currentCategory = category;
-      const categorySelect = document.getElementById("categoryFilter");
-      categorySelect.value = category;
+      document.getElementById("mainFilterSelect").value = ""; // Reseta para a palavra "Seleção"
+document.getElementById("topicSelect").style.display = "none";
+document.getElementById("focoSelect").style.display = "none";
 	  categorySelect.title = category; // ← mostra o nome completo em tooltip
       
       if (category === "Todas") {
@@ -2948,10 +2957,6 @@ function resetAutoAdvanceTimer() {
   }
 }
 
-document.getElementById('autoAdvanceButton').addEventListener('mouseleave', () => {
-  clearTimeout(longPressTimer);
-});
-
 function showFeedback(message, color = "gold") {
   const feedback = document.createElement('div');
   feedback.textContent = message;
@@ -3339,6 +3344,135 @@ function startCustomStudy() {
             }
         }
     });
+	// --- NOVAS FUNÇÕES DO SISTEMA DE FILTRO EM CASCATA ---
+
+    // 1. Acionado quando muda o primeiro menu (Seleção)
+    function handleMainFilterChange(mode) {
+      const topicSelect = document.getElementById('topicSelect');
+      const focoSelect = document.getElementById('focoSelect');
+
+      if (mode === 'all') {
+        // Se escolheu "Tudo", esconde os outros e mostra todos os cards
+        topicSelect.style.display = 'none';
+        focoSelect.style.display = 'none';
+        resetFilterToAll();
+      } else {
+        // Se escolheu "Por Tópico", mostra o menu de tópicos
+        topicSelect.style.display = 'inline-block';
+        focoSelect.style.display = 'none'; // Foco ainda oculto até escolher tópico
+        populateTopicSelect(); // Preenche a lista de tópicos
+      }
+    }
+
+    // 2. Preenche o menu de Tópicos (Baseado na Coluna E)
+    function populateTopicSelect() {
+      const uniqueTopics = [...new Set(initialCards.map(c => c.topico).filter(t => t))].sort();
+      const select = document.getElementById('topicSelect');
+      select.innerHTML = '<option value="">Escolha...</option>';
+      
+      uniqueTopics.forEach(topic => {
+        const option = document.createElement('option');
+        option.value = topic;
+        option.textContent = topic;
+        select.appendChild(option);
+      });
+    }
+
+    // 3. Acionado quando escolhe um Tópico específico
+    function handleTopicChange(selectedTopic) {
+      const focoSelect = document.getElementById('focoSelect');
+
+      if (!selectedTopic) {
+        focoSelect.style.display = 'none';
+        return;
+      }
+
+      // Filtra cards apenas pelo tópico primeiro
+      currentCategory = selectedTopic; // Mantém compatibilidade com variáveis globais
+      
+      // Popula o menu de FOCO baseado apenas neste tópico
+      const cardsOfTopic = initialCards.filter(c => c.topico === selectedTopic);
+      const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f))].sort();
+      
+      const select = document.getElementById('focoSelect');
+      select.innerHTML = '<option value="todos">Foco</option>';
+      
+      uniqueFocos.forEach(foco => {
+        const option = document.createElement('option');
+        option.value = foco;
+        option.textContent = foco;
+        select.appendChild(option);
+      });
+
+      focoSelect.style.display = 'inline-block'; // Mostra o terceiro menu
+      applyAdvancedFilter(selectedTopic, 'todos');
+    }
+
+    // 4. Acionado quando escolhe um Foco específico
+    function handleFocoChange(selectedFoco) {
+      const selectedTopic = document.getElementById('topicSelect').value;
+      applyAdvancedFilter(selectedTopic, selectedFoco);
+    }
+
+    // 5. Função Central que aplica o filtro final
+    function applyAdvancedFilter(topic, foco) {
+      if (!requireAuth()) return;
+
+      let filtered = initialCards;
+
+      // Filtra por Tópico
+      if (topic) {
+        filtered = filtered.filter(card => card.topico === topic);
+      }
+
+      // Filtra por Foco (se não for "todos")
+      if (foco && foco !== 'todos') {
+        filtered = filtered.filter(card => card.foco === foco);
+      }
+
+      // Aplica verificação de "Revisar Erros" se estiver ativo
+      if (isReviewErrorsMode) {
+        filtered = filtered.filter((card) => {
+          const originalIndex = initialCards.indexOf(card);
+          return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+        });
+      }
+
+      cards = filtered;
+      
+      // Se embaralhar estiver ativo, embaralha o resultado
+      if (isShuffleActive) {
+        cards = [...cards].sort(() => Math.random() - 0.5);
+      }
+
+      // Reseta navegação
+      currentCard = 0;
+      showingFront = true;
+      updateCard();
+      saveFlashcardState();
+    }
+
+    // 6. Reseta para mostrar tudo
+    function resetFilterToAll() {
+      currentCategory = "Todas";
+      cards = [...initialCards];
+      
+      if (isReviewErrorsMode) {
+        cards = cards.filter((card) => {
+          const originalIndex = initialCards.indexOf(card);
+          return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
+        });
+      }
+
+      if (isShuffleActive) {
+        cards.sort(() => Math.random() - 0.5);
+      }
+
+      currentCard = 0;
+      showingFront = true;
+      updateCard();
+      saveFlashcardState();
+    }
   </script>
 </body>
 </html>

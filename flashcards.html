@@ -1046,19 +1046,7 @@
     <button class="tooltip" data-tooltip="Estatísticas" onclick="toggleStatsModal()">📈</button>
     <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar apenas cards com erro" onclick="toggleReviewErrors()" style="display:none;">🔍</button>
     </button>
-	<select id="mainFilterSelect" autocomplete="off" class="tooltip" data-tooltip="Modo de Visualização" onchange="handleMainFilterChange(this.value)" style="background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; width: auto;">
-      <option value="" disabled selected hidden>Seleção</option>
-      <option value="all">Tudo</option>
-      <option value="topic">Tópicos</option>
-    </select>
-
-<select id="topicSelect" class="tooltip" data-tooltip="Escolha o Tópico" onchange="handleTopicChange(this.value)" style="display:none; background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; max-width: 150px;">
-  <option value="">Escolha o Tópico...</option>
-</select>
-
-<select id="focoSelect" class="tooltip" data-tooltip="Escolha o Foco" onchange="handleFocoChange(this.value)" style="display:none; background-color: #222; border: 1px solid #555; color: white; padding: 2px 4px; max-width: 150px;">
-  <option value="todos">Todos os Focos</option>
-</select>
+	<button id="filterBtn" class="tooltip" data-tooltip="Filtrar Conteúdo" onclick="openFilterModal()">📂</button>
 	<button class="logout-button" onclick="logout()">
       <i class="fas fa-sign-out-alt"></i> Sair
   </div>
@@ -1307,6 +1295,42 @@
     </div>
 	</div>
   <!-- FIM DO NOVO MODAL DE CONFIGURAÇÕES -->
+  <div id="filterModal" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;">
+    <div id="filterModalContent" style="background: #222; color: white; padding: 25px; border-radius: 10px; max-width: 400px; width: 90%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); text-align: center; border: 1px solid #444; max-height: 90vh; overflow-y: auto;">
+      
+      <h2 style="color: gold; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">Filtrar Cards</h2>
+
+      <div style="margin-bottom: 15px; text-align: left;">
+        <label style="display:block; color: gold; margin-bottom: 5px; font-weight: bold;">1. Disciplina</label>
+        <select id="modalDisciplineSelect" onchange="modalHandleDisciplineChange(this.value)" style="width: 100%; padding: 12px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em;">
+          <option value="">Selecione...</option>
+        </select>
+      </div>
+
+      <div id="modalTopicContainer" style="margin-bottom: 15px; text-align: left; display: none;">
+        <label style="display:block; color: gold; margin-bottom: 5px; font-weight: bold;">2. Tópico</label>
+        <select id="modalTopicSelect" onchange="modalHandleTopicChange(this.value)" style="width: 100%; padding: 12px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em;">
+          <option value="todos">Todos os Tópicos</option>
+        </select>
+      </div>
+
+      <div id="modalFocoContainer" style="margin-bottom: 25px; text-align: left; display: none;">
+        <label style="display:block; color: gold; margin-bottom: 5px; font-weight: bold;">3. Foco Específico</label>
+        <select id="modalFocoSelect" style="width: 100%; padding: 12px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em;">
+          <option value="todos">Todos os Focos</option>
+        </select>
+      </div>
+
+      <div style="display: flex; gap: 10px; justify-content: center; margin-top: 20px; flex-direction: column;">
+        <button onclick="applyModalFilter()" style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 1.1em;">APLICAR FILTRO</button>
+        
+        <button onclick="clearAndCloseFilter()" style="background: #444; color: white; border: 1px solid #666; padding: 10px; border-radius: 5px; cursor: pointer;">Limpar Filtros (Ver Tudo)</button>
+        
+        <button onclick="closeFilterModal()" style="background: transparent; border: none; color: #888; margin-top: 5px; cursor: pointer; text-decoration: underline;">Cancelar</button>
+      </div>
+    </div>
+  </div>
+  
   <div id="loginModal" style="display: flex;">
     <div class="login-container">
       <h2><i class="fas fa-lock"></i> Acesso aos Flashcards</h2>
@@ -1383,7 +1407,8 @@
     // Variáveis para categorias
     let categories = [];
     let currentCategory = "Todas";
-    // Variáveis para medição de tempo de resposta
+	// Variável para lembrar o último filtro usado
+    let lastFilterSelections = { discipline: "", topic: "", foco: "" };
     let cardViewStartTime = 0;
     let isAutoAdvancePaused = false;
 	// --- VARIÁVEIS DO APRENDIZADO ADAPTATIVO ---
@@ -1419,6 +1444,7 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
     }
 
     // Função para resetar a UI após logout
+  // Função para resetar a UI após logout
     function resetUIForLogout() {
       document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
       cardCounter.textContent = "0/0";
@@ -1457,8 +1483,15 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       cardResponseTimes = {};
       currentCategory = "Todas";
       
-      const categorySelect = document.getElementById("categoryFilter");
-      categorySelect.innerHTML = '<option value="Todas">Todas Categorias</option>';
+      // --- CORREÇÃO: Esconde o Modal de Filtro e reseta o ícone ---
+      const modalFilter = document.getElementById("filterModal");
+      if (modalFilter) modalFilter.style.display = "none";
+      
+      const filterBtn = document.getElementById('filterBtn');
+      if(filterBtn) {
+          filterBtn.style.color = 'white';
+          filterBtn.style.textShadow = 'none';
+      }
     }
 
     // --- FUNÇÕES DE AUTENTICAÇÃO ---
@@ -1926,7 +1959,6 @@ loadFlashcardsFromGoogleSheet(SHEET_ID, GID).then(() => {
                     btn.classList.remove("settings-highlight");
                 }, 10000);
             }
-            document.getElementById("mainFilterSelect").value = "";
             updateCard();
         }
         return loadedCards;
@@ -1975,14 +2007,16 @@ document.getElementById("focoSelect").style.display = "none";
       }
     }
 
-        function updateCard() {
+    function updateCard() {
       if (!requireAuth() || cards.length === 0 || isFinished) return;
       const card = cards[currentCard];
       const contentElement = document.getElementById("flashcard-content");
       contentElement.textContent = showingFront ? card.front : card.back;
-      const originalIndex = initialCards.indexOf(cards[currentCard]);
-const originalNumber = originalIndex !== -1 ? originalIndex + 1 : '?';
-cardCounter.innerHTML = `<span class="current-card">${originalNumber}</span>/<span>${initialCards.length}</span>`;
+      // --- ALTERAÇÃO: Contador Relativo (Mostra posição no filtro atual) ---
+      // Ex: Mostra "1 / 15" (sendo 15 o total do tópico filtrado)
+      const currentPosition = currentCard + 1;
+      const totalInFilter = cards.length;
+      cardCounter.innerHTML = `<span class="current-card">${currentPosition}</span>/<span>${totalInFilter}</span>`;
       contentElement.style.fontSize = fontSize + "pt";
       updateAccuracyButtons();
       if (showingFront) {
@@ -3344,128 +3378,213 @@ function startCustomStudy() {
             }
         }
     });
-	// --- NOVAS FUNÇÕES DO SISTEMA DE FILTRO EM CASCATA ---
+	// --- LÓGICA DO MODAL DE FILTRO INTELIGENTE ---
 
-    // 1. Acionado quando muda o primeiro menu (Seleção)
-    function handleMainFilterChange(mode) {
-      const topicSelect = document.getElementById('topicSelect');
-      const focoSelect = document.getElementById('focoSelect');
+    // 1. Abrir o Modal e Preencher Disciplinas
+    // 1. Abrir o Modal e Restaurar Última Escolha
+    function openFilterModal() {
+      if (!requireAuth()) return;
+      
+      const modal = document.getElementById('filterModal');
+      const discSelect = document.getElementById('modalDisciplineSelect');
+      
+      // Busca disciplinas únicas
+      const uniqueDisc = [...new Set(initialCards.map(c => c.disciplina).filter(d => d))].sort();
+      
+      discSelect.innerHTML = '<option value="">Selecione a Disciplina...</option>';
+      uniqueDisc.forEach(disc => {
+        const option = document.createElement('option');
+        option.value = disc;
+        option.textContent = disc;
+        discSelect.appendChild(option);
+      });
 
-      if (mode === 'all') {
-        // Se escolheu "Tudo", esconde os outros e mostra todos os cards
-        topicSelect.style.display = 'none';
-        focoSelect.style.display = 'none';
-        resetFilterToAll();
-      } else {
-        // Se escolheu "Por Tópico", mostra o menu de tópicos
-        topicSelect.style.display = 'inline-block';
-        focoSelect.style.display = 'none'; // Foco ainda oculto até escolher tópico
-        populateTopicSelect(); // Preenche a lista de tópicos
+      // Reseta visualização inicial
+      document.getElementById('modalTopicContainer').style.display = 'none';
+      document.getElementById('modalFocoContainer').style.display = 'none';
+
+      // --- LÓGICA DE MEMÓRIA: Restaura a seleção anterior se houver ---
+      if (lastFilterSelections.discipline) {
+          discSelect.value = lastFilterSelections.discipline;
+          
+          // Força o carregamento dos tópicos baseados na disciplina salva
+          modalHandleDisciplineChange(lastFilterSelections.discipline);
+          
+          if (lastFilterSelections.topic) {
+              const topicSelect = document.getElementById('modalTopicSelect');
+              topicSelect.value = lastFilterSelections.topic;
+              
+              // Força o carregamento dos focos baseados no tópico salvo
+              modalHandleTopicChange(lastFilterSelections.topic);
+              
+              if (lastFilterSelections.foco) {
+                  const focoSelect = document.getElementById('modalFocoSelect');
+                  // Verifica se a opção ainda existe antes de selecionar
+                  if (focoSelect.querySelector(`option[value="${lastFilterSelections.foco}"]`)) {
+                      focoSelect.value = lastFilterSelections.foco;
+                  }
+              }
+          }
       }
+      // -------------------------------------------------------------
+
+      modal.style.display = 'flex';
     }
 
-    // 2. Preenche o menu de Tópicos (Baseado na Coluna E)
-    function populateTopicSelect() {
-      const uniqueTopics = [...new Set(initialCards.map(c => c.topico).filter(t => t))].sort();
-      const select = document.getElementById('topicSelect');
-      select.innerHTML = '<option value="">Escolha...</option>';
-      
+    // 2. Fechar Modal
+    function closeFilterModal() {
+      document.getElementById('filterModal').style.display = 'none';
+    }
+
+    // 3. Ao escolher Disciplina -> Carrega Tópicos
+    function modalHandleDisciplineChange(selectedDisc) {
+      const topicContainer = document.getElementById('modalTopicContainer');
+      const topicSelect = document.getElementById('modalTopicSelect');
+      const focoContainer = document.getElementById('modalFocoContainer');
+
+      // Reseta os passos seguintes
+      topicContainer.style.display = 'none';
+      focoContainer.style.display = 'none';
+
+      if (!selectedDisc) return;
+
+      // Filtra tópicos apenas desta disciplina
+      const cardsOfDisc = initialCards.filter(c => c.disciplina === selectedDisc);
+      const uniqueTopics = [...new Set(cardsOfDisc.map(c => c.topico).filter(t => t))].sort();
+
+      topicSelect.innerHTML = '<option value="todos">Todos os Tópicos</option>';
       uniqueTopics.forEach(topic => {
         const option = document.createElement('option');
         option.value = topic;
         option.textContent = topic;
-        select.appendChild(option);
+        topicSelect.appendChild(option);
       });
+
+      topicContainer.style.display = 'block';
     }
 
-    // 3. Acionado quando escolhe um Tópico específico
-    function handleTopicChange(selectedTopic) {
-      const focoSelect = document.getElementById('focoSelect');
+    // 4. Ao escolher Tópico -> Verifica se precisa mostrar Foco
+    function modalHandleTopicChange(selectedTopic) {
+      const focoContainer = document.getElementById('modalFocoContainer');
+      const focoSelect = document.getElementById('modalFocoSelect');
+      const selectedDisc = document.getElementById('modalDisciplineSelect').value;
 
-      if (!selectedTopic) {
-        focoSelect.style.display = 'none';
+      focoContainer.style.display = 'none';
+
+      if (!selectedTopic || selectedTopic === 'todos') return;
+
+      // Verifica focos existentes para (Disciplina + Tópico)
+      const cardsOfTopic = initialCards.filter(c => 
+          c.disciplina === selectedDisc && c.topico === selectedTopic
+      );
+      const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f))].sort();
+
+      // REGRA DE EFICIÊNCIA: Só mostra a caixa se tiver mais de 1 foco diferente
+      if (uniqueFocos.length > 1) {
+          focoSelect.innerHTML = '<option value="todos">Todos os Focos</option>';
+          uniqueFocos.forEach(foco => {
+            const option = document.createElement('option');
+            option.value = foco;
+            option.textContent = foco;
+            focoSelect.appendChild(option);
+          });
+          focoContainer.style.display = 'block';
+      }
+    }
+
+    // 5. Botão APLICAR (Executa o filtro real)
+    // 5. Botão APLICAR (Executa o filtro e Salva Memória)
+    function applyModalFilter() {
+      const disc = document.getElementById('modalDisciplineSelect').value;
+      const topic = document.getElementById('modalTopicSelect').value;
+      const foco = document.getElementById('modalFocoSelect').value;
+      const focoVisible = document.getElementById('modalFocoContainer').style.display !== 'none';
+
+      if (!disc) {
+        alert("Por favor, selecione pelo menos a Disciplina.");
         return;
       }
 
-      // Filtra cards apenas pelo tópico primeiro
-      currentCategory = selectedTopic; // Mantém compatibilidade com variáveis globais
-      
-      // Popula o menu de FOCO baseado apenas neste tópico
-      const cardsOfTopic = initialCards.filter(c => c.topico === selectedTopic);
-      const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f))].sort();
-      
-      const select = document.getElementById('focoSelect');
-      select.innerHTML = '<option value="todos">Foco</option>';
-      
-      uniqueFocos.forEach(foco => {
-        const option = document.createElement('option');
-        option.value = foco;
-        option.textContent = foco;
-        select.appendChild(option);
-      });
+      // --- SALVA NA MEMÓRIA ---
+      lastFilterSelections = {
+          discipline: disc,
+          topic: topic,
+          foco: (focoVisible ? foco : "") // Só salva o foco se a caixa estava visível
+      };
+      // ------------------------
 
-      focoSelect.style.display = 'inline-block'; // Mostra o terceiro menu
-      applyAdvancedFilter(selectedTopic, 'todos');
-    }
-
-    // 4. Acionado quando escolhe um Foco específico
-    function handleFocoChange(selectedFoco) {
-      const selectedTopic = document.getElementById('topicSelect').value;
-      applyAdvancedFilter(selectedTopic, selectedFoco);
-    }
-
-    // 5. Função Central que aplica o filtro final
-    function applyAdvancedFilter(topic, foco) {
-      if (!requireAuth()) return;
-
-      let filtered = initialCards;
+      // Inicia filtro pela Disciplina
+      let filtered = initialCards.filter(card => card.disciplina === disc);
 
       // Filtra por Tópico
-      if (topic) {
+      if (topic && topic !== 'todos') {
         filtered = filtered.filter(card => card.topico === topic);
+        currentCategory = topic; 
+      } else {
+        currentCategory = disc;
       }
 
-      // Filtra por Foco (se não for "todos")
-      if (foco && foco !== 'todos') {
+      // Filtra por Foco
+      if (focoVisible && foco && foco !== 'todos') {
         filtered = filtered.filter(card => card.foco === foco);
       }
 
-      // Aplica verificação de "Revisar Erros" se estiver ativo
-      if (isReviewErrorsMode) {
-        filtered = filtered.filter((card) => {
-          const originalIndex = initialCards.indexOf(card);
-          return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
-        });
-      }
-
-      cards = filtered;
+      finishFilterApplication(filtered);
       
-      // Se embaralhar estiver ativo, embaralha o resultado
-      if (isShuffleActive) {
-        cards = [...cards].sort(() => Math.random() - 0.5);
+      const btn = document.getElementById('filterBtn');
+      if(btn) {
+          btn.style.color = '#FFD700'; 
+          btn.style.textShadow = '0 0 10px gold';
       }
-
-      // Reseta navegação
-      currentCard = 0;
-      showingFront = true;
-      updateCard();
-      saveFlashcardState();
+      
+      closeFilterModal();
     }
 
-    // 6. Reseta para mostrar tudo
-    function resetFilterToAll() {
-      currentCategory = "Todas";
-      cards = [...initialCards];
+    // 6. Botão LIMPAR / TUDO
+    // 6. Botão LIMPAR (Reseta os campos e mostra tudo, mas mantém janela aberta)
+    function clearAndCloseFilter() {
+      // 1. Limpa a Memória
+      lastFilterSelections = { discipline: "", topic: "", foco: "" };
+
+      // 2. Reseta os Campos Visuais do Modal
+      document.getElementById('modalDisciplineSelect').value = "";
+      document.getElementById('modalTopicContainer').style.display = 'none';
+      document.getElementById('modalFocoContainer').style.display = 'none';
       
+      // 3. Reseta o Filtro real (Mostra todos os cards no fundo)
+      currentCategory = "Todas";
+      finishFilterApplication([...initialCards]);
+      
+      // 4. Reseta a cor do ícone da pasta
+      const btn = document.getElementById('filterBtn');
+      if(btn) {
+          btn.style.color = 'white';
+          btn.style.textShadow = 'none';
+      }
+
+      // OBS: Não chamamos mais closeFilterModal(), então a janela continua aberta
+      // para você fazer uma nova seleção imediatamente.
+    }
+
+    // Função auxiliar para aplicar e salvar
+    function finishFilterApplication(newCardsList) {
+      // Mantém lógica de revisão de erros se estiver ativa
       if (isReviewErrorsMode) {
-        cards = cards.filter((card) => {
+        newCardsList = newCardsList.filter((card) => {
           const originalIndex = initialCards.indexOf(card);
           return cardAccuracy[originalIndex] && cardAccuracy[originalIndex].incorrect > 0;
         });
       }
+
+      cards = newCardsList;
 
       if (isShuffleActive) {
         cards.sort(() => Math.random() - 0.5);
+      }
+
+      if (cards.length === 0) {
+        alert("Nenhum card encontrado com esses filtros.");
+        return; 
       }
 
       currentCard = 0;

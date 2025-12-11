@@ -4024,7 +4024,12 @@ function changeTextColor(color) {
             populateVoiceList();
         };
 
-        window.speechSynthesis.speak(utterance);
+        // --- CORREÇÃO DE CORTE DE ÁUDIO ---
+        // Adiciona um pequeno atraso (100ms) para garantir que o navegador 
+        // limpou o buffer de áudio anterior antes de começar o próximo.
+        setTimeout(() => {
+            window.speechSynthesis.speak(utterance);
+        }, 100);
     }
 
     // Inicialização segura
@@ -5410,6 +5415,7 @@ function startCustomStudy() {
             menu.classList.remove('show-menu');
         }
     });
+	
   </script>
 </body>
 </html>

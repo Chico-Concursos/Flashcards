@@ -1499,82 +1499,59 @@ body {
       object-fit: contain;
       animation: popIn 0.3s ease;
     }
-	/* === CORREÇÃO DE ZOOM NO PC - VERSÃO BLINDADA V2 === */
-    /* Detecta se é um dispositivo com mouse (PC), independente do tamanho da tela/zoom */
-    /* === CORREÇÃO DE ZOOM NO PC - VERSÃO V4 (INTELIGENTE) === */
-    /* Detecta se é um dispositivo com mouse (PC) */
-    @media (hover: hover) and (pointer: fine) {
-      
-      /* 1. Oculta elementos EXCLUSIVOS de celular */
-      #mobileAnswerBtn, #mobileTopTTS { display: none !important; }
+	/* === CORREÇÃO DE ZOOM NO PC (MATA O MODO MOBILE SE TIVER MOUSE) === */
+    /* Se o dispositivo tem cursor (mouse), forçamos o visual de PC */
+    @media (hover: hover) {
+      /* 1. Esconde o botão gigante de celular */
+      #mobileAnswerBtn { display: none !important; }
 
-      /* 2. Restaura elementos EXCLUSIVOS de PC */
-      #desktopTimer { display: inline-block !important; } 
-      
-      /* 3. Garante que a BARRA em si apareça */
+      /* 2. Restaura a barra de botões do PC */
       .bottom-bar {
         display: flex !important;
         height: auto !important;
-        padding: 5px 0 !important;
-        margin: 0 !important;
+        padding: 0 !important;
+        margin: 0px 0 !important;
         border: none !important;
-        visibility: visible !important;
       }
 
-      /* 4. BOTÕES DE NAVEGAÇÃO (Estáticos): Forçamos aparecer SEMPRE */
-      /* Excluímos os botões dinâmicos desta regra para não forçá-los erradamente */
-      .bottom-bar > button:not(#correctButton):not(#incorrectButton):not(#reviewErrorsButton), 
+      /* 3. Garante que os botões da barra inferior apareçam */
+      .bottom-bar > button, 
       .bottom-bar > input, 
       .bottom-bar > span,
       .bottom-bar > div:not(#srsButtons) {
          display: inline-block !important;
       }
-
-      /* 5. BOTÕES DINÂMICOS (Certo/Errado/Revisar): */
-      /* Só forçamos aparecer se o JavaScript NÃO os tiver escondido (style="none") */
-      #correctButton:not([style*="none"]),
-      #incorrectButton:not([style*="none"]),
-      #reviewErrorsButton:not([style*="none"]) {
-         display: inline-block !important;
+      .bottom-bar > div#autoAdvanceControls {
+         display: flex !important;
       }
-      
-      /* 6. BARRA SRS: Mesma lógica, só aparece se o jogo mandar */
-      #srsButtons:not([style*="none"]) {
-        display: flex !important; /* Só exibe se ativo */
+
+      /* 4. Reseta a barra SRS para ficar dentro do card, não fixa no rodapé */
+      #srsButtons {
         position: static !important;
         width: auto !important;
         height: auto !important;
         background-color: transparent !important;
         border-top: none !important;
         padding: 0 !important;
-        gap: 8px !important;
       }
-      
       #srsButtons button.accuracy-button {
         height: auto !important;
         flex: none !important;
         border-radius: 5px !important;
-        font-size: 1em !important;
-        margin: 0 !important;
       }
 
-      /* 7. Mantém o Card com tamanho de PC */
+      /* 5. Ajustes finos de layout */
       #card-container {
          width: 98% !important;
          border-radius: 10px !important;
-         height: 325px !important; 
+         height: 325px !important; /* Mantém altura fixa do PC */
          overflow-y: auto !important;
-         background-color: var(--card-bg, white);
       }
-      
       body {
-         overflow-y: hidden !important;
-         background-color: #121212 !important;
+         overflow-y: hidden !important; /* O PC rola dentro do card, não a página */
       }
-      
       .top-bar {
-         justify-content: center !important; 
-         background-color: #1e1e1e !important;
+         justify-content: center !important; /* Mantém o topo centralizado */
       }
     }
   </style>

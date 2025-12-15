@@ -1499,6 +1499,74 @@ body {
       object-fit: contain;
       animation: popIn 0.3s ease;
     }
+	/* === CORREÇÃO DE ZOOM NO PC - VERSÃO BLINDADA V2 === */
+    /* Detecta se é um dispositivo com mouse (PC), independente do tamanho da tela/zoom */
+    @media (hover: hover) and (pointer: fine) {
+      
+      /* 1. Oculta elementos EXCLUSIVOS de celular */
+      #mobileAnswerBtn { display: none !important; }
+      #mobileTopTTS { display: none !important; } /* Esconde botão de voz do topo mobile */
+
+      /* 2. Restaura elementos EXCLUSIVOS de PC que sumiram com o zoom */
+      #desktopTimer { display: inline-block !important; } /* Traz o relógio de volta */
+      
+      /* 3. Força a barra inferior a aparecer (mesmo com zoom alto) */
+      .bottom-bar {
+        display: flex !important;
+        height: auto !important;
+        padding: 5px 0 !important;
+        margin: 0 !important;
+        border: none !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+      }
+
+      /* 4. Garante que os botões de navegação (Avançar, Voltar, etc) apareçam */
+      .bottom-bar > button, 
+      .bottom-bar > input, 
+      .bottom-bar > span,
+      .bottom-bar > div:not(#srsButtons) {
+         display: inline-block !important;
+      }
+      
+      /* 5. Corrige a barra de botões coloridos (SRS) para não ficar fixa no rodapé */
+      #srsButtons {
+        position: static !important; /* Remove fixação */
+        width: auto !important;
+        height: auto !important;
+        background-color: transparent !important;
+        border-top: none !important;
+        padding: 0 !important;
+        display: flex !important; /* Garante que apareça se estiver ativo */
+        gap: 8px !important;
+      }
+      #srsButtons button.accuracy-button {
+        height: auto !important;
+        flex: none !important;
+        border-radius: 5px !important;
+        font-size: 1em !important;
+        margin: 0 !important;
+      }
+
+      /* 6. Mantém o Card com tamanho de PC */
+      #card-container {
+         width: 98% !important;
+         border-radius: 10px !important;
+         height: 325px !important; 
+         overflow-y: auto !important;
+         background-color: var(--card-bg, white); /* Mantém a cor escolhida */
+      }
+      
+      body {
+         overflow-y: hidden !important; /* Impede barra de rolagem dupla na página */
+         background-color: #121212 !important;
+      }
+      
+      .top-bar {
+         justify-content: center !important; 
+         background-color: #1e1e1e !important;
+      }
+    }
   </style>
 </head>
 <body>

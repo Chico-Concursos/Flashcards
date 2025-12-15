@@ -925,43 +925,151 @@ body {
       font-weight: bold;
       color: gold;
     }
-	/* --- REGRAS EXCLUSIVAS PARA CELULAR (OTIMIZADO) --- */
+	/* --- REGRAS GERAIS (PC) --- */
+    /* Esconde os botões exclusivos de celular quando estiver no PC */
+    #mobileAnswerBtn, #mobileTopTTS { 
+        display: none; 
+    }
+
+    /* --- REGRAS EXCLUSIVAS PARA CELULAR (LAYOUT HÍBRIDO V8) --- */
     @media (max-width: 768px) {
       
-      /* 1. Container do Card: Altura reduzida para evitar rolagem dupla */
+      /* === 1. TROCA INTELIGENTE DO TOPO === */
+      /* Esconde o Relógio no celular */
+      #desktopTimer {
+          display: none !important;
+      }
+      /* Mostra o Botão de Voz no celular (no lugar do relógio) */
+      #mobileTopTTS {
+          display: inline-block !important;
+          color: #FFD700 !important; /* Garante que o ícone fique dourado */
+      }
+
+      /* === 2. VISUAL "TELA CHEIA" === */
       #card-container {
-        height: 50vh; 
-        width: 96%;
-        margin-top: 5px;
+        width: 100% !important;
+        height: calc(100vh - 130px) !important;
+        margin: 0 !important;
+        border-radius: 0 !important;
+        box-shadow: none !important;
+        background-color: black; 
+        border-bottom: 1px solid #333;
+        display: flex;
+        align-items: center; 
       }
 
-      /* 2. Correção Crítica do Login: Garante que o teclado não cubra o botão */
-      #loginModal {
-        align-items: flex-start !important; /* Cola no topo */
-        overflow-y: auto !important;        /* Permite rolar se o teclado subir */
-        padding-top: 40px;                  /* Espaço seguro do topo */
+      #flashcard-content {
+        padding: 20px 15px !important;
+        font-size: 1.5em; 
+        color: #e0e0e0; 
+        line-height: 1.6;
+        font-weight: 500;
       }
       
-      .login-container {
-        margin: 0 auto 80px auto; /* Margem inferior grande para o teclado */
-        width: 92%;
-        padding: 20px;
+      #flashcard-content img {
+        max-height: 40vh;
+        width: auto;
       }
 
-      /* 3. Otimização dos Botões da Barra Inferior (Para não quebrar linha) */
-      .bottom-bar {
-        gap: 5px; /* Menos espaço entre botões */
-      }
-      .bottom-bar button {
-        font-size: 1.1em; /* Botões levemente menores */
+      /* === 3. LIMPEZA DA BARRA SUPERIOR === */
+      .top-bar {
+        justify-content: space-between !important;
+        padding: 10px 15px !important;
+        background-color: black !important;
+        border-bottom: 1px solid #333;
       }
       
-      /* 4. Botões SRS (Errei/Bom/Fácil) mais compactos no celular */
-      .accuracy-button {
-        padding: 0 5px !important;
-        font-size: 0.9em !important;
-        min-width: 55px !important;
+      /* Esconde ícones desnecessários, mas MANTÉM o nosso novo #mobileTopTTS */
+      .top-bar #filterBtn, 
+      .top-bar #streakDisplay,
+      .top-bar button[onclick="toggleStatsModal()"],
+      .top-bar button[onclick="openFilterModal()"] {
+         display: none !important;
       }
+      
+      .menu-item-label {
+          display: inline-block !important;
+          color: #ddd !important;
+          font-size: 1rem !important;
+          opacity: 1 !important;
+      }
+      
+      #syncIndicator { display: inline-block !important; }
+
+      /* === 4. RODAPÉ E BOTÕES === */
+      .bottom-bar { 
+        display: block !important; 
+        height: 0 !important; 
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: visible !important; 
+        border: none !important;
+      }
+
+      .bottom-bar > button, 
+      .bottom-bar > input, 
+      .bottom-bar > span,
+      .bottom-bar > div:not(#srsButtons) { 
+         display: none !important;
+      }
+
+      /* Botão MOSTRAR RESPOSTA */
+      #mobileAnswerBtn {
+        /* Reativamos o display block para celular */
+        display: block !important; 
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 65px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom)); 
+        padding-top: 15px;
+        background-color: #222 !important; 
+        color: #FFD700 !important;        
+        font-size: 1.3em !important;
+        font-weight: bold;
+        border: none !important;
+        border-top: 2px solid #FFD700 !important;
+        z-index: 2147483647 !important;
+        cursor: pointer;
+      }
+
+      /* Barra SRS */
+      #srsButtons {
+        position: fixed !important;
+        bottom: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+        min-height: 65px;
+        padding-bottom: max(0px, env(safe-area-inset-bottom));
+        background-color: #000 !important;
+        z-index: 2147483647 !important;
+        padding: 0 !important;
+        gap: 0 !important;
+        border-top: 1px solid #333;
+        /* Display controlado pelo JS */
+      }
+
+      #srsButtons button.accuracy-button {
+        flex: 1 !important;
+        height: 70px !important;
+        border-radius: 0 !important;
+        margin: 0 !important;
+        font-size: 0.85em !important;
+        font-weight: bold;
+        border: none !important;
+        background-color: transparent !important;
+      }
+
+      #btnAgain, #btnDontKnow { background: #2b1515 !important; color: #ff5555 !important; border-top: 3px solid #ff5555 !important; }
+      #btnHard { background: #2b2515 !important; color: #ffa500 !important; border-top: 3px solid #ffa500 !important; }
+      #btnGood { background: #152b15 !important; color: #90ee90 !important; border-top: 3px solid #90ee90 !important; }
+      #btnEasy { background: #152b2b !important; color: #00ff00 !important; border-top: 3px solid #00ff00 !important; }
+      
+      #loginModal { align-items: flex-start !important; padding-top: 50px; }
+      .login-container { margin-bottom: 100px; width: 95%; }
     }
 	/* --- ESTILO DAS CAIXAS DE SELEÇÃO (OPTION CARDS) --- */
     /* --- ESTILO LIMPO (LISTA) COM TOOLTIP --- */
@@ -1297,6 +1405,7 @@ body {
   </style>
 </head>
 <body>
+<button id="mobileAnswerBtn" onclick="flipCard()" style="display:none;">MOSTRAR RESPOSTA</button>
  <div class="top-bar">
     <!-- 1. BOTÃO MENU (HAMBÚRGUER) -->
     <div style="position: relative;">
@@ -1368,7 +1477,9 @@ body {
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
 	<span id="syncIndicator" class="tooltip" data-tooltip="Status: Sincronizado" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #00ff00; font-weight: bold; cursor: help; margin-left: 8px; text-shadow: 0 0 5px #00ff00;">☁️</span>
  
-    <span class="tooltip" data-tooltip="Zerar Tempo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer;">⏱️ <span id="timer">00:00</span></span>
+    <span id="desktopTimer" class="tooltip" data-tooltip="Zerar Tempo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer;">⏱️ <span id="timer">00:00</span></span>
+
+    <button id="mobileTopTTS" class="tooltip" data-tooltip="Ler em Voz Alta" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSpeech()"><i class="fas fa-volume-up"></i></button>
     
     <button class="tooltip" data-tooltip="Estatísticas" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleStatsModal()"><i class="fas fa-chart-line"></i></button>
     
@@ -2534,7 +2645,30 @@ document.getElementById("focoSelect").style.display = "none";
       
       // Chama a função que criamos no Passo 3 para decidir o que mostrar
       updateEvalButtonsUI();
+// --- CONTROLE DE INTERFACE MOBILE (NOVO) ---
+      const isMobile = window.innerWidth <= 768;
+      const mobileBtn = document.getElementById('mobileAnswerBtn');
+      const srsDiv = document.getElementById('srsButtons');
 
+      if (isMobile) {
+          if (showingFront) {
+              // ESTADO 1: PERGUNTA (FRENTE)
+              // Mostra botão grande "Mostrar Resposta"
+              if(mobileBtn) mobileBtn.style.display = 'block';
+              // Esconde botões SRS
+              if(srsDiv) srsDiv.style.display = 'none';
+          } else {
+              // ESTADO 2: RESPOSTA (VERSO)
+              // Esconde botão grande
+              if(mobileBtn) mobileBtn.style.display = 'none';
+              // Mostra botões SRS (Se estiver no modo SRS ou Normal)
+              // Nota: Forçamos o display flex para garantir que apareça no mobile
+              if(srsDiv) srsDiv.style.display = 'flex';
+          }
+      } else {
+          // No PC, esconde o botão mobile para não atrapalhar
+          if(mobileBtn) mobileBtn.style.display = 'none';
+      }
       // Ajuste extra para o botão de embaralhar (Opcional: esconde no SRS visualmente)
       // Nota: A lógica principal de esconder botões já está dentro do updateEvalButtonsUI
       if (typeof isSRSMode !== 'undefined' && isSRSMode) {

@@ -1499,44 +1499,6 @@ body {
       object-fit: contain;
       animation: popIn 0.3s ease;
     }
-	/* === AJUSTE ESPECÍFICO PARA CELULAR NA HORIZONTAL (LANDSCAPE) === */
-    @media screen and (orientation: landscape) and (max-height: 600px) {
-      
-      /* 1. Compacta os Modais (Config, Login, etc) para não cortar o topo */
-      #settingsModal, #helpModal, #manualModal, #statsModal, #filterModal, #reportModal, #handsFreeModal, #evalModal, #loginModal {
-        padding-top: 10px !important;    /* Remove o espaço gigante do topo */
-        padding-bottom: 10px !important;
-        align-items: flex-start !important; /* Mantém no topo para permitir rolagem */
-      }
-
-      /* 2. Ajusta o Card para aproveitar o espaço lateral */
-      #card-container {
-        min-height: auto !important; /* Remove a altura mínima forçada */
-        margin: 5px auto !important; /* Reduz margens externas */
-        padding: 10px !important;    /* Reduz margens internas */
-        width: 95% !important;       /* Usa mais largura */
-      }
-
-      /* 3. Diminui um pouco a fonte para caber mais texto sem rolar */
-      #flashcard-content {
-        font-size: 1.2em !important; /* Reduz levemente a fonte (era 1.5em) */
-        padding-bottom: 70px !important; /* Espaço apenas para o botão, sem excesso */
-      }
-      
-      /* 4. Botão MOSTRAR RESPOSTA mais fino */
-      #mobileAnswerBtn, #srsButtons {
-        min-height: 45px !important; /* Botão mais baixo para não comer tela */
-        padding-top: 5px !important;
-        padding-bottom: 5px !important;
-        font-size: 1.1em !important;
-      }
-      
-      /* 5. Imagens menores na horizontal */
-      #flashcard-content img {
-        max-height: 60vh !important; /* Limita imagem a 60% da altura da tela */
-        width: auto !important;
-      }
-    }
   </style>
 </head>
 <body>

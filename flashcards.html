@@ -493,7 +493,7 @@ body {
     #end-screen {
       display: none;
       flex-direction: column;
-      justify-content: center;
+      justify-content: flex-start; /* Alinha tudo ao topo */
       align-items: center;
       position: absolute;
       top: 0;
@@ -502,7 +502,7 @@ body {
       height: 100%;
       background: black;
       border-radius: 10px;
-      padding: 10px;
+      padding: 50px 10px 10px 10px; /* Adiciona respiro superior */
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       z-index: 10;
       text-align: center;
@@ -644,9 +644,9 @@ body {
     .loading-indicator {
       display: none;
       position: fixed;
-      top: 50%;
+      top: 150px; /* Fixado no topo */
       left: 50%;
-      transform: translate(-50%, -50%);
+      transform: translateX(-50%); /* Apenas centraliza horizontalmente */
       z-index: 10001;
       text-align: center;
     }
@@ -1291,17 +1291,18 @@ body {
       transition: all 0.5s ease; /* Suavidade */
     }
 	/* --- ALERTA PERSONALIZADO (Substitui o window.alert) --- */
-    #customAlertModal {
+   #customAlertModal {
       position: fixed;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
       background: rgba(0, 0, 0, 0.9);
-      z-index: 20000; /* Maior que tudo para ficar na frente */
+      z-index: 20000;
       display: none;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start; /* Joga para o topo */
+      padding-top: 100px;      /* Distância do topo */
       backdrop-filter: blur(2px);
     }
     .custom-alert-box {
@@ -1459,16 +1460,15 @@ body {
     
     /* 1. Faz a imagem caber no card e parecer "clicável" */
     #flashcard-content img {
-      max-width: 100%;       /* Nunca excede a largura do card */
-      height: auto;          /* Mantém proporção */
-      border-radius: 8px;    /* Cantos arredondados */
+      max-width: 100%;       
+      height: auto;          
+      border-radius: 8px;    
       margin-top: 15px;
-      cursor: zoom-in;       /* Cursor de lupa */
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5); /* Sombra elegante */
+      cursor: zoom-in;       
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5); 
       transition: transform 0.2s ease;
     }
     
-    /* Pequeno efeito ao passar o mouse */
     #flashcard-content img:hover {
       transform: scale(1.02);
       border: 1px solid gold;
@@ -1481,12 +1481,13 @@ body {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.95); /* Fundo bem escuro para foco */
-      z-index: 25000; /* Acima de TUDO */
+      background: rgba(0, 0, 0, 0.95); 
+      z-index: 25000; 
       display: none;
       justify-content: center;
-      align-items: center;
-      cursor: zoom-out; /* Cursor indica que clica para fechar */
+      align-items: flex-start; /* Joga para o topo */
+      padding-top: 60px;       /* Distância do topo */
+      cursor: zoom-out; 
       backdrop-filter: blur(5px);
     }
 
@@ -2769,13 +2770,9 @@ document.getElementById("focoSelect").style.display = "none";
       }
       // Ajuste extra para o botão de embaralhar (Opcional: esconde no SRS visualmente)
       // Nota: A lógica principal de esconder botões já está dentro do updateEvalButtonsUI
-      if (typeof isSRSMode !== 'undefined' && isSRSMode) {
-          const shuffleBtn = document.getElementById('shuffleButton');
-          if (shuffleBtn) shuffleBtn.style.display = 'none';
-      } else {
-          const shuffleBtn = document.getElementById('shuffleButton');
-          if (shuffleBtn) shuffleBtn.style.display = 'inline-block';
-      }
+      // Ajuste extra para o botão de embaralhar (Restaurado: Sempre Visível)
+      const shuffleBtn = document.getElementById('shuffleButton');
+      if (shuffleBtn) shuffleBtn.style.display = 'inline-block';
     }
 
     function updateAccuracyButtons() {
@@ -4144,7 +4141,10 @@ function changeTextColor(color) {
         "X": "dez",
         "L": "cinquenta",
         "C": "cem",
-        "I": "um" // Cuidado: No contexto de Flashcards, I maiúsculo isolado geralmente é numeral.
+        "I": "um", // Cuidado: No contexto de Flashcards, I maiúsculo isolado geralmente é numeral.
+		
+		// === 8. SIGLAS ===
+		"CEDM": "C-E-D-M",
     };
 
     function applyPhoneticCorrections(text) {
@@ -4168,7 +4168,7 @@ function changeTextColor(color) {
             if (/^[a-zA-Z0-9À-ÿ]+$/.test(original)) {
                 // Se for palavra limpa, usamos SEGURANÇA (\b) para não substituir o meio de outras palavras
                 // Ex: Evita que "MP" substitua "caMPo"
-                regex = new RegExp(`\\b${safeOriginal}\\b`, "gi");
+                regex = new RegExp(`(?<![a-zA-Z0-9À-ÿ\\-])${safeOriginal}(?![a-zA-Z0-9À-ÿ\\-])`, "gi");
             } else {
                 // Se tiver ponto, barra ou espaço (Ex: art., CF/88, 11 RPM), ativamos o MODO AGRESSIVO.
                 // Removemos a fronteira (\b) porque o ponto muitas vezes já é a fronteira.

@@ -3918,69 +3918,83 @@ function changeTextColor(color) {
     
     // --- FUNÇÃO MELHORADA: MENUS DE VOZ COM MEMÓRIA ---
     // --- FUNÇÃO MELHORADA: MENUS DE VOZ DUPLA COM MEMÓRIA ---
-    function populateVoiceList() {
+    // --- FUNÇÃO MELHORADA: CARREGAMENTO INTELIGENTE DE VOZES (RETRY SYSTEM) ---
+    function populateVoiceList(attempt = 0) {
         const voiceSelectQ = document.getElementById('voiceSelectQuestion');
         const voiceSelectA = document.getElementById('voiceSelectAnswer');
         
-        // Se os elementos não existirem (ainda não carregou o modal), sai.
         if(!voiceSelectQ || !voiceSelectA) return;
-        
-        const voices = window.speechSynthesis.getVoices();
+
+        let voices = window.speechSynthesis.getVoices();
+
+        // LÓGICA DE RETRY (CRÍTICO PARA CELULAR):
+        // Se não achou vozes e tentou menos de 10 vezes (5 segundos), espera e tenta de novo.
+        if (voices.length === 0 && attempt < 10) {
+            console.log(`Tentativa ${attempt+1}: Vozes ainda carregando...`);
+            setTimeout(() => populateVoiceList(attempt + 1), 500);
+            return;
+        }
         
         // Limpa as listas
         voiceSelectQ.innerHTML = '';
         voiceSelectA.innerHTML = '';
         
-        // Filtra vozes em Português e ordena (Google/Microsoft primeiro)
+        // --- ORDENAÇÃO DE ALTA QUALIDADE (EDGE/GOOGLE/NEURAL) ---
+        // Filtra vozes pt-BR ou PT
         const ptVoices = voices.filter(v => v.lang.includes('pt') || v.lang.includes('PT'));
+
         ptVoices.sort((a, b) => {
-            const isGoodA = a.name.includes('Google') || a.name.includes('Microsoft') || a.name.includes('Luciana');
-            const isGoodB = b.name.includes('Google') || b.name.includes('Microsoft') || b.name.includes('Luciana');
-            return isGoodB - isGoodA; 
+            // Palavras-chave de qualidade (Adicionado 'Natural' e 'Online' para Edge Mobile)
+            const qualityKeywords = ['Natural', 'Online', 'Neural', 'Google', 'Microsoft', 'Premium', 'Luciana', 'Siri'];
+            
+            const isQualityA = qualityKeywords.some(k => a.name.includes(k));
+            const isQualityB = qualityKeywords.some(k => b.name.includes(k));
+
+            // Prioriza vozes de alta qualidade
+            if (isQualityA && !isQualityB) return -1;
+            if (!isQualityA && isQualityB) return 1;
+
+            // Desempate: Prioriza pt-BR exato
+            if (a.lang === 'pt-BR' && b.lang !== 'pt-BR') return -1;
+            if (a.lang !== 'pt-BR' && b.lang === 'pt-BR') return 1;
+
+            return 0; 
         });
 
         // Função auxiliar para criar as opções
         const createOptions = (selectElement) => {
             if(ptVoices.length === 0) {
                 const option = document.createElement('option');
-                option.textContent = "Padrão do Sistema";
+                // Se falhou tudo, mostra aviso, mas mantém funcional
+                option.textContent = "Padrão do Sistema (Vozes não detectadas)";
                 selectElement.appendChild(option);
             } else {
                 ptVoices.forEach((voice) => {
                     const option = document.createElement('option');
-                    option.textContent = voice.name + (voice.default ? ' (Padrão)' : '');
+                    // Adiciona estrela visual nas vozes premium
+                    const isPremium = ['Natural', 'Neural', 'Google'].some(k => voice.name.includes(k));
+                    option.textContent = (isPremium ? '🌟 ' : '') + voice.name;
                     option.value = voice.name;
                     selectElement.appendChild(option);
                 });
             }
         };
 
-        // Preenche os dois menus
         createOptions(voiceSelectQ);
         createOptions(voiceSelectA);
 
         // --- RECUPERA AS ESCOLHAS SALVAS ---
         const savedVoiceQ = localStorage.getItem('chicoVoiceQ');
         const savedVoiceA = localStorage.getItem('chicoVoiceA');
-        const oldSavedVoice = localStorage.getItem('chicoPreferredVoice'); // Migração do sistema antigo
+        const oldSavedVoice = localStorage.getItem('chicoPreferredVoice');
 
-        // Define Pergunta
-        if (savedVoiceQ) {
-            voiceSelectQ.value = savedVoiceQ;
-        } else if (oldSavedVoice) {
-            voiceSelectQ.value = oldSavedVoice; // Tenta usar a antiga se não tiver nova
-        } else {
-            voiceSelectQ.selectedIndex = 0;
-        }
+        if (savedVoiceQ) voiceSelectQ.value = savedVoiceQ;
+        else if (oldSavedVoice) voiceSelectQ.value = oldSavedVoice;
+        else voiceSelectQ.selectedIndex = 0;
 
-        // Define Resposta
-        if (savedVoiceA) {
-            voiceSelectA.value = savedVoiceA;
-        } else if (oldSavedVoice) {
-            voiceSelectA.value = oldSavedVoice;
-        } else {
-            voiceSelectA.selectedIndex = 0;
-        }
+        if (savedVoiceA) voiceSelectA.value = savedVoiceA;
+        else if (oldSavedVoice) voiceSelectA.value = oldSavedVoice;
+        else voiceSelectA.selectedIndex = 0;
         
         // --- EVENTOS DE SALVAMENTO ---
         voiceSelectQ.onchange = function() {

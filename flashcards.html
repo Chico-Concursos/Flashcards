@@ -345,9 +345,9 @@ body {
     }
     #autoAdvanceSetup {
         position: fixed;
-        top: 50%;
+        top: 15%;
         left: 50%;
-        transform: translate(-50%, -50%);
+        transform: translateX(-50%);
         background-color: #222;
         color: white;
         padding: 20px;
@@ -4513,7 +4513,7 @@ function showFeedback(message, color = "gold") {
   const feedback = document.createElement('div');
   feedback.textContent = message;
   feedback.style.position = 'fixed';
-  feedback.style.top = '50%';
+  feedback.style.top = '15%';
   feedback.style.left = '50%';
   feedback.style.transform = 'translate(-50%, -50%)';
   feedback.style.backgroundColor = 'rgba(0, 0, 0, 0.8)';

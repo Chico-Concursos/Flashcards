@@ -1500,6 +1500,60 @@ body {
       object-fit: contain;
       animation: popIn 0.3s ease;
     }
+	/* ============================================================ */
+    /* === CORREÇÃO MESTRA: FORÇAR TUDO PARA O TOPO (GOOGLE SITES) === */
+    /* ============================================================ */
+
+    /* 1. Alinha Modais de Tela Cheia (Config, Ajuda, Stats, Login) no Topo */
+    #settingsModal, 
+    #helpModal, 
+    #manualModal, 
+    #statsModal, 
+    #filterModal, 
+    #reportModal, 
+    #handsFreeModal, 
+    #evalModal, 
+    #customAlertModal, 
+    #loginModal,
+    #sessionExpiredModal {
+        align-items: flex-start !important; /* Força o alinhamento no topo */
+        padding-top: 20px !important;       /* Pequeno respiro do teto */
+        padding-bottom: 50px !important;    /* Espaço no fim para rolar */
+        overflow-y: auto !important;        /* Garante rolagem se for maior que a tela */
+    }
+
+    /* 2. Mensagem Volante de Fonte (Aumentar/Diminuir) */
+    /* O JS cria isso dinamicamente, aqui forçamos a posição */
+    #temp-font-msg {
+        top: 80px !important;        /* 80px do topo (logo abaixo do título) */
+        bottom: auto !important;     /* Ignora o fundo */
+        left: 50% !important;        /* Centraliza horizontalmente */
+        transform: translateX(-50%) !important; /* Ajuste fino do centro */
+        position: fixed !important;  /* Garante que flutue sobre tudo */
+    }
+
+    /* 3. Mensagem de Feedback de Destaque (*Asteriscos*) */
+    #highlightFeedback {
+        top: 80px !important;
+        bottom: auto !important;
+        transform: translateX(-50%) !important;
+    }
+
+    /* 4. Janela de Tempo (Auto Advance) */
+    #autoAdvanceSetup {
+        top: 100px !important;       /* Um pouco mais abaixo */
+        left: 50% !important;
+        bottom: auto !important;
+        transform: translateX(-50%) !important;
+        position: fixed !important;
+    }
+
+    /* 5. Alerta Personalizado (Caixa de Aviso) */
+    .custom-alert-box {
+        margin-top: 50px !important; /* Empurra a caixinha um pouco para baixo dentro do modal */
+    }
+
+    /* ============================================================ */
   </style>
 </head>
 <body>

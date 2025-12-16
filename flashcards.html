@@ -324,7 +324,7 @@ body {
     }
 	    #highlightFeedback {
         position: fixed;
-        top: 50%;
+        top: 15%;
         left: 50%;
         transform: translate(-50%, -50%);
         background-color: rgba(0, 0, 0, 0.8);
@@ -3137,7 +3137,7 @@ document.getElementById("focoSelect").style.display = "none";
       // Aplica estilo FORÇADO (Ignora CSS externo)
       Object.assign(msg.style, {
         position: 'fixed',
-        top: '50%',
+        top: '15%',
         left: '50%',
         transform: 'translate(-50%, -50%)',
         backgroundColor: 'rgba(0, 0, 0, 0.7)', // Fundo Preto
@@ -3599,23 +3599,17 @@ function changeTextColor(color) {
         var end = Date.now() + duration;
 
         (function frame() {
-          // Lança confetes da esquerda
+          // ANIMAÇÃO CORRIGIDA: Chuva Centralizada (Funciona em qualquer largura)
           confetti({
-            particleCount: 5,
-            angle: 60,
-            spread: 55,
-            origin: { x: 0 },
-            colors: ['#FFD700', '#FFFFFF', '#DAA520'], // Dourado, Branco e Ouro Velho
-            zIndex: 10001 // Garante que apareça acima de tudo
-          });
-          // Lança confetes da direita
-          confetti({
-            particleCount: 5,
-            angle: 120,
-            spread: 55,
-            origin: { x: 1 },
+            particleCount: 8,             // Quantidade constante
+            angle: 270,                   // 270 graus = Para baixo (Chuva)
+            spread: 120,                  // Espalha bem para cobrir o card
+            origin: { x: 0.5, y: -0.1 },  // X=0.5 (Centro), Y=-0.1 (Acima do teto)
             colors: ['#FFD700', '#FFFFFF', '#DAA520'],
-            zIndex: 10001
+            zIndex: 10001,
+            scalar: 1.2,                  // Confetes levemente maiores
+            drift: 0,
+            gravity: 1
           });
 
           if (Date.now() < end) {

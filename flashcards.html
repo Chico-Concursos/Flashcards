@@ -988,7 +988,6 @@ body {
       }
 
       /* === 2. VISUAL "TELA CHEIA" === */
-      /* === 2. VISUAL "TELA CHEIA" (CORRIGIDO PARA ROLAGEM) === */
       #card-container {
         width: 100% !important;
         /* Define altura MÍNIMA, mas deixa crescer se o texto for grande */
@@ -998,7 +997,7 @@ body {
         margin: 0 !important;
         border-radius: 0 !important;
         box-shadow: none !important;
-        background-color: black; 
+        background-color: white; 
         border-bottom: 1px solid #333;
         
         display: flex;
@@ -1017,7 +1016,7 @@ body {
       #flashcard-content {
         padding: 20px 15px 100px 15px !important; /* Padding extra embaixo p/ não bater no botão */
         font-size: 1.5em; 
-        color: #e0e0e0; 
+        color: black; 
         line-height: 1.6;
         font-weight: 500;
         
@@ -1585,7 +1584,7 @@ body {
     <select id="cardColor" onchange="changeCardColor(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
         <option value="white">Cor do Card</option>
         <option value="white">Branco</option>
-        <option value="black">Preto</option>
+        <option value="#121212">Preto Suave (Dark)</option>
         <option value="darkblue">Azul Escuro</option>
         <option value="darkred">Vermelho Escuro</option>
         <option value="gold">Dourado</option>
@@ -3744,11 +3743,27 @@ function changeTextColor(color) {
         // Ignora se for scroll vertical
         if (Math.abs(yDiff) > Math.abs(xDiff)) return;
 
-        // Sensibilidade mínima de 50px
+        // Sensibilidade mínima de 50px (TOQUE CURTO / CLIQUE)
         if (Math.abs(xDiff) < 50) {
             // Se o movimento for muito curto, consideramos um "Toque" simples
             if (Math.abs(xDiff) < 10 && Math.abs(yDiff) < 10) {
-                flipCard(); 
+                
+                // --- NOVA LÓGICA DE ZONAS DE TOQUE ---
+                const screenWidth = window.innerWidth;
+                const touchX = touchEndX; // Posição horizontal do toque
+                
+                // 1. ZONA ESQUERDA (30%): Volta (Virar/Anterior)
+                if (touchX < screenWidth * 0.3) {
+                    reviewAndRetreat(); 
+                } 
+                // 2. ZONA DIREITA (30%): Avança (Virar/Próximo)
+                else if (touchX > screenWidth * 0.7) {
+                    reviewAndAdvance(); 
+                } 
+                // 3. ZONA CENTRAL (40%): Apenas Vira
+                else {
+                    flipCard(); 
+                }
             }
             return;
         }
@@ -4485,7 +4500,9 @@ function changeTextColor(color) {
       const contentElement = document.getElementById("flashcard-content");
       const currentText = showingFront ? cards[currentCard].front : cards[currentCard].back;
       const bgColor = window.getComputedStyle(container).backgroundColor;
-      const isBlackBackground = (bgColor === 'rgb(0, 0, 0)' || bgColor === 'black');
+      // CORREÇÃO: Considera "Escuro" tudo que não for exatamente branco
+      // Isso resolve o problema do novo fundo #1E1E1E
+      const isDarkBackground = (bgColor !== 'rgb(255, 255, 255)' && bgColor !== 'white');
 
       // Divide o texto mantendo os asteriscos como delimitadores
       const parts = currentText.split(/(\*[^*]+\*)/g);
@@ -4496,7 +4513,7 @@ function changeTextColor(color) {
         if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
           matchCount++;
           let className;
-          if (isBlackBackground) {
+          if (isDarkBackground) {
             className = (matchCount % 2 === 1) 
               ? 'highlight-asterisk-gold-alt1' 
               : 'highlight-asterisk-gold-alt2';

@@ -4283,14 +4283,19 @@ function changeTextColor(color) {
 
         // 1. Prepara o Texto
         let rawText = showingFront ? cards[currentCard].front : cards[currentCard].back;
-        
+
         // Limpeza visual (remove HTML, chaves, asteriscos)
         let cleanText = rawText.replace(/{{|}}/g, "")
                              .replace(/\*/g, "")
                              .replace(/<[^>]*>/g, "")
                              .replace(/&nbsp;/g, " ");
-        // --- FILTRO ANTI-EMOJI (Remove carinhas e símbolos gráficos para leitura) ---
-        cleanText = cleanText.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]|[\u{1F1E0}-\u{1F1FF}]/gu, "");
+
+        // --- NOVO BLOQUEIO: Remove texto entre colchetes no início (Ex: [Direito]) ---
+        cleanText = cleanText.replace(/^\s*\[.*?\]\s*/, ""); 
+
+        // --- FILTRO ANTI-EMOJI (Atualizado: Inclui relógios, setas e símbolos técnicos) ---
+        cleanText = cleanText.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2300}-\u{25FF}]/gu, "");
+		
         // APLICA A CORREÇÃO FONÉTICA (Dicionário)
         let textToRead = applyPhoneticCorrections(cleanText);
 

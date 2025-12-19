@@ -5916,55 +5916,81 @@ function startCustomStudy() {
         loadIntegratedNotes();
     }
 
-    async function loadIntegratedNotes() {
+    // --- FUNÇÃO DE CARREGAMENTO INTELIGENTE (COM CACHE) ---
+    async function loadIntegratedNotes(forceRefresh = false) {
         const listContainer = document.getElementById('notesListContainer');
-        listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i> Carregando anotações...</p>';
-        
         document.getElementById('noteEditorContainer').style.display = 'none';
         document.getElementById('notesListContainer').style.display = 'block';
 
+        const cacheKey = `chicoNotesCache_${SHEET_ID}`;
+
+        // 1. Tenta carregar da Memória Local (Se não for atualização forçada)
+        if (!forceRefresh) {
+            const cachedData = localStorage.getItem(cacheKey);
+            if (cachedData) {
+                try {
+                    const notes = JSON.parse(cachedData);
+                    console.log("Carregando anotações do cache...");
+                    renderNotesList(notes); // Desenha instantaneamente
+                    return; // Sai da função, economizando internet
+                } catch (e) {
+                    console.log("Cache inválido, baixando...");
+                }
+            }
+        }
+
+        // 2. Se não tinha cache ou clicou em Sincronizar, baixa da internet
+        listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i> Atualizando lista...</p>';
+
         try {
-            // Usa as variáveis globais do Flashcards: userEmail e SHEET_ID
-            // SHEET_ID funciona como o "Vinculado à página"
             const url = `${NOTES_WEB_APP_URL}?action=read&userEmail=${encodeURIComponent(userEmail)}&pageId=${SHEET_ID}`;
             
             const response = await fetch(url);
             const data = await response.json();
 
-            listContainer.innerHTML = '';
+            // Salva no Cache para a próxima vez
+            localStorage.setItem(cacheKey, JSON.stringify(data));
 
-            if (!Array.isArray(data) || data.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhuma anotação neste baralho ainda.</p>';
-                return;
-            }
-
-            // Renderiza a lista
-            data.forEach(note => {
-                const div = document.createElement('div');
-                div.className = 'integrated-note-item';
-                div.innerHTML = `
-                    <div>
-                        <div class="integrated-note-title">${note["Título"] || "Sem título"}</div>
-                        <div class="integrated-note-date">${new Date(note["Data de Criação"]).toLocaleDateString()}</div>
-                    </div>
-                    <div>
-                        <button onclick="editIntegratedNote('${note["ID"]}', '${encodeURIComponent(note["Título"])}', '${encodeURIComponent(note["Conteúdo"])}')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-right:10px;"><i class="fas fa-edit"></i></button>
-                        <button onclick="deleteIntegratedNote(event, '${note["ID"]}')" style="background:none; border:none; color:#ff5555; cursor:pointer;"><i class="fas fa-trash"></i></button>
-                    </div>
-                `;
-                // Clique no item abre edição (exceto se clicar nos botões)
-                div.onclick = (e) => {
-                    if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
-                        editIntegratedNote(note["ID"], encodeURIComponent(note["Título"]), encodeURIComponent(note["Conteúdo"]));
-                    }
-                };
-                listContainer.appendChild(div);
-            });
+            // Desenha na tela
+            renderNotesList(data);
 
         } catch (error) {
             console.error(error);
             listContainer.innerHTML = '<p style="text-align:center; color:#ff5555;">Erro ao carregar anotações.</p>';
         }
+    }
+
+    // Função Auxiliar: Desenha a lista na tela (Usada pelo Cache e pela Internet)
+    function renderNotesList(data) {
+        const listContainer = document.getElementById('notesListContainer');
+        listContainer.innerHTML = '';
+
+        if (!Array.isArray(data) || data.length === 0) {
+            listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;">Nenhuma anotação neste baralho ainda.</p>';
+            return;
+        }
+
+        data.forEach(note => {
+            const div = document.createElement('div');
+            div.className = 'integrated-note-item';
+            div.innerHTML = `
+                <div>
+                    <div class="integrated-note-title">${note["Título"] || "Sem título"}</div>
+                    <div class="integrated-note-date">${new Date(note["Data de Criação"]).toLocaleDateString()}</div>
+                </div>
+                <div>
+                    <button onclick="editIntegratedNote('${note["ID"]}', '${encodeURIComponent(note["Título"])}', '${encodeURIComponent(note["Conteúdo"])}')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-right:10px;"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteIntegratedNote(event, '${note["ID"]}')" style="background:none; border:none; color:#ff5555; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            // Clique no item abre edição
+            div.onclick = (e) => {
+                if(e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
+                    editIntegratedNote(note["ID"], encodeURIComponent(note["Título"]), encodeURIComponent(note["Conteúdo"]));
+                }
+            };
+            listContainer.appendChild(div);
+        });
     }
 
     function openNoteEditor() {

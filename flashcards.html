@@ -1693,8 +1693,7 @@ body {
   <div id="autoAdvanceOverlay" onclick="cancelAutoAdvanceDelay()"></div>
   <div id="card-container">
     <div id="flashcard-content">
-      Por favor, faça login para acessar os flashcards.
-    </div>
+      </div>
     <div id="end-screen">
       <div id="end-message">Chico Concursos<br>Fim</div>
       <button id="restart-button">RECOMEÇAR</button>
@@ -6047,8 +6046,8 @@ function startCustomStudy() {
                 body: params
             });
 
-            cancelNoteEdit();
-            loadIntegratedNotes(); // Recarrega lista
+           cancelNoteEdit();
+            loadIntegratedNotes(true); // <--- ALTERADO: Adicionado (true) para forçar atualização
             showFeedback("Anotação salva com sucesso!", "gold");
 
         } catch (e) {
@@ -6075,7 +6074,7 @@ function startCustomStudy() {
                 body: params
             });
 
-            loadIntegratedNotes();
+            loadIntegratedNotes(true); // <--- ALTERADO: Adicionado (true) para forçar atualização
             showFeedback("Nota excluída.", "#ff5555");
         } catch (err) {
             alert("Erro ao excluir.");

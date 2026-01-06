@@ -194,9 +194,11 @@ body {
       width: 98%;             /* VOLTOU: Ocupa quase toda a largura da tela */
       max-width: none;        /* VOLTOU: Sem limite de largura */
       
-      height: 325px;          /* MANTIDO: Altura fixa para não ficar gigante verticalmente */
-      max-height: 85vh;       /* Segurança para telas de notebooks pequenos */
-      margin: 0px auto;      /* Centralizado */
+      /* --- ALTERAÇÃO: EXPANSÃO AUTOMÁTICA --- */
+      min-height: 325px;      /* Define a altura MÍNIMA (Padrão) */
+      height: auto;           /* Permite crescer se o texto for grande */
+      /* max-height removido para permitir expansão total */
+      margin: 0px auto;       /* Centralizado */
       
       padding: 40px 10px;
       border-radius: 10px;
@@ -204,7 +206,7 @@ body {
       display: flex;
       justify-content: center;
       align-items: center;
-      overflow-y: auto;       /* Cria barra de rolagem se o texto for maior que 600px */
+      overflow-y: visible;    /* ALTERADO: Remove a barra de rolagem interna */
       overflow-x: hidden;
       white-space: pre-wrap;
       overscroll-behavior: contain; 
@@ -212,8 +214,8 @@ body {
     #flashcard-content {
       text-align: center;
       width: 100%;
-      max-height: 100%;
-      overflow-y: auto;
+      /* max-height removido */
+      overflow-y: visible; /* ALTERADO: Texto flui livremente */
       overflow-x: hidden;
       padding: 10px;
       box-sizing: border-box;
@@ -1592,6 +1594,24 @@ body {
     }
 
     /* ============================================================ */
+	/* --- ESTILO DA BARRA DE BUSCA (NOVO) --- */
+    #topSearchBar {
+      display: none; /* Escondido por padrão */
+      background-color: #333;
+      border: 1px solid #FFD700;
+      color: white;
+      padding: 5px 10px;
+      border-radius: 20px;
+      width: 150px;
+      margin-left: 5px;
+      font-size: 0.9em;
+      outline: none;
+      transition: all 0.3s ease;
+    }
+    #topSearchBar:focus {
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
+      width: 180px; /* Cresce levemente ao digitar */
+    }
   </style>
 </head>
 <body>
@@ -1667,6 +1687,9 @@ body {
     <!-- Filtro -->
     <button id="filterBtn" class="tooltip" data-tooltip="Filtrar Cards" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="openFilterModal()"><i class="fas fa-folder-open"></i></button>
     
+    <button id="searchToggleBtn" class="tooltip" data-tooltip="Buscar (Ctrl+F)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSearchBar()"><i class="fas fa-search"></i></button>
+    <input type="text" id="topSearchBar" placeholder="Buscar..." onkeyup="runRealTimeSearch(this.value)">
+
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
 	<span id="syncIndicator" class="tooltip" data-tooltip="Status: Sincronizado" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #00ff00; font-weight: bold; cursor: help; margin-left: 8px; text-shadow: 0 0 5px #00ff00;">☁️</span>
    <span id="mobileCardCounter" style="display:none; font-size: 0.9em; margin: 0 8px; color: gold; font-weight: bold;">0/0</span>
@@ -6080,6 +6103,48 @@ function startCustomStudy() {
             alert("Erro ao excluir.");
         }
     };
+	// --- LÓGICA DA BARRA DE BUSCA (NOVO) ---
+function toggleSearchBar() {
+    const input = document.getElementById("topSearchBar");
+    // Alterna entre mostrar e esconder
+    if (input.style.display === "none" || input.style.display === "") {
+        input.style.display = "inline-block";
+        input.focus(); // Já coloca o cursor para digitar
+    } else {
+        input.style.display = "none";
+        input.value = ""; // Limpa o texto
+        runRealTimeSearch(""); // Restaura os cards originais
+    }
+}
+function runRealTimeSearch(text) {
+    if (!requireAuth()) return;
+    
+    text = text.toLowerCase().trim();
+    
+    // Se o campo estiver vazio, restaura a lista completa (ou o filtro atual)
+    if (!text) {
+        // Se quiser manter o filtro de categoria anterior, seria mais complexo.
+        // Aqui, por simplicidade, restauramos os cards iniciais.
+        cards = [...initialCards];
+        showFeedback("Busca limpa.", "white");
+    } else {
+        // Filtra: Procura o texto na Frente OU no Verso
+        cards = initialCards.filter(card => 
+            card.front.toLowerCase().includes(text) || 
+            card.back.toLowerCase().includes(text)
+        );
+    }
+    // Se não achar nada, avisa
+    if (cards.length === 0) {
+       document.getElementById("flashcard-content").innerHTML = "<br><br>🔍 Nenhum card encontrado com: <br><strong style='color:gold'>" + text + "</strong>";
+       document.getElementById("cardCounter").innerHTML = "0/0";
+       return;
+    }
+    // Reinicia a navegação com a nova lista filtrada
+    currentCard = 0;
+    showingFront = true;
+    updateCard();
+}
   </script>
 </body>
 </html>

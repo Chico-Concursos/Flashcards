@@ -10,7 +10,7 @@
   <link rel="apple-touch-icon" href="https://img.icons8.com/color/96/books.png"> 
 <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/books.png">
 <!-- NOVA FONTE ROBOTO -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Merriweather:wght@300;400;700&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
     * { margin:0; padding:0; box-sizing:border-box; }
@@ -205,7 +205,7 @@ body {
       box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
       display: flex;
       justify-content: center;
-      align-items: center;
+      align-items: flex-start;
       overflow-y: visible;    /* ALTERADO: Remove a barra de rolagem interna */
       overflow-x: hidden;
       white-space: pre-wrap;
@@ -1005,9 +1005,8 @@ body {
         box-shadow: none !important;
         background-color: white; 
         border-bottom: 1px solid #333;
-        
         display: flex;
-        align-items: center; /* Centraliza verticalmente se o texto for pequeno */
+        align-items: flex-start; /* Centraliza verticalmente se o texto for pequeno */
         
         /* IMPORTANTE: Remove a rolagem interna e deixa a página rolar */
         overflow: visible !important; 
@@ -1612,6 +1611,12 @@ body {
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.5);
       width: 180px; /* Cresce levemente ao digitar */
     }
+	/* --- MODO LEITURA (TIPOGRAFIA) --- */
+    .serif-mode {
+      font-family: 'Merriweather', serif !important;
+      line-height: 1.6 !important; /* Aumenta levemente o espaço entre linhas */
+      letter-spacing: 0.02em;      /* Ajuste fino para leitura */
+    }
   </style>
 </head>
 <body>
@@ -1666,6 +1671,13 @@ body {
 </div>
 <div class="menu-item-row" onclick="adjustFontSize(-1)">
     <i class="fas fa-minus" style="width:25px;"></i> <span class="menu-item-label">Diminuir Fonte</span>
+</div>
+<div class="menu-item-row">
+     <i class="fas fa-glasses" style="width:25px;"></i>
+     <select id="fontModeSelect" onchange="setFontMode(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
+        <option value="roboto">Modo Moderno (Padrão)</option>
+        <option value="serif">Modo Livro (Kindle)</option>
+    </select>
 </div>
 <div class="menu-item-row" onclick="toggleHighlightAsterisks(); toggleHamburgerMenu()">
     <i class="fas fa-highlighter" style="width:25px;"></i> <span class="menu-item-label">Destacar Palavras</span>
@@ -1967,8 +1979,6 @@ body {
           <option value="todos">Todos os Anos</option>
         </select>
       </div>
-
-      <div class="settings-section">
 	  <div class="settings-section">
         <h3>2.5. Configuração de Voz (TTS)</h3>
         <div style="margin-bottom: 15px; background: rgba(0, 120, 215, 0.25); border-left: 4px solid #0078d7; padding: 10px; border-radius: 4px;">
@@ -1989,6 +1999,7 @@ body {
         <label style="display:block; color:gold; margin-bottom:5px;">Velocidade de Leitura: <span id="rateValue">1.1x</span></label>
         <input type="range" id="rateRange" min="0.5" max="3" step="0.1" value="1.1" style="width:100%; accent-color:gold;" oninput="document.getElementById('rateValue').textContent = this.value + 'x'">
       </div>
+	  <div class="settings-section">
         <h3>3. Inteligência e Pesos</h3>
         
         <div style="margin-bottom: 15px; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;">
@@ -2251,6 +2262,7 @@ body {
     let isShuffleActive = false;
 	let currentCardColor = 'white'; // Cor padrão
     let currentTextColor = 'black'; // Cor padrão
+	let currentFontMode = 'roboto'; // Padrão
 	let isHighlightModeActive = false;
     // Variáveis para o Temporizador Automático
     let autoAdvanceInterval = null;
@@ -2594,8 +2606,9 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
     currentCategory,
     cardAccuracy,
     isReviewErrorsMode,       // ← Vírgula adicionada aqui
-    currentCardColor,         // ← Agora OK
-    currentTextColor          // ← OK (não precisa de vírgula na última linha, mas pode ter)
+    currentCardColor,
+    currentTextColor,
+    currentFontMode           // Nova preferência salva
   };
   
   localStorage.setItem('flashcardState', JSON.stringify(state));
@@ -2643,8 +2656,14 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
         document.getElementById("flashcard-content").style.color = currentTextColor;
         document.getElementById("textColor").value = currentTextColor;
       }
+	  document.getElementById("textColor").value = currentTextColor;
+      }
+      
+      // --- CARREGA MODO LEITURA ---
+      if (state.currentFontMode) {
+          setFontMode(state.currentFontMode);
+      }
           return true;
-        }
       } catch (e) {
         console.error("Erro ao carregar estado:", e);
       }
@@ -3368,7 +3387,23 @@ function changeTextColor(color) {
   currentTextColor = color; // Salva a cor atual
   saveFlashcardState();
 }
+function setFontMode(mode) {
+      if (!requireAuth()) return;
+      currentFontMode = mode;
+      
+      const content = document.getElementById("flashcard-content");
+      if (mode === 'serif') {
+        content.classList.add("serif-mode");
+      } else {
+        content.classList.remove("serif-mode");
+      }
+      
+      // Atualiza o menu visualmente (Sincroniza a escolha salva)
+      const select = document.getElementById("fontModeSelect");
+      if (select) select.value = mode;
 
+      saveFlashcardState();
+    }
     function resetTimer() {
       if (!requireAuth()) return;
       

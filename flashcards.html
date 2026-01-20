@@ -79,32 +79,78 @@ body {
       z-index: 10006;
     }
     
+    /* --- INÍCIO DO NOVO MENU EM 2 COLUNAS --- */
     .menu-dropdown {
-      display: none; /* Escondido por padrão */
+      display: none;
+      
+      /* VOLTAMOS PARA ABSOLUTE (Relativo ao botão) */
       position: absolute;
       top: 100%;
-      left: 10px; /* Alinhado à esquerda */
+      
+      /* SEU AJUSTE MANUAL PARA PC */
+      left: -90px; 
+      
       background-color: #222;
       border: 1px solid #FFD700;
       border-radius: 8px;
       padding: 10px;
       box-shadow: 0 4px 20px rgba(0,0,0,0.9);
-      z-index: 20000; /* Acima de tudo */
-      flex-direction: column;
-      gap: 12px;
-      text-align: left;
-      min-width: 220px;
+      z-index: 20000;
       
-      /* --- NOVAS REGRAS DE ROLAGEM --- */
-      max-height: 60vh;       /* Ocupa no máximo 60% da altura da tela */
-      overflow-y: auto;       /* Cria barra de rolagem se o conteúdo for maior */
-      overflow-x: hidden;     /* Evita rolagem lateral */
+      /* CONFIGURAÇÃO DE GRADE (GRID) - 2 COLUNAS */
+      grid-template-columns: 1fr 1fr; 
+      gap: 10px; 
+      
+      text-align: left;
+      
+      /* Largura fixa para PC */
+      width: 500px;
+      max-width: 90vw; 
+      
+      max-height: 70vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    /* Animação Simples (Para não conflitar com a posição) */
+    @keyframes slideDownSimple {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .menu-dropdown.show-menu {
-      display: flex; /* Aparece quando ativo */
-      animation: slideDown 0.3s ease;
+      display: grid; 
+      animation: slideDownSimple 0.3s ease;
     }
+
+    /* ESTILO DO BOTÃO SAIR */
+    .menu-dropdown .menu-item-row:last-child {
+      grid-column: 1 / -1; 
+      justify-content: center; 
+      width: 60% !important; 
+      margin: 15px auto 5px auto !important; 
+      border-top: 1px solid #FFD700 !important;
+      padding-top: 10px !important;
+      border-bottom: none !important;
+    }
+
+    /* RESPONSIVIDADE: PROTEÇÃO PARA CELULAR */
+    @media (max-width: 600px) {
+      .menu-dropdown {
+        /* No celular, ignoramos o -90px e encostamos na esquerda segura */
+        left: 5px !important; 
+        right: auto;
+        
+        width: auto;       
+        min-width: 250px; 
+        grid-template-columns: 1fr; /* Volta para 1 coluna */
+      }
+      
+      .menu-dropdown .menu-item-row:last-child {
+        width: 90% !important;
+      }
+    }
+    /* --- FIM DO NOVO MENU EM 2 COLUNAS --- */
 
     .menu-item-row {
       display: flex;
@@ -1617,6 +1663,26 @@ body {
       line-height: 1.6 !important; /* Aumenta levemente o espaço entre linhas */
       letter-spacing: 0.02em;      /* Ajuste fino para leitura */
     }
+	/* --- CSS DO NOVO DASHBOARD DE CONFIGURAÇÕES --- */
+    .mode-grid-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* 2 botões por linha */
+      gap: 10px;
+    }
+    .settings-dashboard-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr; /* Divide a tela ao meio (Esq/Dir) */
+      gap: 20px; /* Espaço entre as colunas */
+      align-items: start; /* Alinha o topo das caixas */
+    }
+    
+    /* Responsividade: No celular, empilha tudo novamente */
+    @media (max-width: 768px) {
+      .mode-grid-container, 
+      .settings-dashboard-grid {
+        grid-template-columns: 1fr !important; /* Volta para 1 coluna */
+      }
+    }
   </style>
 </head>
 <body>
@@ -1627,70 +1693,70 @@ body {
      <button class="hamburger-btn tooltip" data-tooltip="Menu Principal" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleHamburgerMenu()"><i class="fas fa-bars"></i></button>
       
       <!-- GAVETA DO MENU (CONTEÚDO ESCONDIDO) -->
-      <div id="mainMenuDropdown" class="menu-dropdown">
+     <div id="mainMenuDropdown" class="menu-dropdown">
         
-       <!-- Configurações e Ajuda -->
-<div class="menu-item-row" onclick="toggleHelpModal(); toggleHamburgerMenu()">
-    <i class="fas fa-question-circle" style="width:25px;"></i> <span class="menu-item-label">Ajuda</span>
-</div>
-<div class="menu-item-row" onclick="openSettingsModal(); toggleHamburgerMenu()">
-    <i class="fas fa-cog" style="width:25px;"></i> <span class="menu-item-label">Configurações</span>
-</div>
-<div class="menu-item-row" onclick="reportCurrentCard(); toggleHamburgerMenu()">
-    <i class="fas fa-exclamation-triangle" style="width:25px;"></i> <span class="menu-item-label">Reportar Erro</span>
-</div>
-<div class="menu-item-row" onclick="toggleStatsModal(); toggleHamburgerMenu()">
-    <i class="fas fa-chart-line" style="width:25px;"></i> <span class="menu-item-label">Estatísticas</span>
-</div>
-<div class="menu-item-row" onclick="toggleManualModal(); toggleHamburgerMenu()">
-    <i class="fas fa-book" style="width:25px;"></i> <span class="menu-item-label">Manual do Usuário</span>
-</div>
-        <!-- Aparência (Cores e Fontes) -->
-<div class="menu-item-row">
-    <i class="fas fa-paint-brush" style="width:25px;"></i> 
-    <select id="cardColor" onchange="changeCardColor(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
-        <option value="white">Cor do Card</option>
-        <option value="white">Branco</option>
-        <option value="#121212">Preto Suave (Dark)</option>
-        <option value="darkblue">Azul Escuro</option>
-        <option value="darkred">Vermelho Escuro</option>
-        <option value="gold">Dourado</option>
-    </select>
-</div>
-<div class="menu-item-row">
-     <i class="fas fa-font" style="width:25px;"></i>
-     <select id="textColor" onchange="changeTextColor(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
-        <option value="black">Cor da Fonte</option>
-        <option value="black">Preto</option>
-        <option value="white">Branco</option>
-        <option value="gold">Dourado</option>
-    </select>
-</div>
-<div class="menu-item-row" onclick="adjustFontSize(1)">
-    <i class="fas fa-plus" style="width:25px;"></i> <span class="menu-item-label">Aumentar Fonte</span>
-</div>
-<div class="menu-item-row" onclick="adjustFontSize(-1)">
-    <i class="fas fa-minus" style="width:25px;"></i> <span class="menu-item-label">Diminuir Fonte</span>
-</div>
-<div class="menu-item-row">
-     <i class="fas fa-glasses" style="width:25px;"></i>
-     <select id="fontModeSelect" onchange="setFontMode(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
-        <option value="roboto">Modo Moderno (Padrão)</option>
-        <option value="serif">Modo Livro (Kindle)</option>
-    </select>
-</div>
-<div class="menu-item-row" onclick="toggleHighlightAsterisks(); toggleHamburgerMenu()">
-    <i class="fas fa-highlighter" style="width:25px;"></i> <span class="menu-item-label">Destacar Palavras</span>
-</div>
+        <div class="menu-item-row">
+            <i class="fas fa-paint-brush" style="width:25px;"></i> 
+            <select id="cardColor" onchange="changeCardColor(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
+                <option value="white">Cor do Card</option>
+                <option value="white">Branco</option>
+                <option value="#121212">Preto Suave (Dark)</option>
+                <option value="darkblue">Azul Escuro</option>
+                <option value="darkred">Vermelho Escuro</option>
+                <option value="gold">Dourado</option>
+            </select>
+        </div>
+        <div class="menu-item-row" onclick="openSettingsModal(); toggleHamburgerMenu()">
+            <i class="fas fa-cog" style="width:25px;"></i> <span class="menu-item-label">Configurações</span>
+        </div>
 
-<!-- Funcionalidades -->
-<div class="menu-item-row" onclick="toggleSpeech(); toggleHamburgerMenu()">
-    <span id="menuTTSIcon"><i class="fas fa-volume-up" style="width:25px;"></i></span> <span class="menu-item-label">Ler em Voz Alta</span>
-</div>
+        <div class="menu-item-row">
+             <i class="fas fa-font" style="width:25px;"></i>
+             <select id="textColor" onchange="changeTextColor(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
+                <option value="black">Cor da Fonte</option>
+                <option value="black">Preto</option>
+                <option value="white">Branco</option>
+                <option value="gold">Dourado</option>
+            </select>
+        </div>
+        <div class="menu-item-row" onclick="toggleHelpModal(); toggleHamburgerMenu()">
+            <i class="fas fa-question-circle" style="width:25px;"></i> <span class="menu-item-label">Ajuda</span>
+        </div>
 
-        <!-- Sair -->
-        <div class="menu-item-row" onclick="logout()" style="border-top: 1px solid #FFD700; margin-top:5px; padding-top:10px;">
-            <i class="fas fa-sign-out-alt" style="color:red;"></i> <span class="menu-item-label" style="color:red; font-weight:bold;">Sair</span>
+        <div class="menu-item-row" onclick="adjustFontSize(1)">
+            <i class="fas fa-plus" style="width:25px;"></i> <span class="menu-item-label">Aumentar Fonte</span>
+        </div>
+        <div class="menu-item-row" onclick="toggleStatsModal(); toggleHamburgerMenu()">
+            <i class="fas fa-chart-line" style="width:25px;"></i> <span class="menu-item-label">Estatísticas</span>
+        </div>
+
+        <div class="menu-item-row" onclick="adjustFontSize(-1)">
+            <i class="fas fa-minus" style="width:25px;"></i> <span class="menu-item-label">Diminuir Fonte</span>
+        </div>
+        <div class="menu-item-row" onclick="toggleManualModal(); toggleHamburgerMenu()">
+            <i class="fas fa-book" style="width:25px;"></i> <span class="menu-item-label">Manual</span>
+        </div>
+
+        <div class="menu-item-row">
+             <i class="fas fa-glasses" style="width:25px;"></i>
+             <select id="fontModeSelect" onchange="setFontMode(this.value)" style="background:#000; color:white; border:1px solid #555; width:100%;">
+                <option value="roboto">Modo Padrão</option>
+                <option value="serif">Modo Livro</option>
+            </select>
+        </div>
+        <div class="menu-item-row" onclick="reportCurrentCard(); toggleHamburgerMenu()">
+            <i class="fas fa-exclamation-triangle" style="width:25px;"></i> <span class="menu-item-label">Reportar Erro</span>
+        </div>
+
+        <div class="menu-item-row" onclick="toggleHighlightAsterisks(); toggleHamburgerMenu()">
+            <i class="fas fa-highlighter" style="width:25px;"></i> <span class="menu-item-label">Destacar Palavras</span>
+        </div>
+        <div class="menu-item-row" onclick="toggleSpeech(); toggleHamburgerMenu()">
+            <span id="menuTTSIcon"><i class="fas fa-volume-up" style="width:25px;"></i></span> <span class="menu-item-label">Ler em Voz Alta</span>
+        </div>
+
+        <div class="menu-item-row" onclick="logout()">
+            <i class="fas fa-sign-out-alt"></i> <span class="menu-item-label" style="font-weight:bold;">Sair</span>
         </div>
       </div>
     </div>
@@ -1908,46 +1974,44 @@ body {
   <!-- INÍCIO DO NOVO MODAL DE CONFIGURAÇÕES (COLE AQUI) -->
   <div id="settingsModal" style="display:none;">
     <div id="settingsModalContent">
-      <h2 style="margin-top:0; margin-bottom: 15px;">Configurações de Estudo</h2>
+    <h2 style="margin-top:0; margin-bottom: 15px; text-align:center; color:gold;">Configurações de Estudo</h2>
       
       <div class="settings-section">
-        <h3>1. Escolha o Modo de Estudo</h3>
-        <div class="mode-selection">
-          
+        <h3 style="color: #FFD700; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">1. Escolha o Modo de Estudo</h3>
+        
+        <div class="mode-grid-container">
           <div class="clean-option-row">
             <label>
               <input type="radio" name="studyMode" value="simulado" onchange="switchStudyMode(this.value)"> 
-              Simulado Personalizado
+              Simulado
             </label>
-           <span class="info-icon" tabindex="0" data-tooltip="Você escolhe as disciplinas e a quantidade exata. Ideal para focar.">?</span>
+           <span class="info-icon" tabindex="0" data-tooltip="Você escolhe as disciplinas e a quantidade.">?</span>
           </div>
-
           <div class="clean-option-row">
             <label>
               <input type="radio" name="studyMode" value="livre" onchange="switchStudyMode(this.value)"> 
               Estudo Livre
             </label>
-           <span class="info-icon" tabindex="0" data-tooltip="Sorteio aleatório de todas as matérias. Você define apenas o total.">?</span>
+           <span class="info-icon" tabindex="0" data-tooltip="Sorteio aleatório geral.">?</span>
           </div>
-<div class="clean-option-row">
+          <div class="clean-option-row">
             <label>
               <input type="radio" name="studyMode" value="srs" onchange="switchStudyMode(this.value)"> 
-              Repetição Espaçada (SRS) 🧠
+              SRS (Espaçada) 🧠
             </label>
-           <span class="info-icon" tabindex="0" data-tooltip="Sistema inteligente que agenda revisões. Você avalia a dificuldade e o sistema decide quando o card volta.">?</span>
+           <span class="info-icon" tabindex="0" data-tooltip="O sistema agenda suas revisões automaticamente.">?</span>
           </div>
           <div class="clean-option-row">
             <label>
               <input type="radio" name="studyMode" value="provas" onchange="switchStudyMode(this.value)"> 
               Provas Anteriores
             </label>
-           <span class="info-icon" tabindex="0" data-tooltip="Refaça provas completas filtradas pelo ano de aplicação.">?</span>
+           <span class="info-icon" tabindex="0" data-tooltip="Refaça provas por ano.">?</span>
           </div>
-
         </div>
       </div>
 
-      <div id="simuladoOptions" class="settings-section" style="display: none;">
+      <div id="simuladoOptions" class="settings-section" style="display: none; background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444;">
         <h3>2. Monte seu Simulado</h3>
         <div id="simuladoLoading" style="display: none; color: gold; margin-bottom: 10px;">Carregando disciplinas...</div>
         <div id="simuladoDisciplineInputs">
@@ -1979,68 +2043,69 @@ body {
           <option value="todos">Todos os Anos</option>
         </select>
       </div>
-	  <div class="settings-section">
-        <h3>2.5. Configuração de Voz (TTS)</h3>
-        <div style="margin-bottom: 15px; background: rgba(0, 120, 215, 0.25); border-left: 4px solid #0078d7; padding: 10px; border-radius: 4px;">
-            <p style="margin: 0; font-size: 0.95em; line-height: 1.4;">
-                🚀 <strong>Melhor Qualidade:</strong> O navegador <strong>Microsoft Edge</strong> oferece as melhores vozes (Neurais) gratuitamente. Se estiver em outro navegador, as vozes podem soar robóticas.
-            </p>
-        </div>
-        <label style="display:block; color:gold; margin-bottom:5px;">🗣️ Voz da Pergunta (Frente):</label>
-        <select id="voiceSelectQuestion" style="width:100%; padding:8px; background:#333; color:white; border:1px solid #555; border-radius:4px; margin-bottom:10px;">
-            <option value="">Carregando vozes...</option>
-        </select>
 
-        <label style="display:block; color:gold; margin-bottom:5px;">🗣️ Voz da Resposta (Verso):</label>
-        <select id="voiceSelectAnswer" style="width:100%; padding:8px; background:#333; color:white; border:1px solid #555; border-radius:4px; margin-bottom:10px;">
-            <option value="">Carregando vozes...</option>
-        </select>
+      <div class="settings-dashboard-grid">
+          
+          <div class="settings-column">
+            <h3 style="color: #FFD700; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">2. Inteligência e Pesos</h3>
+            
+            <div style="margin-bottom: 15px; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 5px; display: flex; align-items: center;">
+                <label style="cursor: pointer; display: flex; align-items: center; width: 100%;">
+                    <input type="checkbox" id="enableFocusMode" style="transform: scale(1.3); margin-right: 10px;"> 
+                    <span style="color: gold; font-weight: bold;">ATIVAR MODO FOCO 🧠</span>
+                </label>
+            </div>
 
-        <label style="display:block; color:gold; margin-bottom:5px;">Velocidade de Leitura: <span id="rateValue">1.1x</span></label>
-        <input type="range" id="rateRange" min="0.5" max="3" step="0.1" value="1.1" style="width:100%; accent-color:gold;" oninput="document.getElementById('rateValue').textContent = this.value + 'x'">
-      </div>
-	  <div class="settings-section">
-        <h3>3. Inteligência e Pesos</h3>
-        
-        <div style="margin-bottom: 15px; background: rgba(255,215,0,0.1); padding: 10px; border-radius: 5px; display: flex; align-items: center; justify-content: space-between;">
-            <label style="cursor: pointer; display: flex; align-items: center; flex-grow: 1;">
-                <input type="checkbox" id="enableFocusMode" style="transform: scale(1.3); margin-right: 10px;"> 
-                <span style="color: gold; font-weight: bold;">ATIVAR MODO FOCO 🧠</span>
-            </label>
-            <span class="info-icon" tabindex="0" data-tooltip="O sistema identifica automaticamente onde você tem dificuldade e manda mais questões desse assunto.">?</span>
-        </div>
-<div class="clean-option-row">
-            <label>
-              <input type="radio" name="weightMode" value="sequencial" onchange="switchWeightMode(this.value)"> 
-              Sequencial (Livre)
-            </label>
-            <span class="info-icon" tabindex="0" data-tooltip="Mantém a ordem original da planilha ou a ordem definida pelo SRS. Não embaralha.">?</span>
-          </div>
-          <div class="clean-option-row">
-            <label>
-              <input type="radio" name="weightMode" value="ponderado" onchange="switchWeightMode(this.value)"> 
-              Aleatório Ponderado
-            </label>
-            <span class="info-icon" tabindex="0" data-tooltip="Questões com maior peso (importância) aparecem mais vezes.">?</span>
+            <div class="clean-option-row">
+                <label>
+                  <input type="radio" name="weightMode" value="sequencial" onchange="switchWeightMode(this.value)"> 
+                  Sequencial (Fixo)
+                </label>
+            </div>
+            <div class="clean-option-row">
+                <label>
+                  <input type="radio" name="weightMode" value="ponderado" onchange="switchWeightMode(this.value)"> 
+                  Aleatório Ponderado
+                </label>
+            </div>
+            <div class="clean-option-row">
+                <label>
+                  <input type="radio" name="weightMode" value="minimo" onchange="switchWeightMode(this.value)"> 
+                  Peso Mínimo
+                </label>
+            </div>
+            
+            <div id="pesoMinimoOptions" style="display: none; margin-top: 10px; padding: 10px; background: #333; border-radius: 5px;">
+              <label for="pesoMinimoValue">Peso mínimo exigido:</label>
+              <input type="number" id="pesoMinimoValue" class="quantity-input" min="1" value="1" style="width: 60px; margin-left: 10px;">
+            </div>
           </div>
 
-          <div class="clean-option-row">
-            <label>
-              <input type="radio" name="weightMode" value="minimo" onchange="switchWeightMode(this.value)"> 
-              Peso Mínimo
-            </label>
-            <span class="info-icon" tabindex="0" data-tooltip="Ignora questões fáceis. Só mostra questões com peso acima do definido.">?</span>
+          <div class="settings-column">
+            <h3 style="color: #FFD700; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">3. Configuração de Voz</h3>
+            
+            <div style="margin-bottom: 10px; padding: 8px; background: rgba(0, 120, 215, 0.2); border-left: 3px solid #0078d7; font-size: 0.85em;">
+                Use <strong>Microsoft Edge</strong> para vozes neurais realistas.
+            </div>
 
-        </div>
-        
-        <div id="pesoMinimoOptions" style="display: none; margin-top: 10px; padding-left: 5px;">
-          <label for="pesoMinimoValue">Peso mínimo exigido:</label>
-          <input type="number" id="pesoMinimoValue" class="quantity-input" min="1" value="1" style="width: 60px; margin-left: 10px;">
-        </div>
+            <label style="display:block; color:#ccc; font-size:0.9em; margin-bottom:2px;">🗣️ Voz da Pergunta:</label>
+            <select id="voiceSelectQuestion" style="width:100%; padding:6px; background:#333; color:white; border:1px solid #555; border-radius:4px; margin-bottom:8px;">
+                <option value="">Carregando...</option>
+            </select>
+
+            <label style="display:block; color:#ccc; font-size:0.9em; margin-bottom:2px;">🗣️ Voz da Resposta:</label>
+            <select id="voiceSelectAnswer" style="width:100%; padding:6px; background:#333; color:white; border:1px solid #555; border-radius:4px; margin-bottom:8px;">
+                <option value="">Carregando...</option>
+            </select>
+
+            <label style="display:block; color:gold; margin-bottom:0px;">Velocidade: <span id="rateValue">1.1x</span></label>
+            <input type="range" id="rateRange" min="0.5" max="3" step="0.1" value="1.1" style="width:100%; accent-color:gold;" oninput="document.getElementById('rateValue').textContent = this.value + 'x'">
+          </div>
+
       </div>
 
       <div class="settings-actions">
-        <button id="startStudyBtn" class="start-button" onclick="startCustomStudy()">INICIAR</button>
+        <button id="startStudyBtn" class="start-button" onclick="startCustomStudy()">INICIAR ESTUDO</button>
         <button class="close-button" onclick="closeSettingsModal()">Fechar</button>
       </div>
     </div>
@@ -6183,5 +6248,3 @@ function runRealTimeSearch(text) {
   </script>
 </body>
 </html>
-
-

@@ -2305,10 +2305,12 @@ body {
   <script>
     // --- CONFIGURAÇÃO INICIAL ---
 // --- CONFIGURAÇÃO INICIAL ---
+     // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbxfeIybUQvl-cb_VEBITzKF9Nbw97FgWMGWVF6pW-McV5MwVpJOoytWcVKl5dIApOjGZw/exec";
-    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxy_sanjZc0AL-kMIu5LJEqjrFLAVeHIJsWtQq_l5XEqOR5E38xsOzJyHzprjJCHh15/exec"; // NOVO BACKEND
+	// Acesso aos Cards
+    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxy_sanjZc0AL-kMIu5LJEqjrFLAVeHIJsWtQq_l5XEqOR5E38xsOzJyHzprjJCHh15/exec"; 
 	// URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
-    let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec";
+    let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec"; 
 	
     let isAuthenticated = false;
     let userEmail = '';
@@ -2797,7 +2799,7 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
         
         // Chama o Apps Script (mesma URL do login)
-        const response = await fetch(WEB_APP_URL, { 
+        const response = await fetch(SRS_BACKEND_URL, { 
             method: 'POST',
             body: formData,
             signal: controller.signal 
@@ -2869,7 +2871,13 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
     }
 
     // Função auxiliar para carregar cards na memória e preparar a tela
-    function processLoadedCards(cardsData, isFromCache) {
+   function processLoadedCards(cardsData, isFromCache) {
+        // --- NOVO: ETIQUETA PERMANENTE (Garante que o número nunca se perca) ---
+        cardsData.forEach((card, index) => {
+            card._originalIndex = index; 
+        });
+        // -----------------------------------------------------------------------
+
         initialCards = cardsData;
         // Se estamos iniciando agora (cards vazio) ou carregando do cache, atualiza tudo
         // Se for atualização de rede em segundo plano, atualiza initialCards mas mantém o estudo atual se o usuário já começou
@@ -5609,8 +5617,9 @@ function startCustomStudy() {
         newInterval = applyFuzz(newInterval); // Aplica Fuzz
         nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(1, newInterval)); 
       } else if (rating === 'good') {
-        // Multiplicador ajustado de 2.5 para 2.4 (Curva mais suave)
-        newInterval = state.interval === 0 ? 1 : Math.round(state.interval * 2.4);
+        // Usa o Ease Factor real do card. Se for a 1ª vez, usa 2.5 (padrão)
+        let multiplier = state.easeFactor || 2.5; 
+        newInterval = state.interval === 0 ? 1 : Math.round(state.interval * multiplier);
         newInterval = applyFuzz(newInterval); // Aplica Fuzz
         nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(1, newInterval)); 
       } else if (rating === 'easy') {
@@ -5640,7 +5649,7 @@ function startCustomStudy() {
     }
   // --- NOVO SISTEMA DE FILA DE SALVAMENTO (OFFLINE SYNC) ---
     // 1. Carrega fila pendente da memória do navegador
-    let saveQueue = JSON.parse(localStorage.getItem('chicoSaveQueue') || '[]');
+    let saveQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
     let isSyncing = false;
 
     // 2. Função genérica que adiciona à fila e tenta enviar
@@ -5650,7 +5659,7 @@ function startCustomStudy() {
       
       // Salva na fila e persiste no navegador
       saveQueue.push({ endpoint: endpoint, data: dataObj });
-      localStorage.setItem('chicoSaveQueue', JSON.stringify(saveQueue));
+      localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
 
       // Feedback visual discreto no console
       console.log("Dado adicionado à fila de sincronização. Pendentes:", saveQueue.length);
@@ -5687,13 +5696,13 @@ function startCustomStudy() {
         
         // Remove o item da fila e atualiza o LocalStorage
         saveQueue.shift();
-        localStorage.setItem('chicoSaveQueue', JSON.stringify(saveQueue));
+        localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
 
         isSyncing = false;
 
         // Se ainda tiver itens, processa o próximo em 500ms
         if (saveQueue.length > 0) setTimeout(processSaveQueue, 500);
-        localStorage.setItem('chicoSaveQueue', JSON.stringify(saveQueue));
+        localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
 
         isSyncing = false;
 
@@ -5764,7 +5773,11 @@ function startCustomStudy() {
       if (!userEmail || cards.length === 0) return;
 
       const currentCardObj = cards[currentCard];
-      const realIndex = initialCards.indexOf(currentCardObj);
+      // CORREÇÃO: Usa a etiqueta permanente ou fallback para o método antigo
+      let realIndex = currentCardObj._originalIndex;
+      if (realIndex === undefined || realIndex === null) {
+          realIndex = initialCards.indexOf(currentCardObj);
+      }
 
       if (realIndex === -1) return;
 
@@ -5774,7 +5787,7 @@ function startCustomStudy() {
         action: 'savePosition',
         sheetId: SHEET_ID,
         email: userEmail,
-        cardIndex: realIndex,
+        cardIndex: realIndex + 1, // SALVA O NÚMERO REAL (HUMANO)
         modo: currentMode
       };
 
@@ -5805,7 +5818,7 @@ function startCustomStudy() {
             const msgElement = document.getElementById('resumeMessage');
             if (msgElement) {
                 msgElement.innerHTML = `
-                    Você parou no Card <strong>${savedIndex + 1}</strong> de ${cards.length}:<br><br>
+                    Você parou no Card <strong>${savedIndex}</strong> de ${cards.length}:<br><br>
                     <em style="color: gold;">"${cardText}"</em><br><br>
                     Deseja continuar de onde parou?
                 `;
@@ -5822,7 +5835,7 @@ function startCustomStudy() {
         document.getElementById('resumeModal').style.display = 'none';
         
         if (window.savedPosition) {
-            currentCard = window.savedPosition.index;
+            currentCard = window.savedPosition.index - 1; // VOLTA PARA ÍNDICE DE ARRAY
             showingFront = true;
             
             // Lógica SRS (Opcional)

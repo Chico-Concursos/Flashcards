@@ -2348,6 +2348,7 @@ body {
     let lastFilterSelections = { discipline: "", topic: "", foco: "" };
     let cardViewStartTime = 0;
     let isAutoAdvancePaused = false;
+	let savePositionTimer = null;
 	// --- VARIÁVEIS DO APRENDIZADO ADAPTATIVO ---
     let userLearningStats = {
         totalCharsRead: 0,
@@ -3031,7 +3032,16 @@ document.getElementById("focoSelect").style.display = "none";
       // Ajuste extra para o botão de embaralhar (Restaurado: Sempre Visível)
       const shuffleBtn = document.getElementById('shuffleButton');
       if (shuffleBtn) shuffleBtn.style.display = 'inline-block';
-    }
+
+      // --- NOVO: SALVAR POSIÇÃO AUTOMATICAMENTE A CADA CARD ---
+    // --- NOVO: SALVAMENTO INTELIGENTE (Espera o tempo definido em segundos antes de enviar) ---
+      // Se o usuário clicar de novo antes do tempo definido, cancela o envio anterior
+      clearTimeout(savePositionTimer); 
+      
+      savePositionTimer = setTimeout(() => {
+          savePositionToBackend();
+      }, 5000); // 5000 milissegundos = 5 segundos
+    } 
 
     function updateAccuracyButtons() {
       const correctButton = document.getElementById('correctButton');
@@ -5832,8 +5842,18 @@ function startCustomStudy() {
         showFeedback("Iniciando do começo.", "white");
     }
 	// Tenta salvar se o usuário fechar a aba ou o navegador
+    // --- REDE DE SEGURANÇA: Salvar ao sair ---
+    // Se o usuário sair antes do tempo definido, cancelamos a espera e salvamos AGORA.
     window.addEventListener('visibilitychange', () => {
         if (document.visibilityState === 'hidden') {
+            // 1. Se existir um timer rodando, cancela ele para não duplicar
+            if (savePositionTimer) {
+                clearTimeout(savePositionTimer);
+                savePositionTimer = null;
+            }
+            
+            // 2. Força o salvamento imediato
+            console.log("Saída detectada: Forçando salvamento imediato...");
             savePositionToBackend();
         }
     });

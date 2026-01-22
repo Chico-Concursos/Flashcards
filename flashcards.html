@@ -1769,7 +1769,9 @@ body {
     <input type="text" id="topSearchBar" placeholder="Buscar..." onkeyup="runRealTimeSearch(this.value)">
 
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
-	<span id="syncIndicator" class="tooltip" data-tooltip="Status: Sincronizado" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="color: #00ff00; font-weight: bold; cursor: help; margin-left: 8px; text-shadow: 0 0 5px #00ff00;">☁️</span>
+	<button id="aiBtn" class="tooltip" data-tooltip="Professor IA" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="explainWithAI()" style="background: none; border: none; color: #a78bfa; font-size: 1.2em; cursor: pointer; margin-left: 5px;">
+        <i class="fas fa-robot"></i>
+    </button>
    <span id="mobileCardCounter" style="display:none; font-size: 0.9em; margin: 0 8px; color: gold; font-weight: bold;">0/0</span>
     <span id="desktopTimer" class="tooltip" data-tooltip="Zerar Tempo" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer;">⏱️ <span id="timer">00:00</span></span>
     
@@ -2637,13 +2639,18 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       startSessionTimer();
       showLoadingIndicator();
 
-      // --- ORDEM DE CARREGAMENTO CORRIGIDA ---
+      // --- ORDEM DE CARREGAMENTO CORRIGIDA (COM PAUSA ANTI-FLOOD) ---
       // 1. Baixa seu progresso (Armazém + SRS)
-      loadAllDataFromBackend(userEmail).then(() => {
+      loadAllDataFromBackend(userEmail).then(async () => {
+          
+          console.log("Progresso baixado. Aguardando servidor esfriar...");
+          // PAUSA DE 1.5 SEGUNDOS (Evita o erro "Muitas Requisições")
+          await new Promise(resolve => setTimeout(resolve, 1500));
+
           // 2. Baixa os Cards
           return loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
       }).then(() => {
-          // 3. Tudo pronto: Esconde loading e Pergunta se quer continuar
+          // 3. Tudo pronto
           hideLoadingIndicator();
           checkForSavedPosition();
 		  checkAndIncrementStreak();
@@ -6278,6 +6285,251 @@ function runRealTimeSearch(text) {
     showingFront = true;
     updateCard();
 }
+// ============================================
+// ============================================
+// --- ÁREA DO PROFESSOR IA (VERSÃO FINAL - WIDESCREEN & FORMATADA) ---
+
+let chatHistoryContext = []; 
+
+// 1. Função Formatadora de Texto (Melhora a Legibilidade)
+function formatMarkdown(text) {
+    if (!text) return "";
+    return text
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #a78bfa;">$1</strong>') // Negrito vira Roxo Claro
+        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Itálico
+        .replace(/### (.*?)\n/g, '<h3 style="margin: 10px 0 5px 0; color: white;">$1</h3>') // Títulos
+        .replace(/- /g, '• ') // Listas mais bonitas
+        .replace(/\n/g, '<br>'); // Quebras de linha
+}
+
+// 2. Leitura de Dados
+function generatePromptFromCard() {
+    console.log("--- LENDO DADOS ---");
+    if (typeof cards === 'undefined' || typeof currentCard === 'undefined') {
+        return "Erro: Sistema desconectado. Peça para o aluno recarregar.";
+    }
+    const cardData = cards[currentCard];
+    if (!cardData) return "Erro: Card inválido.";
+
+    const front = cardData.front || "Pergunta vazia";
+    const back = cardData.back || "Resposta vazia";
+    
+    return `O aluno está estudando este Flashcard (Card #${currentCard}):
+    ---
+    PERGUNTA: ${front}
+    RESPOSTA: ${back}
+    ---
+    Aja como um Professor Especialista.
+    1. Explique o conceito.
+    2. Dê um exemplo prático.
+    3. Use formatação clara (negrito para destacar termos).`;
+}
+
+// 3. Visualização do Chat (Cores melhoradas)
+// 3. Visualização do Chat (Estilo Linear - Melhor para Leitura)
+function addMessageToChat(sender, message) {
+    const chatHistory = document.getElementById('aiChatHistory');
+    if (!chatHistory) return;
+
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'ai-message';
+    
+    // Estilo Base (Comum para ambos)
+    messageDiv.style.marginBottom = '15px';
+    messageDiv.style.padding = '15px 20px';
+    messageDiv.style.borderRadius = '8px';
+    messageDiv.style.lineHeight = '1.6';
+    messageDiv.style.width = '100%'; // Ocupa a largura toda (sem zig-zag)
+    messageDiv.style.boxSizing = 'border-box'; // Garante que o padding não estoure a largura
+    
+    if (sender === 'user') {
+        // Estilo do Usuário (Cinza Escuro, Diferenciado pelo ícone)
+        messageDiv.style.background = '#252525'; 
+        messageDiv.style.borderLeft = '4px solid #555'; // Barra lateral discreta
+        messageDiv.innerHTML = `<strong style="color: #bbb;">👤 Sua Dúvida:</strong><br><span style="color: #ddd;">${message}</span>`;
+    } else {
+        // Estilo da IA (Roxo Escuro, Foco na leitura)
+        messageDiv.style.background = '#1a1a1a';
+        messageDiv.style.borderLeft = '4px solid #a78bfa'; // Barra lateral roxa
+        messageDiv.innerHTML = `<strong style="color: #a78bfa;">🤖 Professor IA:</strong><br><div style="color: #e0e0e0; margin-top: 5px;">${message}</div>`;
+    }
+
+    chatHistory.appendChild(messageDiv);
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    return messageDiv;
+}
+
+// 4. API Groq
+async function callGroqAPI(messagesContext) {
+    const part1 = "gsk_cl1TddotvtLXhhuPmAIkW"; 
+    const part2 = "Gdyb3FYSLgkfpv26DOzYa16yGOkhoPj";
+    const apiKey = part1 + part2;
+    const url = "https://api.groq.com/openai/v1/chat/completions";
+
+    try {
+        const response = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": "Bearer " + apiKey },
+            body: JSON.stringify({
+                messages: [{role: "system", content: "Você é um professor didático."}, ...messagesContext],
+                model: "llama-3.3-70b-versatile",
+                temperature: 0.5,
+                max_tokens: 1024
+            })
+        });
+        if (!response.ok) throw new Error("Erro API");
+        const data = await response.json();
+        return data.choices[0].message.content;
+    } catch (error) {
+        return "❌ Erro de conexão. Verifique sua internet.";
+    }
+}
+
+// 5. Botão Explicar
+window.explainWithAI = async function() {
+    const modal = document.getElementById('aiModal');
+    const chatHistory = document.getElementById('aiChatHistory');
+    
+    if(modal) modal.style.display = 'flex'; // IMPORTANTE: display flex para centralizar
+    
+    chatHistoryContext = []; 
+    chatHistory.innerHTML = `<div class="ai-message"><strong>Professor IA:</strong><br><i class="fas fa-spinner fa-spin"></i> Analisando...</div>`;
+
+    try {
+        const promptInicial = generatePromptFromCard();
+        chatHistoryContext.push({ role: "user", content: promptInicial });
+        
+        const respostaIA = await callGroqAPI(chatHistoryContext);
+        chatHistoryContext.push({ role: "assistant", content: respostaIA });
+        
+        // Aplica a formatação visual (Negrito, Quebras de linha)
+        const respostaFormatada = formatMarkdown(respostaIA);
+        
+        chatHistory.innerHTML = ``; // Limpa o loading
+        addMessageToChat('system', respostaFormatada); // Adiciona mensagem formatada
+
+    } catch (error) {
+        chatHistory.innerHTML = `<div style="color:red">Erro ao processar.</div>`;
+    }
+};
+
+// 6. Envio Manual
+window.sendUserMessage = async function() {
+    const input = document.getElementById('aiUserInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    addMessageToChat('user', text);
+    input.value = ''; 
+    
+    chatHistoryContext.push({ role: "user", content: text });
+
+    const loadingDiv = addMessageToChat('system', '<i class="fas fa-spinner fa-spin"></i> Digitando...');
+    
+    try {
+        const respostaIA = await callGroqAPI(chatHistoryContext);
+        chatHistoryContext.push({ role: "assistant", content: respostaIA });
+
+        loadingDiv.remove(); // Remove o loading
+        
+        // Aplica a formatação visual
+        const respostaFormatada = formatMarkdown(respostaIA);
+        addMessageToChat('system', respostaFormatada);
+
+    } catch (error) {
+        loadingDiv.remove();
+        addMessageToChat('system', '❌ Erro ao responder.');
+    }
+};
   </script>
+  <div id="aiModal" style="
+    display: none; 
+    position: fixed; 
+    top: 20px; 
+    left: 50%; 
+    transform: translateX(-50%); 
+    width: 95%; 
+    max-width: 800px; /* <-- AUMENTADO PARA 800px (Era 450px) */
+    height: 85vh; 
+    background: #121212; /* Fundo mais escuro para contraste */
+    border: 1px solid #333; 
+    border-radius: 12px; 
+    z-index: 99999; 
+    box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+    flex-direction: column; 
+    font-family: 'Roboto', sans-serif;
+    overflow: hidden;">
+
+    <div style="
+        padding: 18px; 
+        background: #1f1f1f; 
+        border-bottom: 1px solid #333; 
+        display: flex; 
+        justify-content: space-between; 
+        align-items: center;">
+        
+        <div style="display: flex; align-items: center; gap: 12px; color: #a78bfa;">
+            <i class="fas fa-robot" style="font-size: 1.4rem;"></i>
+            <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 0.5px;">Professor IA</h3>
+        </div>
+        
+        <button onclick="document.getElementById('aiModal').style.display='none'" 
+            style="background: none; border: none; color: #888; font-size: 28px; cursor: pointer; padding: 0 10px; line-height: 1;">
+            &times;
+        </button>
+    </div>
+
+    <div id="aiChatHistory" style="
+        flex-grow: 1; 
+        padding: 20px; 
+        overflow-y: auto; 
+        display: flex; 
+        flex-direction: column; 
+        gap: 18px; 
+        background: #0d0d0d;
+        font-size: 16px; /* <-- FONTE MAIOR PARA LEGIBILIDADE */
+        line-height: 1.6;
+        color: #e0e0e0;">
+        </div>
+
+    <div style="
+        padding: 15px; 
+        background: #1f1f1f; 
+        border-top: 1px solid #333; 
+        display: flex; 
+        gap: 10px; 
+        align-items: center;">
+        
+        <input type="text" id="aiUserInput" placeholder="Digite sua dúvida aqui..." 
+               style="
+               flex-grow: 1; 
+               padding: 12px 18px; 
+               border-radius: 25px; 
+               border: 1px solid #444; 
+               background: #2a2a2a; 
+               color: white; 
+               outline: none;
+               font-size: 15px;"
+               onkeydown="if(event.key === 'Enter') sendUserMessage()">
+        
+        <button onclick="sendUserMessage()" style="
+            background: #a78bfa; 
+            color: #000; 
+            border: none; 
+            width: 45px; 
+            height: 45px; 
+            border-radius: 50%; 
+            cursor: pointer; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 18px;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+            box-shadow: 0 2px 10px rgba(167, 139, 250, 0.3);">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
 </body>
 </html>

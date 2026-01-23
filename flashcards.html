@@ -1236,7 +1236,6 @@ body {
       }
     }
 	/* --- ESTILO DAS CAIXAS DE SELEÇÃO (OPTION CARDS) --- */
-    /* --- ESTILO LIMPO (LISTA) COM TOOLTIP --- */
     .clean-option-row {
       display: flex;
       align-items: center;
@@ -1683,6 +1682,65 @@ body {
         grid-template-columns: 1fr !important; /* Volta para 1 coluna */
       }
     }
+	/* --- CORREÇÃO DE ALTURA (VISUAL COMPACTO) --- */
+    
+    /* 1. Emagrece as linhas de opção (Simulado, Livre, SRS...) */
+    .clean-option-row {
+        padding: 8px 12px !important; /* Reduzido de 15px para 8px */
+        margin-bottom: 6px !important; /* Aproxima uma caixa da outra */
+        min-height: 40px !important;   /* Remove altura mínima excessiva */
+    }
+
+    /* 2. Emagrece os campos de digitação e seleção (Disciplinas) */
+.discipline-select, 
+    select, 
+    input[type="text"] {     <-- Só sobram o select e o texto
+        padding: 6px 10px !important;  /* Reduzido drasticamente o "ar" interno */
+        height: auto !important;       /* Altura automática baseada no texto */
+        font-size: 0.95em !important;  /* Fonte levemente ajustada */
+        margin: 2px 0 !important;      /* Remove margens externas desnecessárias */
+    }
+    
+    /* 3. Ajusta o botão de adicionar disciplina para acompanhar */
+    .add-discipline-button {
+        padding: 6px 12px !important;
+        height: auto !important;
+    }
+
+    /* 4. Ajusta os Labels (Textos "Modo de Estudo", etc) */
+    .clean-option-row label {
+        display: flex;
+        align-items: center;
+        gap: 8px; /* Aproxima o texto da bolinha/radio */
+    }
+	/* 5. Emagrece os 3 botões do rodapé (Resetar, Iniciar, Fechar) */
+    .settings-actions button {
+        padding: 6px 5px !important;   /* Reduz o "estofamento" interno vertical */
+        font-size: 0.85em !important;  /* Diminui levemente a fonte */
+        min-height: 0 !important;      /* Remove altura mínima obrigatória */
+        height: auto !important;       /* Deixa a altura se ajustar ao texto */
+        margin-bottom: 0 !important;   /* Remove margem extra inferior */
+    }
+
+    /* 6. Ajusta especificamente o botão do meio (Iniciar Estudo) que tem 2 linhas */
+    #startStudyBtn {
+        font-size: 0.8em !important;   /* Fonte um pouco menor para caber melhor */
+        line-height: 1.2 !important;   /* Aproxima as linhas "INICIAR" e "ESTUDO" */
+        padding: 8px 5px !important;   /* Um pouquinho mais alto que os outros para destaque */
+    }
+
+    /* 7. Ajusta os ícones dentro dos botões (Lixeira, X) */
+    .settings-actions button i {
+        font-size: 1.1em !important;   /* Ícones proporcionais */
+        margin-bottom: 2px !important;
+    }
+    
+    /* 8. Aproxima o rodapé do conteúdo acima (remove espaço vazio) */
+    .settings-actions {
+        margin-top: 10px !important;
+        padding-top: 10px !important;
+    }
+	
   </style>
 </head>
 <body>
@@ -2106,9 +2164,57 @@ body {
 
       </div>
 
-      <div class="settings-actions">
-        <button id="startStudyBtn" class="start-button" onclick="startCustomStudy()">INICIAR ESTUDO</button>
-        <button class="close-button" onclick="closeSettingsModal()">Fechar</button>
+      <div class="settings-actions" style="
+          display: flex; 
+          gap: 8px; 
+          justify-content: space-between; 
+          margin-top: 15px; 
+          border-top: 1px solid #444; 
+          padding-top: 15px;">
+        
+        <button onclick="resetToFullDeck(); closeSettingsModal()" style="
+            flex: 1; /* Ocupa 1 parte do espaço */
+            padding: 10px; 
+            background: #381010; 
+            color: #ff6b6b; 
+            border: 1px solid #ff4d4d; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.8em;
+            font-weight: bold;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <i class="fas fa-trash-restore" style="font-size: 1.2em; margin-bottom:2px;"></i>
+            Resetar
+        </button>
+
+        <button id="startStudyBtn" onclick="startCustomStudy()" style="
+            flex: 2; /* Ocupa 2 partes (dobro do tamanho) */
+            padding: 10px; 
+            background: #FFD700; /* Dourado */
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-weight: 900; 
+            font-size: 0.9em;
+            text-transform: uppercase;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3);">
+            INICIAR ESTUDO
+        </button>
+
+        <button onclick="closeSettingsModal()" style="
+            flex: 1; /* Ocupa 1 parte do espaço */
+            padding: 10px; 
+            background: #333; 
+            color: #ccc; 
+            border: 1px solid #555; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            font-size: 0.8em;
+            display: flex; flex-direction: column; align-items: center; justify-content: center;">
+            <i class="fas fa-times" style="font-size: 1.2em; margin-bottom:2px;"></i>
+            Fechar
+        </button>
       </div>
     </div>
 	</div>
@@ -2521,7 +2627,112 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       document.getElementById("flashcard-content").textContent = "Sessão expirada. Por favor, faça login novamente.";
       cardCounter.textContent = "0/0";
     }
+// --- FUNÇÃO: REINICIAR SESSÃO (LIMPAR FILTROS) ---
+    // --- FUNÇÃO: SAIR DO MODO DE ESTUDO (PRESERVA PROGRESSO) ---
+    // --- FUNÇÃO RESET V3: LIMPEZA TOTAL (VISUAL E LÓGICA) ---
+    // --- 1. FUNÇÃO QUE ABRE O MODAL (Substitui o alert/confirm nativo) ---
+    function resetToFullDeck() {
+        if (!requireAuth()) return;
+        
+        // Em vez de usar confirm(), abrimos nosso modal customizado
+        const modal = document.getElementById('customConfirmModal');
+        if(modal) {
+            modal.style.display = 'flex';
+        }
+        
+        // Fecha o modal de configurações para focar na confirmação
+        if(typeof closeSettingsModal === 'function') closeSettingsModal();
+    }
 
+    // --- 2. FUNÇÃO PARA FECHAR O MODAL (Cancelar) ---
+    function closeConfirmModal() {
+        const modal = document.getElementById('customConfirmModal');
+        if(modal) modal.style.display = 'none';
+        
+        // Reabre configurações se quiser (opcional), mas melhor deixar fechado.
+    }
+
+    // --- 3. A LÓGICA REAL DE RESET (Só executa se clicar em SIM) ---
+    function executeFullReset() {
+        closeConfirmModal(); // Fecha a janela de confirmação
+
+        // A. RECUPERAÇÃO SEGURA DOS DADOS
+        const savedData = localStorage.getItem('flashcardsState');
+        if (savedData) {
+            try {
+                cards = JSON.parse(savedData);
+            } catch (e) {
+                cards = [...initialCards]; 
+            }
+        } else {
+            cards = [...initialCards];
+        }
+        
+        // B. RESETA VARIÁVEIS GLOBAIS
+        currentCard = 0;
+        showingFront = true;
+        isFinished = false;
+        isReviewErrorsMode = false;
+        currentCategory = "Todas";
+        if (typeof isSimuladoMode !== 'undefined') isSimuladoMode = false;
+        
+        // Reseta variáveis da Seção 2
+        if (typeof isFocusMode !== 'undefined') isFocusMode = false;
+        if (typeof currentWeightMode !== 'undefined') currentWeightMode = 'sequencial';
+
+        // C. FAXINA VISUAL COMPLETA
+        
+        // Seção 1: Modos
+        const modeRadios = document.querySelectorAll('input[name="studyMode"]');
+        modeRadios.forEach(radio => radio.checked = false);
+        
+        if(document.getElementById('simuladoOptions')) document.getElementById('simuladoOptions').style.display = 'none';
+        if(document.getElementById('livreOptions')) document.getElementById('livreOptions').style.display = 'none';
+        if(document.getElementById('provasOptions')) document.getElementById('provasOptions').style.display = 'none';
+
+        // Seção 1: Inputs
+        const selects = document.querySelectorAll('.discipline-select');
+        const inputs = document.querySelectorAll('.quantity-input');
+        if(selects[0]) selects[0].value = "";
+        if(inputs[0]) inputs[0].value = "";
+        
+        const rows = document.querySelectorAll('.discipline-row');
+        for(let i = 1; i < rows.length; i++) rows[i].remove();
+        
+        const totalDisplay = document.getElementById('totalSimuladoQuestions');
+        if(totalDisplay) totalDisplay.innerText = "0";
+
+        // Seção 2: Inteligência e Pesos
+        const focusCheck = document.getElementById('enableFocusMode');
+        if(focusCheck) focusCheck.checked = false;
+
+        const weightRadios = document.querySelectorAll('input[name="weightMode"]');
+        weightRadios.forEach(radio => radio.checked = false);
+
+        const pesoOptions = document.getElementById('pesoMinimoOptions');
+        if(pesoOptions) pesoOptions.style.display = 'none';
+        
+        const pesoInput = document.getElementById('pesoMinimoValue');
+        if(pesoInput) pesoInput.value = 1;
+
+        // D. LIMPA TELAS DO SISTEMA
+        const reviewBtn = document.getElementById('reviewErrorsButton');
+        if(reviewBtn) reviewBtn.style.display = 'none';
+        
+        const endScreen = document.getElementById('end-screen');
+        if(endScreen) endScreen.style.display = 'none';
+        
+        const flashcardContent = document.getElementById('flashcard-content');
+        if(flashcardContent) flashcardContent.style.display = 'block';
+        
+        // E. ATUALIZA E SALVA
+        updateCard();
+        saveFlashcardState(); 
+        
+        if (typeof showFeedback === 'function') {
+            showFeedback("Sessão reiniciada com sucesso! 🚀", "#4CAF50");
+        }
+    }
     function logout() {
       // SALVAR ANTES DE SAIR
       savePositionToBackend();
@@ -4105,91 +4316,24 @@ function setFontMode(mode) {
             }
         }
     }
-	// --- TEXT-TO-SPEECH (PIPER NEURAL - WEBASSEMBLY) ---
-    // Carrega uma IA de voz neural direto no navegador (Qualidade Estúdio)
-    let isAutoTTS = false; 
-    let piperWorker = null;
-    let isPiperLoading = false;
-    let audioContext = null;
 
-    // Configuração da Voz (Modelo pt_BR-faber-medium - Voz Masculina Neural)
-    // Se quiser feminina, mude para 'pt_BR_lara-medium' nas URLs abaixo
-    const PIPER_MODEL_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx?download=true";
-    const PIPER_CONFIG_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json?download=true";
-    // Biblioteca do Piper (WASM) via CDN
-    const PIPER_WASM_SCRIPT = "https://cdn.jsdelivr.net/npm/@buzzing/piper-synth-web@0.1.1/index.min.js";
-
-    // 1. Injeta o script do Piper dinamicamente
-    function loadPiperScript() {
-        if (document.getElementById('piper-script')) return; // Já carregado
-        
-        showFeedback("Preparando motor de voz... ⏳", "gold");
-        const script = document.createElement('script');
-        script.id = 'piper-script';
-        script.type = 'module';
-        script.src = PIPER_WASM_SCRIPT;
-        
-        script.onload = () => {
-            console.log("Piper Script Carregado. Inicializando...");
-            initPiper();
-        };
-        script.onerror = () => {
-            showFeedback("Erro ao carregar Piper. Verifique internet.", "red");
-        };
-        document.body.appendChild(script);
-    }
-
-    // 2. Inicializa o Worker do Piper
-    async function initPiper() {
-        if (isPiperLoading || piperWorker) return;
-        isPiperLoading = true;
-        
-        try {
-            // Importa a função da biblioteca carregada pelo CDN
-            // Nota: Dependendo da CDN, a função pode estar global ou em módulo. 
-            // Vamos usar uma abordagem genérica para carregar o worker.
-            // Para simplificar em arquivo único, usaremos a API de áudio nativa com fallback se o Piper falhar
-            // Mas vamos tentar configurar o worker manualmente aqui:
-            
-            showFeedback("Baixando voz neural (25MB)... Aguarde.", "gold");
-
-            // Como o Piper via CDN em arquivo único é complexo, vamos usar o tts-server logic simplificado
-            // Se falhar, usaremos o Nativo melhorado.
-            
-            // --- HACK PARA PROJETO DE ARQUIVO ÚNICO ---
-            // O Piper exige Workers que não rodam bem em file:// sem configuração.
-            // Vamos usar o truque do Blob para criar o Worker inline se possível, 
-            // mas baixar 30MB toda vez é ruim para o usuário.
-            
-            // MUDANÇA DE ESTRATÉGIA PARA MÁXIMA COMPATIBILIDADE:
-            // Vamos usar o SISTEMA NATIVO (SpeechSynthesis) mas forçando a voz "Google Português"
-            // que é Neural e já vem no Chrome/Android, evitando o download de 30MB.
-            
-            throw new Error("Modo Simplificado Ativado");
-
-        } catch (e) {
-            console.log("Fallback para Voz Nativa Otimizada");
-            isPiperLoading = false;
-            // Se o Piper falhar (comum em arquivo local), inicializa o sistema nativo
-            populateVoiceList();
-        }
-    }
-
-    // --- SISTEMA HÍBRIDO (Tenta selecionar a melhor voz nativa Neural) ---
-    
-    // --- FUNÇÃO MELHORADA: MENUS DE VOZ COM MEMÓRIA ---
-    // --- FUNÇÃO MELHORADA: MENUS DE VOZ DUPLA COM MEMÓRIA ---
-    // --- FUNÇÃO MELHORADA: CARREGAMENTO INTELIGENTE DE VOZES (RETRY SYSTEM) ---
-    function populateVoiceList(attempt = 0) {
+    // --- FUNÇÃO APRIMORADA: SELEÇÃO AUTOMÁTICA DE VOZES NEURAIS ---
+function populateVoiceList(attempt = 0) {
+    try {
         const voiceSelectQ = document.getElementById('voiceSelectQuestion');
         const voiceSelectA = document.getElementById('voiceSelectAnswer');
         
-        if(!voiceSelectQ || !voiceSelectA) return;
+        if(!voiceSelectQ || !voiceSelectA) {
+            console.log("Elementos de voz não encontrados. Tentativa:", attempt);
+            if (attempt < 3) {
+                setTimeout(() => populateVoiceList(attempt + 1), 300);
+            }
+            return;
+        }
 
-        let voices = window.speechSynthesis.getVoices();
+        let voices = window.speechSynthesis.getVoices() || [];
 
         // LÓGICA DE RETRY (CRÍTICO PARA CELULAR):
-        // Se não achou vozes e tentou menos de 10 vezes (5 segundos), espera e tenta de novo.
         if (voices.length === 0 && attempt < 10) {
             console.log(`Tentativa ${attempt+1}: Vozes ainda carregando...`);
             setTimeout(() => populateVoiceList(attempt + 1), 500);
@@ -4201,41 +4345,53 @@ function setFontMode(mode) {
         voiceSelectA.innerHTML = '';
         
         // --- ORDENAÇÃO DE ALTA QUALIDADE (EDGE/GOOGLE/NEURAL) ---
-        // Filtra vozes pt-BR ou PT
-        const ptVoices = voices.filter(v => v.lang.includes('pt') || v.lang.includes('PT'));
-
-        ptVoices.sort((a, b) => {
-            // Palavras-chave de qualidade (Adicionado 'Natural' e 'Online' para Edge Mobile)
-            const qualityKeywords = ['Natural', 'Online', 'Neural', 'Google', 'Microsoft', 'Premium', 'Luciana', 'Siri'];
+        const ptVoices = voices.filter(v => 
+            v.lang?.includes('pt') || 
+            v.lang?.includes('PT') || 
+            v.lang?.includes('brasil') ||
+            v.name?.includes('Portuguese')
+        ).sort((a, b) => {
+            const neuralKeywords = [
+                'Natural', 'Neural', 'Online', 'Premium', 
+                'Google', 'Microsoft', 'Azure', 'Amazon',
+                'Luciana', 'Fernanda', 'Daniel', 'Helena'
+            ];
             
-            const isQualityA = qualityKeywords.some(k => a.name.includes(k));
-            const isQualityB = qualityKeywords.some(k => b.name.includes(k));
-
-            // Prioriza vozes de alta qualidade
-            if (isQualityA && !isQualityB) return -1;
-            if (!isQualityA && isQualityB) return 1;
-
-            // Desempate: Prioriza pt-BR exato
-            if (a.lang === 'pt-BR' && b.lang !== 'pt-BR') return -1;
-            if (a.lang !== 'pt-BR' && b.lang === 'pt-BR') return 1;
-
-            return 0; 
+            const isNeuralA = neuralKeywords.some(k => a.name?.includes(k));
+            const isNeuralB = neuralKeywords.some(k => b.name?.includes(k));
+            
+            if (isNeuralA && !isNeuralB) return -1;
+            if (!isNeuralA && isNeuralB) return 1;
+            
+            // Prioriza vozes do Brasil
+            const isBrazilianA = a.lang?.includes('BR') || a.name?.includes('Brasil');
+            const isBrazilianB = b.lang?.includes('BR') || b.name?.includes('Brasil');
+            if (isBrazilianA && !isBrazilianB) return -1;
+            if (!isBrazilianA && isBrazilianB) return 1;
+            
+            return 0;
         });
 
         // Função auxiliar para criar as opções
         const createOptions = (selectElement) => {
             if(ptVoices.length === 0) {
                 const option = document.createElement('option');
-                // Se falhou tudo, mostra aviso, mas mantém funcional
                 option.textContent = "Padrão do Sistema (Vozes não detectadas)";
                 selectElement.appendChild(option);
             } else {
-                ptVoices.forEach((voice) => {
+                ptVoices.forEach((voice, index) => {
                     const option = document.createElement('option');
-                    // Adiciona estrela visual nas vozes premium
-                    const isPremium = ['Natural', 'Neural', 'Google'].some(k => voice.name.includes(k));
-                    option.textContent = (isPremium ? '🌟 ' : '') + voice.name;
-                    option.value = voice.name;
+                    const isNeural = ['Natural', 'Neural', 'Online'].some(k => voice.name?.includes(k));
+                    const isPremium = ['Google', 'Microsoft'].some(k => voice.name?.includes(k));
+                    
+                    let prefix = '';
+                    if (isNeural && isPremium) prefix = '⭐ ';
+                    else if (isNeural) prefix = '🌟 ';
+                    else if (isPremium) prefix = '💎 ';
+                    
+                    option.textContent = prefix + (voice.name || 'Voz Desconhecida');
+                    option.value = voice.name || 'default';
+                    if (index === 0) option.selected = true;
                     selectElement.appendChild(option);
                 });
             }
@@ -4244,29 +4400,154 @@ function setFontMode(mode) {
         createOptions(voiceSelectQ);
         createOptions(voiceSelectA);
 
-        // --- RECUPERA AS ESCOLHAS SALVAS ---
+        // === NOVO: SELEÇÃO AUTOMÁTICA DA MELHOR VOZ DISPONÍVEL ===
+        function autoSelectBestVoices() {
+            if (ptVoices.length === 0) return;
+            
+            // Busca vozes neurais específicas para Brasil
+            const bestVoices = ptVoices.filter(voice => 
+                voice.lang?.includes('BR') || 
+                voice.name?.includes('Brasil') || 
+                voice.name?.includes('Brazilian') ||
+                voice.name?.includes('Fernanda') ||
+                voice.name?.includes('Helena')
+            );
+            
+            let bestQuestionVoice = null;
+            let bestAnswerVoice = null;
+            
+            // Prioridade 1: Voze Microsoft Neural (Edge)
+            bestQuestionVoice = bestVoices.find(v => 
+                (v.name?.includes('Microsoft') || v.name?.includes('Azure')) &&
+                (v.name?.includes('Fernanda') || v.name?.includes('Helena')) &&
+                v.name?.includes('Natural')
+            );
+            
+            // Prioridade 2: Vozes Google
+            if (!bestQuestionVoice) {
+                bestQuestionVoice = bestVoices.find(v => 
+                    v.name?.includes('Google') && 
+                    v.lang?.includes('BR')
+                );
+            }
+            
+            // Usa a primeira voz disponível como fallback
+            bestQuestionVoice = bestQuestionVoice || bestVoices[0] || ptVoices[0];
+            bestAnswerVoice = bestQuestionVoice;
+
+            // Aplica as seleções
+            if (bestQuestionVoice?.name) {
+                voiceSelectQ.value = bestQuestionVoice.name;
+                localStorage.setItem('chicoVoiceQ', bestQuestionVoice.name);
+            }
+            
+            if (bestAnswerVoice?.name) {
+                voiceSelectA.value = bestAnswerVoice.name;
+                localStorage.setItem('chicoVoiceA', bestAnswerVoice.name);
+            }
+            
+            // Feedback visual suave
+            setTimeout(() => {
+                if (typeof showFeedback === 'function') {
+                    showFeedback("Melhores vozes neurais configuradas! 🎯", "#4CAF50");
+                }
+            }, 800);
+        }
+
+        // === CARREGAMENTO INTELIGENTE DE VOZES SALVAS ===
         const savedVoiceQ = localStorage.getItem('chicoVoiceQ');
         const savedVoiceA = localStorage.getItem('chicoVoiceA');
         const oldSavedVoice = localStorage.getItem('chicoPreferredVoice');
 
-        if (savedVoiceQ) voiceSelectQ.value = savedVoiceQ;
-        else if (oldSavedVoice) voiceSelectQ.value = oldSavedVoice;
-        else voiceSelectQ.selectedIndex = 0;
+        let voiceApplied = false;
 
-        if (savedVoiceA) voiceSelectA.value = savedVoiceA;
-        else if (oldSavedVoice) voiceSelectA.value = oldSavedVoice;
-        else voiceSelectA.selectedIndex = 0;
+        // Tenta usar vozes salvas primeiro
+        if (savedVoiceQ && ptVoices.some(v => v.name === savedVoiceQ)) {
+            voiceSelectQ.value = savedVoiceQ;
+            voiceApplied = true;
+        } else if (oldSavedVoice && ptVoices.some(v => v.name === oldSavedVoice)) {
+            voiceSelectQ.value = oldSavedVoice;
+            voiceApplied = true;
+        }
+
+        if (savedVoiceA && ptVoices.some(v => v.name === savedVoiceA)) {
+            voiceSelectA.value = savedVoiceA;
+            voiceApplied = true;
+        } else if (oldSavedVoice && ptVoices.some(v => v.name === oldSavedVoice)) {
+            voiceSelectA.value = oldSavedVoice;
+            voiceApplied = true;
+        }
+
+        // Se não aplicou nenhuma voz salva, seleciona automaticamente as melhores
+        if (!voiceApplied && ptVoices.length > 0) {
+            autoSelectBestVoices();
+        }
+        // === FIM DA LÓGICA DE SELEÇÃO ===
         
         // --- EVENTOS DE SALVAMENTO ---
         voiceSelectQ.onchange = function() {
             localStorage.setItem('chicoVoiceQ', this.value);
-            showFeedback("Voz da Pergunta definida! 🗣️", "gold");
+            if (typeof showFeedback === 'function') {
+                showFeedback("Voz da Pergunta definida! 🗣️", "gold");
+            }
         };
+        
         voiceSelectA.onchange = function() {
             localStorage.setItem('chicoVoiceA', this.value);
-            showFeedback("Voz da Resposta definida! 🗣️", "gold");
+            if (typeof showFeedback === 'function') {
+                showFeedback("Voz da Resposta definida! 🗣️", "gold");
+            }
         };
+        
+        console.log(`✅ Vozes carregadas com sucesso. Total: ${ptVoices.length}`);
+        if (ptVoices.length > 0) {
+            console.log("Melhores vozes:", ptVoices.slice(0, 3).map(v => v.name).join(', '));
+        }
+        
+    } catch (error) {
+        console.error("❌ Erro na função populateVoiceList:", error);
+        if (typeof showFeedback === 'function') {
+            showFeedback("Erro ao carregar vozes. Recarregue a página.", "#ff5252");
+        }
     }
+} // <--- FECHAMENTO CORRETO DA FUNÇÃO AQUI
+
+// --- INICIALIZAÇÃO SEGURA ---
+// Remove listeners existentes para evitar duplicação
+if (window.speechSynthesis.onvoiceschanged) {
+    window.speechSynthesis.onvoiceschanged = null;
+}
+
+// Garante que as vozes carreguem (Chrome precisa disso)
+window.speechSynthesis.onvoiceschanged = populateVoiceList;
+
+// Força carregamento inicial com múltiplas tentativas seguras
+let loadAttempts = 0;
+const maxAttempts = 5;
+const loadVoicesInterval = setInterval(() => {
+    populateVoiceList(loadAttempts);
+    loadAttempts++;
+    if (loadAttempts >= maxAttempts) {
+        clearInterval(loadVoicesInterval);
+        console.log("Intialized carregamento de vozes após", maxAttempts, "tentativas");
+    }
+}, 300);
+
+// Remove o interval anterior se existir
+if (window.voiceLoadInterval) clearInterval(window.voiceLoadInterval);
+window.voiceLoadInterval = loadVoicesInterval;
+
+// Event listener para botão de configurações
+setTimeout(() => {
+    const settingsBtn = document.getElementById('settingsBtn');
+    if(settingsBtn) {
+        // Remove listener existente para evitar duplicação
+        settingsBtn.removeEventListener('click', populateVoiceList);
+        settingsBtn.addEventListener('click', populateVoiceList);
+    }
+}, 1000);
+
+console.log("Intialized sistema de vozes melhorado");
 
     // Garante que as vozes carreguem (Chrome precisa disso)
     if (window.speechSynthesis.onvoiceschanged !== undefined) {
@@ -6290,16 +6571,17 @@ function runRealTimeSearch(text) {
 // --- ÁREA DO PROFESSOR IA (VERSÃO FINAL - WIDESCREEN & FORMATADA) ---
 
 let chatHistoryContext = []; 
+let lastExplainedCardIndex = -1; // <--- NOVO: Memória do último card
 
 // 1. Função Formatadora de Texto (Melhora a Legibilidade)
 function formatMarkdown(text) {
     if (!text) return "";
     return text
-        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #a78bfa;">$1</strong>') // Negrito vira Roxo Claro
-        .replace(/\*(.*?)\*/g, '<em>$1</em>') // Itálico
-        .replace(/### (.*?)\n/g, '<h3 style="margin: 10px 0 5px 0; color: white;">$1</h3>') // Títulos
-        .replace(/- /g, '• ') // Listas mais bonitas
-        .replace(/\n/g, '<br>'); // Quebras de linha
+        .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #a78bfa;">$1</strong>') 
+        .replace(/\*(.*?)\*/g, '<em>$1</em>') 
+        .replace(/### (.*?)\n/g, '<h3 style="margin: 10px 0 5px 0; color: white;">$1</h3>') 
+        .replace(/- /g, '• ') 
+        .replace(/\n/g, '<br>'); 
 }
 
 // 2. Leitura de Dados
@@ -6319,14 +6601,21 @@ function generatePromptFromCard() {
     PERGUNTA: ${front}
     RESPOSTA: ${back}
     ---
-    Aja como um Professor Especialista.
-    1. Explique o conceito.
-    2. Dê um exemplo prático.
-    3. Use formatação clara (negrito para destacar termos).`;
+    Aja como um Professor Especialista em Concursos e Memorização.
+    Siga estes 4 passos rigorosamente:
+
+    1. EXPLICAÇÃO: Explique o conceito de forma didática e simples.
+    2. EXEMPLO: Dê um exemplo prático de aplicação.
+    3. MEMORIZAÇÃO (Foco em Retenção):
+       - Analise as palavras-chave da resposta.
+       - Crie um ACRÔNIMO (sigla) ou uma FRASE MNEMÔNICA (fácil de lembrar).
+       - Se possível, sugira uma associação visual ou metáfora.
+       - O objetivo é ajudar o aluno a acertar questões de prova objetiva.
+    4. FORMATAÇÃO: Use negrito nos termos chaves e listas para facilitar a leitura.`;
 }
 
-// 3. Visualização do Chat (Cores melhoradas)
-// 3. Visualização do Chat (Estilo Linear - Melhor para Leitura)
+// 3. Visualização do Chat (Estilo Linear)
+// 3. Visualização do Chat (Estilo Linear com Rolagem Inteligente)
 function addMessageToChat(sender, message) {
     const chatHistory = document.getElementById('aiChatHistory');
     if (!chatHistory) return;
@@ -6334,28 +6623,36 @@ function addMessageToChat(sender, message) {
     const messageDiv = document.createElement('div');
     messageDiv.className = 'ai-message';
     
-    // Estilo Base (Comum para ambos)
     messageDiv.style.marginBottom = '15px';
     messageDiv.style.padding = '15px 20px';
     messageDiv.style.borderRadius = '8px';
     messageDiv.style.lineHeight = '1.6';
-    messageDiv.style.width = '100%'; // Ocupa a largura toda (sem zig-zag)
-    messageDiv.style.boxSizing = 'border-box'; // Garante que o padding não estoure a largura
+    messageDiv.style.width = '100%'; 
+    messageDiv.style.boxSizing = 'border-box'; 
     
     if (sender === 'user') {
-        // Estilo do Usuário (Cinza Escuro, Diferenciado pelo ícone)
         messageDiv.style.background = '#252525'; 
-        messageDiv.style.borderLeft = '4px solid #555'; // Barra lateral discreta
+        messageDiv.style.borderLeft = '4px solid #555'; 
         messageDiv.innerHTML = `<strong style="color: #bbb;">👤 Sua Dúvida:</strong><br><span style="color: #ddd;">${message}</span>`;
     } else {
-        // Estilo da IA (Roxo Escuro, Foco na leitura)
         messageDiv.style.background = '#1a1a1a';
-        messageDiv.style.borderLeft = '4px solid #a78bfa'; // Barra lateral roxa
+        messageDiv.style.borderLeft = '4px solid #a78bfa'; 
         messageDiv.innerHTML = `<strong style="color: #a78bfa;">🤖 Professor IA:</strong><br><div style="color: #e0e0e0; margin-top: 5px;">${message}</div>`;
     }
 
     chatHistory.appendChild(messageDiv);
-    chatHistory.scrollTop = chatHistory.scrollHeight;
+
+    // --- LÓGICA DE ROLAGEM INTELIGENTE ---
+    if (sender === 'user') {
+        // Se for o usuário, rola para o fim (para ver o que acabou de digitar)
+        chatHistory.scrollTop = chatHistory.scrollHeight;
+    } else {
+        // Se for a IA (texto longo), rola suavemente para o INÍCIO da mensagem dela
+        setTimeout(() => {
+            messageDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100); // Pequeno delay para garantir que o texto renderizou
+    }
+    
     return messageDiv;
 }
 
@@ -6385,13 +6682,39 @@ async function callGroqAPI(messagesContext) {
     }
 }
 
-// 5. Botão Explicar
+// 5. Botão Explicar (COM CACHE INTELIGENTE)
 window.explainWithAI = async function() {
     const modal = document.getElementById('aiModal');
     const chatHistory = document.getElementById('aiChatHistory');
     
-    if(modal) modal.style.display = 'flex'; // IMPORTANTE: display flex para centralizar
+    if(modal) modal.style.display = 'flex'; 
     
+    // --- LÓGICA DE CACHE ---
+    // Se o card atual é o mesmo da última vez E temos histórico salvo...
+    if (currentCard === lastExplainedCardIndex && chatHistoryContext.length > 0) {
+        console.log("Usando resposta em cache (Economia de Tokens)");
+        
+        // Limpa a tela para redesenhar limpo
+        chatHistory.innerHTML = "";
+        
+        // Redesenha o histórico salvo na memória
+        chatHistoryContext.forEach(msg => {
+            // Ignora a mensagem inicial do sistema (prompt oculto)
+            if (msg.role === 'user' && !msg.content.includes("Aja como um Professor")) {
+                 addMessageToChat('user', msg.content);
+            }
+            if (msg.role === 'assistant') {
+                 // Reaplica a formatação visual bonita
+                 const formatted = formatMarkdown(msg.content);
+                 addMessageToChat('system', formatted);
+            }
+        });
+        return; // <--- PARA AQUI! Não chama a IA de novo.
+    }
+    // -----------------------
+
+    // Se chegou aqui, é um card novo. Atualiza o índice e limpa o chat.
+    lastExplainedCardIndex = currentCard;
     chatHistoryContext = []; 
     chatHistory.innerHTML = `<div class="ai-message"><strong>Professor IA:</strong><br><i class="fas fa-spinner fa-spin"></i> Analisando...</div>`;
 
@@ -6402,14 +6725,14 @@ window.explainWithAI = async function() {
         const respostaIA = await callGroqAPI(chatHistoryContext);
         chatHistoryContext.push({ role: "assistant", content: respostaIA });
         
-        // Aplica a formatação visual (Negrito, Quebras de linha)
         const respostaFormatada = formatMarkdown(respostaIA);
         
-        chatHistory.innerHTML = ``; // Limpa o loading
-        addMessageToChat('system', respostaFormatada); // Adiciona mensagem formatada
+        chatHistory.innerHTML = ``; 
+        addMessageToChat('system', respostaFormatada); 
 
     } catch (error) {
         chatHistory.innerHTML = `<div style="color:red">Erro ao processar.</div>`;
+        lastExplainedCardIndex = -1; // Reseta cache em caso de erro para tentar de novo
     }
 };
 
@@ -6442,7 +6765,7 @@ window.sendUserMessage = async function() {
     }
 };
   </script>
-  <div id="aiModal" style="
+ <div id="aiModal" style="
     display: none; 
     position: fixed; 
     top: 20px; 
@@ -6450,7 +6773,8 @@ window.sendUserMessage = async function() {
     transform: translateX(-50%); 
     width: 95%; 
     max-width: 800px; /* <-- AUMENTADO PARA 800px (Era 450px) */
-    height: 85vh; 
+    max-height: 85vh; /* Define altura máxima para não cortar na tela */
+    height: auto;     /* Altura automática: ajusta ao conteúdo */
     background: #121212; /* Fundo mais escuro para contraste */
     border: 1px solid #333; 
     border-radius: 12px; 
@@ -6529,6 +6853,66 @@ window.sendUserMessage = async function() {
             box-shadow: 0 2px 10px rgba(167, 139, 250, 0.3);">
             <i class="fas fa-paper-plane"></i>
         </button>
+    </div>
+</div>
+<div id="customConfirmModal" style="
+    display: none; 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background: rgba(0,0,0,0.85); 
+    z-index: 999999; 
+    justify-content: center; 
+    align-items: center;
+    backdrop-filter: blur(2px);">
+    
+    <div style="
+        background: #1e1e1e; 
+        border: 1px solid #ff4d4d; 
+        padding: 25px; 
+        border-radius: 12px; 
+        width: 90%; 
+        max-width: 350px; 
+        text-align: center; 
+        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        font-family: 'Roboto', sans-serif;">
+        
+        <i class="fas fa-exclamation-triangle" style="font-size: 3em; color: #ff4d4d; margin-bottom: 15px;"></i>
+        
+        <h3 style="color: #fff; margin-bottom: 10px;">Reiniciar Sessão?</h3>
+        
+        <p style="color: #ccc; font-size: 0.95em; line-height: 1.5; margin-bottom: 25px;">
+            Você sairá do modo atual e voltará para o baralho completo.<br>
+            <strong style="color: #4CAF50;">Seu progresso será salvo. ✅</strong>
+        </p>
+
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button onclick="closeConfirmModal()" style="
+                flex: 1;
+                padding: 12px;
+                background: #333;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;">
+                Cancelar
+            </button>
+            
+            <button onclick="executeFullReset()" style="
+                flex: 1;
+                padding: 12px;
+                background: #ff4d4d;
+                color: #fff;
+                border: none;
+                border-radius: 6px;
+                cursor: pointer;
+                font-weight: bold;">
+                Sim, Sair
+            </button>
+        </div>
     </div>
 </div>
 </body>

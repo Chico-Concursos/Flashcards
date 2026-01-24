@@ -3164,7 +3164,7 @@ document.getElementById("focoSelect").style.display = "none";
 	if (typeof handsFreeTimer !== 'undefined') clearTimeout(handsFreeTimer);
 	stopSpeech();
       // NOVO: Rola suavemente para o topo do cartão a cada troca
-    document.getElementById("card-container").scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById("card-container").scrollIntoView({ behavior: 'smooth', block: 'nearest' });
 
       if (!requireAuth() || cards.length === 0 || isFinished) return;
       const card = cards[currentCard];

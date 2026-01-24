@@ -6653,8 +6653,6 @@ function formatMarkdown(text) {
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/### (.*?)\n/g, '<h3 style="margin: 10px 0 5px 0; color: white;">$1</h3>') 
         .replace(/- /g, '• ') 
-        // Esta linha abaixo garante que frases de "Bem-vindo" fiquem na cor correta
-        .replace(/(Bem-vindo.*?!)/g, '<span style="color: #f7ef8a; font-weight: bold;">$1</span>')
         .replace(/\n/g, '<br>'); 
 }
 
@@ -6711,7 +6709,7 @@ function addMessageToChat(sender, message) {
     } else {
         messageDiv.style.background = '#1a1a1a';
         messageDiv.style.borderLeft = '4px solid #FFD700'; 
-        messageDiv.innerHTML = `<b style="color: #f7ef8a; font-weight: 900; font-size: 1.1em;">🤖 Professor IA:</b><br><div style="color: #f5f5f5; margin-top: 5px;">${message}</div>`;
+        messageDiv.innerHTML = `<strong style="color: #FFD700;">🤖 Professor IA:</strong><br><div style="color: #f5f5f5; margin-top: 5px;">${message}</div>`;
     }
 
     chatHistory.appendChild(messageDiv);
@@ -6794,7 +6792,7 @@ window.explainWithAI = async function() {
     // Se chegou aqui, é um card novo. Atualiza o índice e limpa o chat.
     lastExplainedCardIndex = currentCard;
     chatHistoryContext = []; 
-    chatHistory.innerHTML = `<div class="ai-message"><strong style="color: #f7ef8a;">Professor IA:</strong><br><i class="fas fa-spinner fa-spin" style="color: #f7ef8a;"></i> <span style="color: #f7ef8a;">Analisando...</span></div>`;
+    chatHistory.innerHTML = `<div class="ai-message"><strong>Professor IA:</strong><br><i class="fas fa-spinner fa-spin"></i> Analisando...</div>`;
 
     try {
         const promptInicial = generatePromptFromCard();
@@ -6872,7 +6870,7 @@ window.sendUserMessage = async function() {
         
         <div style="display: flex; align-items: center; gap: 12px; color: #f7ef8a;">
             <i class="fas fa-robot" style="font-size: 1.4rem;"></i>
-            <h3 style="margin: 0; font-size: 18px; font-weight: Extra Bold; letter-spacing: 0.5px;">PROFESSOR IA</h3>
+            <h3 style="margin: 0; font-size: 18px; font-weight: bold; letter-spacing: 0.5px;">Professor IA</h3>
         </div>
         
         <button onclick="document.getElementById('aiModal').style.display='none'" 

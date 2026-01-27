@@ -2820,11 +2820,16 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       // Carrega dados do SRS em paralelo
       loadAllDataFromBackend(userEmail); 
 
-      await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
+     await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
       hideLoadingIndicator();
       
       // Tenta recuperar a posição após carregar tudo
       checkForSavedPosition();
+      
+      // --- CORREÇÃO DE SEGURANÇA: SESSÃO ÚNICA ---
+      // Inicia o monitoramento imediatamente após o login manual
+      startSingleSessionMonitor();
+      // -------------------------------------------
 
     } else {
       showLoginError(result.error || 'Erro durante a autenticação.');

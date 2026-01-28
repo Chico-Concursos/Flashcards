@@ -2299,6 +2299,35 @@ body {
       <button class="login-button" onclick="location.reload()">Fazer Login Novamente</button>
     </div>
   </div>
+  <div id="concurrentSessionModal" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.95);
+      z-index: 2147483647; 
+      display: none;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);">
+      
+    <div class="session-expired-container" style="border: 1px solid #ff4d4d; box-shadow: 0 0 40px rgba(255, 77, 77, 0.4);">
+      <h2 style="color: #ff4d4d; margin-bottom: 20px; font-size: 1.8em;">
+        <i class="fas fa-user-lock"></i> Acesso Interrompido
+      </h2>
+      <p style="font-size: 1.1em; color: white; line-height: 1.5; margin-bottom: 25px;">
+        Sua conta foi conectada em outro dispositivo. <br>
+        <span style="color: #aaa; font-size: 0.9em;">(Apenas um acesso simultâneo é permitido)</span>
+      </p>
+      <p style="margin-bottom: 25px; color: gold;">
+        Por segurança, esta sessão será encerrada.
+      </p>
+      <button class="login-button" onclick="logout()" style="background: linear-gradient(to bottom, #ff4d4d, #cc0000); color: white; border: none;">
+        ENTENDI, SAIR AGORA
+      </button>
+    </div>
+  </div>
   <div id="reportModal">
     <div id="reportModalContent">
       <h3 style="color: #FFD700; margin-bottom: 10px;">⚠️ Reportar Erro</h3>
@@ -2516,8 +2545,11 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       document.getElementById('reviewErrorsButton').style.display = 'none';
       document.getElementById('reviewErrorsButton').style.color = 'white';
       document.getElementById('reviewErrorsButton').style.textShadow = 'none';
-      document.getElementById('loginEmail').value = '';
+     document.getElementById('loginEmail').value = '';
       document.getElementById('loginPassword').value = '';
+      
+      setLoginButtonLoading(false); // ◄--- LINHA NOVA: Destrava o botão e remove o spinner
+      
       document.getElementById('loginError').style.display = 'none';
       
       if (isAutoAdvanceActive) {
@@ -2527,6 +2559,7 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       document.getElementById('statsModal').style.display = 'none';
       document.getElementById('helpModal').style.display = 'none';
       document.getElementById('sessionExpiredModal').style.display = 'none';
+      document.getElementById('concurrentSessionModal').style.display = 'none'; // ◄--- LINHA NOVA AQUI
       document.getElementById('autoAdvanceSetup').style.display = 'none';
       document.getElementById('autoAdvanceOverlay').style.display = 'none';
       document.getElementById('correctButton').classList.remove('correct');
@@ -2820,16 +2853,13 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       // Carrega dados do SRS em paralelo
       loadAllDataFromBackend(userEmail); 
 
-     await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
+      await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
       hideLoadingIndicator();
       
       // Tenta recuperar a posição após carregar tudo
       checkForSavedPosition();
-      
-      // --- CORREÇÃO DE SEGURANÇA: SESSÃO ÚNICA ---
-      // Inicia o monitoramento imediatamente após o login manual
-      startSingleSessionMonitor();
-      // -------------------------------------------
+	  // INICIA O MONITORAMENTO
+      startSessionHeartbeat();
 
     } else {
       showLoginError(result.error || 'Erro durante a autenticação.');
@@ -2882,18 +2912,72 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
           // 3. Tudo pronto
           hideLoadingIndicator();
           checkForSavedPosition();
-          checkAndIncrementStreak();
-          
-          // --- INÍCIO DA PROTEÇÃO DE SESSÃO ÚNICA ---
-          // Inicia o monitoramento de conta compartilhada
-          startSingleSessionMonitor(); 
-          // -------------------------------------------
+		  checkAndIncrementStreak();
+		  // INICIA O MONITORAMENTO DE SESSÃO ÚNICA
+          startSessionHeartbeat();
       });
   } else {
     document.getElementById('loginModal').style.display = 'flex';
   }
 }
+// --- SISTEMA DE VERIFICAÇÃO DE SESSÃO ÚNICA (HEARTBEAT) ---
+let sessionHeartbeat = null;
 
+function startSessionHeartbeat() {
+    // Evita duplicar o timer
+    if (sessionHeartbeat) clearInterval(sessionHeartbeat);
+
+    // Verifica a cada 30 segundos (30000 ms)
+    sessionHeartbeat = setInterval(async () => {
+        const token = localStorage.getItem('sessionToken');
+        const email = localStorage.getItem('userEmail');
+        
+        if (!token || !email) return; // Se não tiver logado, não verifica
+
+        try {
+            const formData = new URLSearchParams();
+            formData.append('action', 'checkStatus');
+            formData.append('email', email);
+            formData.append('sessionToken', token);
+
+            // Usa fetch com 'no-cors' não funciona para ler resposta, então usamos normal.
+            // O App Script já tem headers CORS configurados.
+            const response = await fetch(WEB_APP_URL, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+           if (!result.success) {
+                // 1. Para de verificar para não ficar repetindo
+                clearInterval(sessionHeartbeat); 
+                
+                // 2. Limpa dados sensíveis imediatamente (Segurança)
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('sessionToken');
+                
+                // 3. Exibe o MODAL BONITO em vez do alert nativo
+                const modal = document.getElementById('concurrentSessionModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                } else {
+                    // Fallback de segurança caso o HTML não tenha sido atualizado
+                    alert("Sua conta foi conectada em outro dispositivo. Sessão encerrada.");
+                    logout();
+                }
+                
+                // Nota: Não chamamos logout() direto aqui para dar tempo 
+                // do usuário LER a mensagem. O logout ocorre ao clicar no botão do modal.
+            }
+
+        } catch (e) {
+            console.log("Erro silencioso ao verificar sessão (pode ser internet oscilando):", e);
+            // Não desloga por erro de rede, espera a próxima checagem
+        }
+
+    }, 30000); // 30 segundos
+}
     // --- FUNÇÕES PRINCIPAIS ---
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -6691,83 +6775,6 @@ function runRealTimeSearch(text) {
     showingFront = true;
     updateCard();
 }
-
-// ============================================================
-// === SISTEMA DE PROTEÇÃO: SESSÃO ÚNICA (ANTI-COMPARTILHAMENTO) ===
-// ============================================================
-
-let sessionCheckInterval = null;
-
-async function startSingleSessionMonitor() {
-    if (!userEmail) return;
-
-    // 1. Avisa o servidor: "Estou entrando agora, invalide os outros!"
-    try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'startSession');
-        formData.append('email', userEmail);
-        formData.append('sheetId', SHEET_ID); // Usa ID da planilha se necessário
-
-        const response = await fetch(SRS_BACKEND_URL, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-        
-        if (data.result === "success") {
-            // Guarda meu crachá único
-            sessionStorage.setItem('uniqueSessionToken', data.token);
-            console.log("Proteção Ativa: Token de sessão gerado.");
-            
-            // 2. Inicia o "Heartbeat" (Batimento Cardíaco)
-            // Verifica a cada 20 segundos se ainda sou válido
-            if (sessionCheckInterval) clearInterval(sessionCheckInterval);
-            sessionCheckInterval = setInterval(checkSessionStatus, 20000); 
-        }
-
-    } catch (e) {
-        console.warn("Falha ao iniciar monitoramento de sessão (Pode ser erro de rede).");
-    }
-}
-
-async function checkSessionStatus() {
-    // Se não tiver token ou usuário, para tudo.
-    const myToken = sessionStorage.getItem('uniqueSessionToken');
-    if (!userEmail || !myToken) return;
-
-    try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'checkSession');
-        formData.append('email', userEmail);
-        formData.append('token', myToken); // Manda meu crachá para conferência
-
-        const response = await fetch(SRS_BACKEND_URL, {
-            method: 'POST',
-            body: formData
-        });
-        
-        const data = await response.json();
-
-        // SE O SERVIDOR DISSER "KICKED" (EXPULSO)...
-        if (data.result === "kicked") {
-            clearInterval(sessionCheckInterval); // Para de checar
-            
-            // 1. Mostra Alerta Fatal
-            showCustomAlert("⛔ CONTA DESCONECTADA ⛔\n\nDetectamos que sua conta foi acessada em outro dispositivo/navegador.\n\nPara segurança, esta sessão foi encerrada.");
-            
-            // 2. Força Logout (Limpa dados)
-            setTimeout(() => {
-                logout(); // Chama sua função de logout existente
-            }, 4000); // Espera 4 segundos para a pessoa ler
-        }
-
-    } catch (e) {
-        // Erros de rede silenciosos (não expulsa se a internet cair rapidinho)
-        console.log("Verificação de sessão pulada (Rede instável)");
-    }
-}
-// ============================================================
 // ============================================
 // ============================================
 // --- ÁREA DO PROFESSOR IA (VERSÃO FINAL - WIDESCREEN & FORMATADA) ---
@@ -7154,18 +7161,16 @@ window.sendUserMessage = async function() {
       var h = window.innerHeight;
       ruler.textContent = "📏 " + w + "px x " + h + "px";
 
-      // 2. Mostra a régua
+      // 2. Mostra a régua (Apenas a etiqueta com números)
       ruler.style.display = 'block';
       
-      // 3. Adiciona borda visual
-      document.body.style.border = "4px dashed #FFD700";
-      document.body.style.boxSizing = "border-box";
+      // (As linhas da borda externa foram removidas aqui)
 
       // 4. Timer para esconder
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(function() {
         ruler.style.display = 'none';
-        document.body.style.border = "none"; 
+        // Não precisa mais limpar a borda, pois ela não existe
       }, 2000);
     });
   })();

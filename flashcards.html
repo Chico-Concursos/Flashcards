@@ -3175,7 +3175,12 @@ function startSessionHeartbeat() {
 
         if (loadedCards.length > 0) {
             // SUCESSO: Atualiza o Cache e a tela
-            localStorage.setItem(cacheKey, JSON.stringify(loadedCards));
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify(loadedCards));
+            } catch (e) {
+                console.warn("Memória local cheia (Cache), seguindo sem salvar offline.", e);
+            }
+
             processLoadedCards(loadedCards, false);
             
             if (hasLoadedLocal) {

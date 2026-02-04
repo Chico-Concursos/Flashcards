@@ -6895,18 +6895,37 @@ async function callGroqAPI(messagesContext) {
         const cardContext = cardData ? 
             (showingFront ? cardData.front : cardData.back).substring(0, 100) : '';
         
+        // --- OTIMIZAÇÃO: JANELA DESLIZANTE (LÓGICA SENIOR) ---
+        // Objetivo: Enviar apenas o essencial para não travar a memória da IA.
+        
+        let messagesToSend = messagesContext;
+        const LIMIT = 6; // Mantém a 1ª (Contexto) + as 5 últimas (Conversa Recente)
+
+        if (messagesContext.length > LIMIT) {
+            console.log("Otimizando histórico do chat...");
+            
+            // 1. A Regra de Ouro: Nunca perca a primeira mensagem (index 0),
+            // pois ela contém o comando "Aja como um Professor" e os dados do Card.
+            const firstMsg = messagesContext[0];
+            
+            // 2. Pega apenas as últimas mensagens recentes (LIMIT - 1)
+            // O slice(-(LIMIT-1)) pega do fim para o começo.
+            const recentMsgs = messagesContext.slice(-(LIMIT - 1));
+            
+            // 3. Reconstrói o histórico limpo
+            messagesToSend = [firstMsg, ...recentMsgs];
+        }
+        // -----------------------------------------------------
+
         const payload = {
             action: 'askAI',
             email: userEmail || 'anonymous',
             sessionToken: localStorage.getItem('sessionToken') || '',
-            messages: JSON.stringify(messagesContext),
+            messages: JSON.stringify(messagesToSend), // <--- AGORA USAMOS A LISTA OTIMIZADA
             cardContext: cardContext,
             timestamp: Date.now(),
-            // --- NOVO: ENVIANDO O CRACHÁ PARA O PROFESSOR IA ---
             originUrl: window.location.href 
-            // ---------------------------------------------------
         };
-
         const formData = new URLSearchParams();
         for (const key in payload) {
             formData.append(key, payload[key]);

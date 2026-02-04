@@ -4746,12 +4746,21 @@ function populateVoiceList(attempt = 0) {
 
 // --- INICIALIZAÇÃO SEGURA ---
 // Remove listeners existentes para evitar duplicação
+// --- OTIMIZAÇÃO: CARREGAR VOZES APENAS UMA VEZ ---
+// Evita que o navegador fique recarregando a lista e travando o console
+let voicesLoaded = false; 
+
 if (window.speechSynthesis.onvoiceschanged) {
     window.speechSynthesis.onvoiceschanged = null;
 }
 
-// Garante que as vozes carreguem (Chrome precisa disso)
-window.speechSynthesis.onvoiceschanged = populateVoiceList;
+window.speechSynthesis.onvoiceschanged = function() {
+    if (voicesLoaded) return; // Se já carregou, o "Porteiro" barra a repetição
+    
+    console.log("🔊 Carregando vozes do sistema (Tentativa Única)...");
+    populateVoiceList();
+    voicesLoaded = true; // Marca na prancheta que já foi feito
+};
 
 // Força carregamento inicial com múltiplas tentativas seguras
 let loadAttempts = 0;

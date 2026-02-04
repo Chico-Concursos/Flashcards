@@ -2459,8 +2459,8 @@ body {
 // --- CONFIGURAÇÃO INICIAL ---
      // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyM10CNRiMOvuO0BpiBZgjLvqho3sgbeicPmAHefyVAOeunCivhRMATJHKKuo7tMKr7/exec";
-	// Acesso aos Cards
-    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxy_sanjZc0AL-kMIu5LJEqjrFLAVeHIJsWtQq_l5XEqOR5E38xsOzJyHzprjJCHh15/exec"; 
+	// Suporte acesso aos Cards
+    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxeWOiSc_fUrtMaZX11oqw365UaObz3hjAzXedN_BXSuWBqkhNSsyMSP6nOrywz6y2fwA/exec"; 
 	// URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
     let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec"; 
 	// Professor IA
@@ -2910,9 +2910,6 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
       loadAllDataFromBackend(userEmail).then(async () => {
           
           console.log("Progresso baixado. Aguardando servidor esfriar...");
-          // PAUSA DE 1.5 SEGUNDOS (Evita o erro "Muitas Requisições")
-          await new Promise(resolve => setTimeout(resolve, 1500));
-
           // 2. Baixa os Cards
           return loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
       }).then(() => {
@@ -3241,7 +3238,8 @@ function startSessionHeartbeat() {
                 btn.classList.add("settings-highlight");
                 setTimeout(() => btn.classList.remove("settings-highlight"), 10000);
             }
-            updateCard();
+           // ALTERAÇÃO: Passamos 'true' para NÃO disparar o salvamento automático logo ao abrir
+            updateCard(true);
         }
     }
 
@@ -3282,7 +3280,8 @@ document.getElementById("focoSelect").style.display = "none";
       }
     }
 
-    function updateCard() {
+    // Alteração: Aceita parâmetro para pular o salvamento automático
+function updateCard(skipAutoSave = false) {
 	if (typeof handsFreeTimer !== 'undefined') clearTimeout(handsFreeTimer);
 	stopSpeech();
       if (!requireAuth() || cards.length === 0 || isFinished) return;
@@ -3381,16 +3380,17 @@ document.getElementById("focoSelect").style.display = "none";
       const shuffleBtn = document.getElementById('shuffleButton');
       if (shuffleBtn) shuffleBtn.style.display = 'inline-block';
 
-      // --- NOVO: SALVAR POSIÇÃO AUTOMATICAMENTE A CADA CARD ---
-    // --- NOVO: SALVAMENTO INTELIGENTE (Espera o tempo definido em segundos antes de enviar) ---
+    // --- NOVO: SALVAR POSIÇÃO AUTOMATICAMENTE A CADA CARD ---
       // Se o usuário clicar de novo antes do tempo definido, cancela o envio anterior
       clearTimeout(savePositionTimer); 
       
-      savePositionTimer = setTimeout(() => {
-          savePositionToBackend();
-      }, 5000); // 5000 milissegundos = 5 segundos
-    } 
-
+      // SÓ AGENDA O SALVAMENTO SE NÃO FOR SOLICITADO O PULO (skipAutoSave)
+      if (!skipAutoSave) {
+          savePositionTimer = setTimeout(() => {
+              savePositionToBackend();
+          }, 5000); // 5000 milissegundos = 5 segundos
+      }
+    }
     function updateAccuracyButtons() {
       const correctButton = document.getElementById('correctButton');
       const incorrectButton = document.getElementById('incorrectButton');

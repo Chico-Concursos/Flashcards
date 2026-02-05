@@ -2458,9 +2458,9 @@ body {
     // --- CONFIGURAÇÃO INICIAL ---
 // --- CONFIGURAÇÃO INICIAL ---
      // Usuário e Senha
-    let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyHcNX32MxlMTWc_q-yP1ujIQGrhrwSxfComs-syYy_xbIiPzc9nox6VI3iBzO72RWTkg/exec";
+    let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYpyzD80XnRBr_PpBYHALEYJyjuD9Y0Yx2dlzZvtA6ePM8ihcqMMInlgtorEB_I0_-sw/exec";
 	// Suporte acesso aos Cards
-    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbxeWOiSc_fUrtMaZX11oqw365UaObz3hjAzXedN_BXSuWBqkhNSsyMSP6nOrywz6y2fwA/exec"; 
+    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbyk6bPv7IIGBO6fef50xFnPU95krGUA-huwJiOr3TiC4ammvPaS93ryhzXy8CbRnIQftg/exec"; 
 	// URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
     let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec"; 
 	// Professor IA
@@ -3071,66 +3071,94 @@ function startSessionHeartbeat() {
     }
 
     async function loadFlashcardsFromGoogleSheet(sheetId, gid) {
-      // 1. TENTATIVA DE CARREGAMENTO LOCAL (CACHE)
       const cacheKey = `cachedCards_${sheetId}_${gid}`;
-      const localData = localStorage.getItem(cacheKey);
-      let hasLoadedLocal = false;
-
-      if (localData) {
-          try {
-              console.log("Carregando do Cache Local...");
-              const parsedData = JSON.parse(localData);
-              if (parsedData && parsedData.length > 0) {
-                  processLoadedCards(parsedData, true); // true = origem cache
-                  hasLoadedLocal = true;
-                  showFeedback("Modo Offline: Cards carregados do cache.", "#4CAF50");
-              }
-          } catch (e) {
-              console.error("Cache inválido", e);
-          }
-      }
-
-      if (!isAuthenticated && !hasLoadedLocal) {
-        document.getElementById("flashcard-content").textContent = "Por favor, faça login para acessar os flashcards.";
-        cardCounter.textContent = "0/0";
-        return;
-      }
+      const versionKey = `version_${sheetId}_${gid}`;
       
-      if (isSessionExpired()) {
-        expireSession();
-        return;
-      }
-
-      // Se não carregou local, mostra loading para o usuário saber que estamos buscando
-      if (!hasLoadedLocal) {
-          showLoadingIndicator("Baixando dados de forma segura...");
-      }
-
-      // 2. TENTATIVA DE CARREGAMENTO SEGURO (VIA BACKEND)
-      // Recupera o token salvo no login
+      // Recupera credenciais
       const sessionToken = localStorage.getItem('sessionToken');
       const userEmail = localStorage.getItem('userEmail');
 
-      if (!sessionToken) {
-         if (!hasLoadedLocal) {
-            showLoginError("Sessão inválida. Faça login novamente.");
-            expireSession();
-         }
-         return;
+      // Recupera o que temos guardado no celular
+      const localData = localStorage.getItem(cacheKey);
+      const localVersion = localStorage.getItem(versionKey);
+      
+      let serverVersion = null;
+      let shouldUseCache = false;
+
+      // --- ETAPA 1: O VIGIA (Pergunta ao servidor qual a versão atual) ---
+      try {
+          if (navigator.onLine) {
+              const formData = new URLSearchParams();
+              formData.append('action', 'checkVersion');
+              
+              // Controller para não deixar o app travado se a internet estiver lenta (3s timeout)
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+              const response = await fetch(SRS_BACKEND_URL, { 
+                  method: 'POST', 
+                  body: formData,
+                  signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+              
+              if (response.ok) {
+                  const json = await response.json();
+                  if (json.result === 'success') {
+                      serverVersion = json.version;
+                      console.log(`📡 Versão Servidor: ${serverVersion} | Versão Local: ${localVersion}`);
+                  }
+              }
+          }
+      } catch (e) {
+          console.warn("⚠️ O Vigia não conseguiu contatar o servidor (Offline ou erro).", e);
+          // Se falhar a verificação, assumimos que é melhor usar o cache do que travar
+          if (localData) shouldUseCache = true;
       }
+
+      // --- ETAPA 2: A DECISÃO ---
+      // Se temos dados locais E (a versão é igual OU estamos offline), usamos o cache
+      if (localData && (localVersion === serverVersion || !serverVersion)) {
+          shouldUseCache = true;
+      }
+
+      // --- ETAPA 3: EXECUÇÃO (Caminho A: Cache Local) ---
+      if (shouldUseCache) {
+          try {
+              console.log("🚀 O Vigia liberou: Carregando do Cache Local (Instantâneo)");
+              const parsedData = JSON.parse(localData);
+              if (parsedData && parsedData.length > 0) {
+                  processLoadedCards(parsedData, true); // true = origem cache
+                  showFeedback("⚡ Dados carregados da memória (Atualizados)", "#4CAF50");
+                  hideLoadingIndicator();
+                  return; // Encerra aqui, economizando dados!
+              }
+          } catch (e) {
+              console.error("Cache corrompido, forçando download...", e);
+          }
+      }
+
+      // --- ETAPA 4: EXECUÇÃO (Caminho B: Download da Nuvem) ---
+      // Se chegamos aqui, ou não tem cache, ou a versão mudou.
+      
+      if (!isAuthenticated) {
+        document.getElementById("flashcard-content").textContent = "Por favor, faça login.";
+        return;
+      }
+
+      showLoadingIndicator("Baixando atualização do servidor...");
 
       try {
         const formData = new URLSearchParams();
-        formData.append('action', 'loadCards');       // Ação nova que criamos no script
+        formData.append('action', 'loadCards');       
         formData.append('email', userEmail);
-        formData.append('sessionToken', sessionToken); // Senha da sessão
+        formData.append('sessionToken', sessionToken);
         formData.append('sheetId', sheetId);
         formData.append('gid', gid);
 
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
         
-        // Chama o Apps Script (mesma URL do login)
         const response = await fetch(SRS_BACKEND_URL, { 
             method: 'POST',
             body: formData,
@@ -3146,14 +3174,12 @@ function startSessionHeartbeat() {
             throw new Error(jsonResponse.error || "Erro desconhecido ao baixar cards.");
         }
 
-        // Processa os dados recebidos (Array de Arrays)
-        // Ignora a primeira linha (cabeçalho) com .slice(1)
+        // Processamento dos dados (Mapeamento das colunas)
         const rawData = jsonResponse.data.slice(1); 
         let loadedCards = [];
 
         rawData.forEach(row => {
-            // Mapeamento direto das colunas (Ordem da planilha)
-            // 0: Frente, 1: Verso, 2: Foco, 3: Disciplina, 4: Tópico, 5: Peso, 6: Tipo, 7: Ano
+            // Mapeamento: 0:Frente, 1:Verso, 2:Foco, 3:Disciplina, 4:Tópico, 5:Peso, 6:Tipo, 7:Ano
             const frontText = (row[0] || '').toString().trim();
             const backText = (row[1] || '').toString().trim();
             const foco = (row[2] || "").toString().trim(); 
@@ -3171,37 +3197,32 @@ function startSessionHeartbeat() {
         });
 
         if (loadedCards.length > 0) {
-            // SUCESSO: Atualiza o Cache e a tela
+            // SUCESSO: Atualiza o Cache, a Versão e a Tela
             try {
                 localStorage.setItem(cacheKey, JSON.stringify(loadedCards));
+                if (serverVersion) {
+                    localStorage.setItem(versionKey, serverVersion); // Atualiza a etiqueta de versão
+                }
             } catch (e) {
-                console.warn("Memória local cheia (Cache), seguindo sem salvar offline.", e);
+                console.warn("Memória local cheia, seguindo sem salvar offline.", e);
             }
 
             processLoadedCards(loadedCards, false);
-            
-            if (hasLoadedLocal) {
-                showFeedback("Lista de cards atualizada com segurança!", "gold");
-            }
-        } else if (!hasLoadedLocal) {
+            showFeedback("Lista de cards atualizada com sucesso!", "gold");
+        } else {
             document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
             cardCounter.textContent = "0/0";
         }
-        return loadedCards;
 
       } catch (error) {
           console.error("Erro ao baixar cards:", error);
-          if (!hasLoadedLocal) {
-              document.getElementById("flashcard-content").textContent = `Erro: ${error.message}`;
-              cardCounter.textContent = "0/0";
-              // Se o erro for de sessão, força logout
-              if (error.message.includes("Sessão") || error.message.includes("acesso")) {
-                  setTimeout(expireSession, 3000);
-              }
+          // Último recurso: Se falhar o download mas tiver cache velho, usa ele
+          if (localData) {
+              showFeedback("Erro na conexão. Usando versão antiga.", "#ffa500");
+              processLoadedCards(JSON.parse(localData), true);
           } else {
-              showFeedback("Sem conexão. Usando versão offline.", "#ffa500");
+              document.getElementById("flashcard-content").textContent = `Erro: ${error.message}`;
           }
-          return [];
       } finally {
           hideLoadingIndicator();
       }

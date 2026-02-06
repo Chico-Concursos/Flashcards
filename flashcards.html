@@ -2784,24 +2784,48 @@ let lastAutoAdvanceDelay = localStorage.getItem('lastAutoAdvanceDelay')
         }
     }
     function logout() {
-      // SALVAR ANTES DE SAIR
-      savePositionToBackend();
+      // 1. AVISA O SERVIDOR (Libera memória lá na nuvem)
+      const token = localStorage.getItem('sessionToken');
+      const email = localStorage.getItem('userEmail');
 
-      if (sessionTimer) {
+      if (token && email) {
+          // Envia o aviso em segundo plano (sem travar o usuário)
+          const formData = new URLSearchParams();
+          formData.append('action', 'logout');
+          formData.append('email', email);
+          formData.append('sessionToken', token);
+          
+          // Usa 'navigator.sendBeacon' se disponível (melhor para quando fecha a aba), senão usa fetch
+          if (navigator.sendBeacon) {
+              navigator.sendBeacon(WEB_APP_URL, formData);
+          } else {
+              fetch(WEB_APP_URL, {
+                  method: 'POST',
+                  mode: 'no-cors',
+                  body: formData
+              }).catch(e => console.log("Erro ao avisar servidor:", e));
+          }
+      }
+
+      // 2. SALVA POSIÇÃO LOCALMENTE (Garante que nada se perca)
+      savePositionToBackend(); 
+
+      // 3. LIMPEZA LOCAL (Navegador)
+      if (typeof sessionTimer !== 'undefined' && sessionTimer) {
         clearInterval(sessionTimer);
         sessionTimer = null;
       }
       
       localStorage.removeItem('isAuthenticated');
       localStorage.removeItem('userEmail');
-	  localStorage.removeItem('sessionToken');
+      localStorage.removeItem('sessionToken'); // Remove o crachá local
       localStorage.removeItem('loginTime');
-      localStorage.removeItem('flashcardState');
-      localStorage.removeItem(`flashcardStats_${SHEET_ID}_${GID}`);
       
-      isAuthenticated = false;
-      userEmail = '';
+      // Reset de variáveis globais
+      if (typeof isAuthenticated !== 'undefined') isAuthenticated = false;
+      if (typeof userEmail !== 'undefined') userEmail = '';
       
+      // 4. RESETA A TELA
       resetUIForLogout();
     }
 

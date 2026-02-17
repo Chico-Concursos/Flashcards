@@ -2244,16 +2244,16 @@ body {
         </select>
       </div>
 
-      <div id="modalTopicContainer" style="margin-bottom: 15px; text-align: left; display: none;">
-        <label style="display:block; color: gold; margin-bottom: 5px; font-weight: bold;">2. Tópico</label>
-        <select id="modalTopicSelect" onchange="modalHandleTopicChange(this.value)" style="width: 100%; padding: 12px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em;">
+      <div id="modalTopicContainer" style="margin-bottom: 8px; text-align: left; display: none;">
+        <label style="display:block; color: gold; margin-bottom: 3px; font-size: 0.9em; font-weight: bold;">2. Tópico</label>
+        <select id="modalTopicSelect" onchange="modalHandleTopicChange(this.value)" style="width: 100%; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1em;">
           <option value="todos">Todos os Tópicos</option>
         </select>
       </div>
 
-      <div id="modalFocoContainer" style="margin-bottom: 25px; text-align: left; display: none;">
-        <label style="display:block; color: gold; margin-bottom: 5px; font-weight: bold;">3. Foco Específico</label>
-        <select id="modalFocoSelect" style="width: 100%; padding: 12px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em;">
+      <div id="modalFocoContainer" style="margin-bottom: 15px; text-align: left; display: none;">
+        <label style="display:block; color: #00FFFF; margin-bottom: 3px; font-size: 0.9em; font-weight: bold;">3. Foco Específico</label>
+        <select id="modalFocoSelect" style="width: 100%; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1em;">
           <option value="todos">Todos os Focos</option>
         </select>
       </div>
@@ -5938,18 +5938,20 @@ function startCustomStudy() {
       const focoSelect = document.getElementById('modalFocoSelect');
       const selectedDisc = document.getElementById('modalDisciplineSelect').value;
 
-      focoContainer.style.display = 'none';
+      focoContainer.style.display = 'none'; // Esconde por padrão
 
       if (!selectedTopic || selectedTopic === 'todos') return;
 
-      // Verifica focos existentes para (Disciplina + Tópico)
+      // Busca cards que batem com a Disciplina E com o Tópico
       const cardsOfTopic = initialCards.filter(c => 
           c.disciplina === selectedDisc && c.topico === selectedTopic
       );
-      const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f))].sort();
+      
+      // Extrai os Focos únicos (Coluna C)
+      const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f && f.trim() !== ""))].sort();
 
-      // REGRA DE EFICIÊNCIA: Só mostra a caixa se tiver mais de 1 foco diferente
-      if (uniqueFocos.length > 1) {
+      // Só mostra a 3ª opção se houver realmente mais de um foco cadastrado
+      if (uniqueFocos.length > 0) {
           focoSelect.innerHTML = '<option value="todos">Todos os Focos</option>';
           uniqueFocos.forEach(foco => {
             const option = document.createElement('option');
@@ -5957,7 +5959,7 @@ function startCustomStudy() {
             option.textContent = foco;
             focoSelect.appendChild(option);
           });
-          focoContainer.style.display = 'block';
+          focoContainer.style.display = 'block'; // Aparece suavemente
       }
     }
 

@@ -7025,22 +7025,29 @@
 
         const endpoint = lote[0].endpoint; // Usa a URL padrão
 
-        await fetch(endpoint, {
-          method: 'POST',
-          mode: 'no-cors',
-          keepalive: true,
-          body: formData
-        });
+            // NOVO CÓDIGO INÍCIO
+            const response = await fetch(endpoint, {
+              method: 'POST',
+              body: formData
+            });
 
-        console.log(`🚀 Lote de ${tamanhoLote} itens enviado com sucesso!`);
+            const result = await response.json();
 
-        // Remove apenas os itens enviados, mantendo os que chegaram depois
-        saveQueue.splice(0, tamanhoLote);
-        localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
+            // SÓ apaga da mochila SE o Google confirmar o sucesso!
+            if (result.result === "success") {
+              console.log(`🚀 Lote de ${tamanhoLote} itens enviado e CONFIRMADO pelo servidor!`);
+              
+              // Remove apenas os itens enviados e confirmados
+              saveQueue.splice(0, tamanhoLote);
+              localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
+            } else {
+              console.warn("⚠️ O servidor não confirmou a gravação. O lote será mantido na mochila para a próxima tentativa.");
+            }
 
-        isSyncing = false;
+            isSyncing = false;
+            // NOVO CÓDIGO FIM
 
-      } catch (err) {
+          } catch (err) {
         console.error("Erro na rede. O lote aguardará a próxima tentativa.", err);
         isSyncing = false;
       }

@@ -3551,6 +3551,9 @@
 
     async function login(event) {
       if (event) event.preventDefault();
+
+      // 🧹 LIXEIRA DE FANTASMAS: Limpa qualquer "mochila" velha deste navegador antes de começar
+      localStorage.removeItem('chicoSaveQueue_v2');
       const email = document.getElementById('loginEmail').value.trim();
       const password = document.getElementById('loginPassword').value;
       if (!email || !password) {
@@ -3601,13 +3604,13 @@
           void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
 
-          // Carrega dados do SRS em paralelo
-          loadAllDataFromBackend(userEmail);
+          // Carrega dados do SRS (Armazém e Progresso) ESPERANDO a resposta
+          await loadAllDataFromBackend(userEmail);
 
           await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
           hideLoadingIndicator();
 
-          // Tenta recuperar a posição após carregar tudo
+          // Tenta recuperar a posição após ter certeza que baixou tudo
           checkForSavedPosition();
           // INICIA O MONITORAMENTO
           startSessionHeartbeat();

@@ -7116,6 +7116,21 @@
     function savePositionToBackend() {
       if (!userEmail || cards.length === 0) return;
 
+      // 🛡️ ESCUDO ANTI-FALHA: Bloqueia o salvamento se o aluno ainda estiver no Login ou no Modal de Retorno
+      const resumeModal = document.getElementById('resumeModal');
+      const loginModal = document.getElementById('loginModal');
+      
+      // Se a janela de "Continuar de onde parou" estiver visível, aborta o salvamento
+      if (resumeModal && resumeModal.style.display === 'flex') {
+        console.log("🛡️ Salvamento bloqueado: Aguardando escolha do usuário no modal.");
+        return;
+      }
+      
+      // Se a tela de Login estiver visível, aborta o salvamento
+      if (loginModal && window.getComputedStyle(loginModal).display !== 'none') {
+        return;
+      }
+
       const currentCardObj = cards[currentCard];
       // CORREÇÃO: Usa a etiqueta permanente ou fallback para o método antigo
       let realIndex = currentCardObj._originalIndex;

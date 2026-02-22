@@ -7135,21 +7135,44 @@
       console.log(`Salvando posição na fila: Card #${realIndex}`);
       addToSaveQueue(SRS_BACKEND_URL, payload);
     }
-    // 6. Verificar e Perguntar se quer continuar (Resume)
-    // 6. Verificar e Perguntar se quer continuar (Resume) - CORRIGIDO
-    // 6. Verificar e Perguntar se quer continuar (Resume) - VERSÃO MODAL DARK
+    // 6. Verificar e Perguntar se quer continuar (Resume) - VERSÃO INTELIGENTE COM MOCHILA LOCAL
     function checkForSavedPosition() {
-      console.log("Verificando posição salva...", window.savedPosition);
+      console.log("Verificando posição salva...");
 
-      // Verifica se existe algo salvo válido
-      if (window.savedPosition && typeof window.savedPosition.index === 'number') {
+      let targetIndex = null;
+      let targetMode = 'sequencial';
 
-        const savedIndex = window.savedPosition.index;
+      // --- 1. PRIMEIRO: Olha na "Mochila" (Fila local não enviada) ---
+      try {
+        const localQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
+        // Procura de trás para a frente (do mais recente para o mais antigo)
+        for (let i = localQueue.length - 1; i >= 0; i--) {
+          if (localQueue[i].data && localQueue[i].data.action === 'savePosition') {
+            targetIndex = localQueue[i].data.cardIndex;
+            targetMode = localQueue[i].data.modo || 'sequencial';
+            console.log("📍 Posição recuperada da mochila local:", targetIndex);
+            break; // Achou o mais recente, pára de procurar
+          }
+        }
+      } catch(e) {
+        console.log("Erro ao ler mochila local:", e);
+      }
 
+      // --- 2. SEGUNDO: Se a mochila não tiver posição, confia no Google ---
+      if (targetIndex === null && window.savedPosition && typeof window.savedPosition.index === 'number') {
+        targetIndex = window.savedPosition.index;
+        targetMode = window.savedPosition.modo;
+        console.log("☁️ Posição recuperada do servidor Google:", targetIndex);
+      }
+
+      // --- 3. EXIBE A MENSAGEM SE TIVERMOS UMA POSIÇÃO VÁLIDA ---
+      if (targetIndex !== null && targetIndex > 0) {
+        
         // Segurança: O índice salvo ainda existe no baralho atual?
-        if (savedIndex >= cards.length) return;
+        if (targetIndex > cards.length) return;
 
-        const card = cards[savedIndex];
+        // Como o targetIndex é o número "humano" (1, 2, 3...), temos de subtrair 1 para achar no código (0, 1, 2...)
+        const card = cards[targetIndex - 1]; 
         if (!card) return;
 
         // Texto curto para mostrar no modal
@@ -7159,13 +7182,16 @@
         const msgElement = document.getElementById('resumeMessage');
         if (msgElement) {
           msgElement.innerHTML = `
-                    Você parou no Card <strong>${savedIndex}</strong> de ${cards.length}:<br><br>
+                    Você parou no Card <strong>${targetIndex}</strong> de ${cards.length}:<br><br>
                     <em style="color: gold;">"${cardText}"</em><br><br>
                     Deseja continuar de onde parou?
                 `;
         }
 
-        // Mostra o Modal Personalizado (em vez do confirm feio)
+        // Atualiza a variável global do sistema para o botão "CONTINUAR" saber para onde ir
+        window.savedPosition = { index: targetIndex, modo: targetMode };
+
+        // Mostra o Modal Personalizado
         const modal = document.getElementById('resumeModal');
         if (modal) modal.style.display = 'flex';
       }

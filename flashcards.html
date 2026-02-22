@@ -3228,8 +3228,7 @@
     let savePositionTimer = null;
     // --- VARIÁVEIS DO APRENDIZADO ADAPTATIVO ---
     let userLearningStats = {
-      totalCharsRead: 0,
-      totalTimeRead: 0,
+      recentSpeeds: [], // Nova fila para Média Móvel (Guarda as últimas 20 velocidades)
       topicWeights: {} // Ex: { "Direito Const": 2, "Português": 1 }
     };
     // -------------------------------------------
@@ -4773,6 +4772,11 @@
           if (!userLearningStats.topicWeights) {
             userLearningStats.topicWeights = userLearningStats.disciplineWeights || {};
           }
+          // --- NOVA VACINA (MÉDIA MÓVEL) ---
+          // Garante que a fila exista para quem já tinha progresso salvo
+          if (!userLearningStats.recentSpeeds) {
+            userLearningStats.recentSpeeds = [];
+          }
         }
       } catch (e) {
         console.error("Erro ao carregar estatísticas:", e);
@@ -4812,12 +4816,20 @@
           const currentSpeed = timeSpent / charCount;
 
           if (!userLearningStats.topicWeights) userLearningStats.topicWeights = {};
+          if (!userLearningStats.recentSpeeds) userLearningStats.recentSpeeds = [];
 
-          userLearningStats.totalTimeRead += timeSpent;
-          userLearningStats.totalCharsRead += charCount;
+          // 1. Adiciona a velocidade atual no final da fila
+          userLearningStats.recentSpeeds.push(currentSpeed);
+          
+          // 2. Mantém o limite rígido de 20 posições (descarta a leitura mais antiga)
+          if (userLearningStats.recentSpeeds.length > 20) {
+            userLearningStats.recentSpeeds.shift();
+          }
 
-          const globalAvgSpeed = userLearningStats.totalCharsRead > 0
-            ? userLearningStats.totalTimeRead / userLearningStats.totalCharsRead
+          // 3. Calcula a Média Móvel (Soma tudo e divide pelo tamanho da fila atual)
+          const sumSpeeds = userLearningStats.recentSpeeds.reduce((a, b) => a + b, 0);
+          const globalAvgSpeed = userLearningStats.recentSpeeds.length > 0
+            ? sumSpeeds / userLearningStats.recentSpeeds.length
             : 0.5;
 
           if (currentTopic && userLearningStats.topicWeights[currentTopic] === undefined) {
@@ -6978,7 +6990,7 @@
     let saveQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
     let isSyncing = false;
 
-    // 2. Função genérica que adiciona à fila e tenta enviar
+    // 2. Função genérica que adiciona à fila (AGORA ACUMULA EM LOTES)
     function addToSaveQueue(endpoint, dataObj) {
       // Adiciona timestamp para controle
       dataObj._timestamp = Date.now();
@@ -6988,57 +7000,49 @@
       localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
 
       // Feedback visual discreto no console
-      console.log("Dado adicionado à fila de sincronização. Pendentes:", saveQueue.length);
+      console.log("Dado adicionado ao lote. Pendentes:", saveQueue.length);
 
-      // Tenta processar a fila imediatamente
-      processSaveQueue();
+      // O envio imediato foi REMOVIDO aqui. O relógio de 15s é quem vai enviar.
     }
 
-    // 3. Processador da Fila (O coração do Offline Sync)
+    // 3. Processador da Fila em Lotes (Atacado - Para 1000 alunos)
     async function processSaveQueue() {
-      // Se já está enviando, se a fila está vazia ou se está sem internet, para.
+      // Se já está enviando, fila vazia ou sem internet, para.
       if (isSyncing || saveQueue.length === 0 || !navigator.onLine) return;
 
       isSyncing = true;
-      const item = saveQueue[0]; // Pega o item mais antigo (FIFO)
+      
+      // Pega um lote de até 20 itens para enviar tudo de uma vez
+      const tamanhoLote = Math.min(saveQueue.length, 20);
+      const lote = saveQueue.slice(0, tamanhoLote);
 
       try {
-        // Converte o objeto de dados para o formato que o Google Scripts aceita
         const formData = new URLSearchParams();
-        for (const key in item.data) {
-          formData.append(key, item.data[key]);
-        }
+        formData.append('action', 'batchSync'); // 🚨 NOVO IDIOMA (O Backend precisará aprender)
+        formData.append('email', userEmail);
+        formData.append('sheetId', SHEET_ID);
+        formData.append('batchData', JSON.stringify(lote)); // Transforma o lote num pacote só
 
-        // Tenta enviar (Modo no-cors: Garante envio sem erro de rede)
-        await fetch(item.endpoint, {
+        const endpoint = lote[0].endpoint; // Usa a URL padrão
+
+        await fetch(endpoint, {
           method: 'POST',
           mode: 'no-cors',
           keepalive: true,
           body: formData
         });
 
-        // No modo no-cors, assumimos sucesso se não houve erro de rede.
-        console.log("Item enviado para sincronização (Blind Save)!");
+        console.log(`🚀 Lote de ${tamanhoLote} itens enviado com sucesso!`);
 
-        // Remove o item da fila e atualiza o LocalStorage
-        saveQueue.shift();
+        // Remove apenas os itens enviados, mantendo os que chegaram depois
+        saveQueue.splice(0, tamanhoLote);
         localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
 
         isSyncing = false;
-
-        // Se ainda tiver itens, processa o próximo em 500ms
-        if (saveQueue.length > 0) setTimeout(processSaveQueue, 500);
-        localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
-
-        isSyncing = false;
-
-        // Se ainda tiver itens, processa o próximo em 500ms
-        if (saveQueue.length > 0) setTimeout(processSaveQueue, 500);
 
       } catch (err) {
-        console.error("Sem conexão. O dado permanecerá na fila e será tentado depois.", err);
+        console.error("Erro na rede. O lote aguardará a próxima tentativa.", err);
         isSyncing = false;
-        // Não removemos da fila. Ele tentará de novo na próxima chamada.
       }
     }
 
@@ -7061,11 +7065,15 @@
       }
     }
 
-    // Loop Inteligente: Processa a fila E atualiza o ícone a cada 2 segundos
+    // Loop Visual: Atualiza a nuvenzinha na tela a cada 2 segundos
     setInterval(() => {
-      processSaveQueue(); // Tenta enviar se tiver internet
-      updateSyncUI();     // Atualiza a cor da nuvem
+      updateSyncUI();
     }, 2000);
+
+    // Loop de Atacado: O caminhão de entregas só passa a cada 15 segundos
+    setInterval(() => {
+      processSaveQueue(); 
+    }, 15000);
 
     // Quando a internet voltar, força a sincronização e avisa o usuário
     window.addEventListener('online', () => {

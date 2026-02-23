@@ -2957,7 +2957,7 @@
           Filtros (Ver Tudo)</button>
 
         <button onclick="closeFilterModal()"
-          style="background: transparent; border: none; color: #888; margin-top: 5px; cursor: pointer; text-decoration: underline;">Cancelar</button>
+          style="background: transparent; border: none; color: #888; margin-top: 5px; cursor: pointer; text-decoration: underline;">Fechar</button>
       </div>
     </div>
   </div>
@@ -3223,6 +3223,8 @@
     let currentCategory = "Todas";
     // Variável para lembrar o último filtro usado
     let lastFilterSelections = { discipline: "", topic: "", foco: "" };
+    let savedMainProgressIndex = -1; // Marcador de página invisível
+    let isTemporaryFilterActive = false; // Escudo de salvamento
     let cardViewStartTime = 0;
     let isAutoAdvancePaused = false;
     let savePositionTimer = null;
@@ -6680,9 +6682,19 @@
         topicSelect.appendChild(option);
       });
 
-      topicContainer.style.display = 'block';
+     topicContainer.style.display = 'block';
+      
+      // Força a abertura do Passo 3 com "Todos os Tópicos" pré-selecionado
+      modalHandleTopicChange('todos');
     }
 
+    // --- NOVA FUNÇÃO DE TROCA DO PASSO 3 ---
+    function toggleStep3FilterType(type) {
+      document.getElementById('modalFocoSelect').style.display = (type === 'foco') ? 'block' : 'none';
+      document.getElementById('modalPesoContainer').style.display = (type === 'peso') ? 'flex' : 'none';
+    }
+
+    // 4. Ao escolher Tópico -> Habilita Passo 3 (Refinar Busca)
     // --- NOVA FUNÇÃO DE TROCA DO PASSO 3 ---
     function toggleStep3FilterType(type) {
       document.getElementById('modalFocoSelect').style.display = (type === 'foco') ? 'block' : 'none';
@@ -6697,12 +6709,15 @@
 
       step3Container.style.display = 'none'; // Esconde por padrão
 
-      if (!selectedTopic || selectedTopic === 'todos') return;
+      if (!selectedTopic) return;
 
-      // Busca cards que batem com a Disciplina E com o Tópico
-      const cardsOfTopic = initialCards.filter(c =>
-        c.disciplina === selectedDisc && c.topico === selectedTopic
-      );
+      // Busca cards que batem com a Disciplina
+      let cardsOfTopic = initialCards.filter(c => c.disciplina === selectedDisc);
+      
+      // Se o usuário escolheu um tópico específico (diferente de 'todos'), filtra mais uma vez
+      if (selectedTopic !== 'todos') {
+        cardsOfTopic = cardsOfTopic.filter(c => c.topico === selectedTopic);
+      }
 
       // Extrai os Focos únicos
       const uniqueFocos = [...new Set(cardsOfTopic.map(c => c.foco).filter(f => f && f.trim() !== ""))].sort();
@@ -6726,6 +6741,13 @@
 
     // 5. Botão APLICAR (Executa o filtro e Salva Memória)
     function applyModalFilter() {
+      // --- MARCADOR DE PÁGINA (Grava onde o aluno estava antes de filtrar) ---
+      if (!isTemporaryFilterActive && cards.length > 0) {
+        const currentCardObj = cards[currentCard];
+        savedMainProgressIndex = (currentCardObj && currentCardObj._originalIndex !== undefined) ? currentCardObj._originalIndex : -1;
+        isTemporaryFilterActive = true;
+      }
+
       const disc = document.getElementById('modalDisciplineSelect').value;
       const topic = document.getElementById('modalTopicSelect').value;
 
@@ -6798,6 +6820,17 @@
       // 3. Reseta o Filtro real (Mostra todos os cards no fundo)
       currentCategory = "Todas";
       finishFilterApplication([...initialCards]);
+
+      // --- RESTAURA O MARCADOR DE PÁGINA ---
+      if (savedMainProgressIndex !== -1) {
+        const restoredIndex = cards.findIndex(c => c._originalIndex === savedMainProgressIndex);
+        if (restoredIndex !== -1) {
+          currentCard = restoredIndex;
+          updateCard(true); // Atualiza a tela voltando para o card exato
+        }
+        savedMainProgressIndex = -1; // Limpa o marcador
+      }
+      isTemporaryFilterActive = false; // Desliga o escudo de salvamento
 
       // 4. Reseta a cor do ícone da pasta
       const btn = document.getElementById('filterBtn');
@@ -7112,9 +7145,15 @@
       addToSaveQueue(SRS_BACKEND_URL, payload);
     }
 
-    // 5. Salvar Posição (Atualizado para usar a Fila)
+    /// 5. Salvar Posição (Atualizado para usar a Fila)
     function savePositionToBackend() {
       if (!userEmail || cards.length === 0) return;
+
+      // 🛡️ ESCUDO DE FILTRO: Bloqueia salvamento na nuvem se houver um filtro temporário ativo
+      if (typeof isTemporaryFilterActive !== 'undefined' && isTemporaryFilterActive) {
+        console.log("🛡️ Salvamento bloqueado: Filtro temporário de revisão ativo.");
+        return;
+      }
 
       // 🛡️ ESCUDO ANTI-FALHA: Bloqueia o salvamento se o aluno ainda estiver no Login ou no Modal de Retorno
       const resumeModal = document.getElementById('resumeModal');

@@ -3818,6 +3818,41 @@
       return false;
     }
 
+    // --- NOVO: SISTEMA DE GALPÃO (IndexedDB) ---
+    const DB_NAME = "ChicoCardsDB";
+    const STORE_NAME = "cardsStore";
+
+    function initDB() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = (e) => e.target.result.createObjectStore(STORE_NAME);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error);
+      });
+    }
+
+    async function saveToGalpao(key, data) {
+      try {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          tx.objectStore(STORE_NAME).put(data, key);
+          tx.oncomplete = () => resolve();
+        });
+      } catch (e) { console.warn("Erro ao salvar no galpão"); }
+    }
+
+    async function loadFromGalpao(key) {
+      try {
+        const db = await initDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const request = tx.objectStore(STORE_NAME).get(key);
+          request.onsuccess = () => resolve(request.result);
+        });
+      } catch (e) { return null; }
+    }
+
     async function loadFlashcardsFromGoogleSheet(sheetId, gid) {
       const cacheKey = `cachedCards_${sheetId}_${gid}`;
       const versionKey = `version_${sheetId}_${gid}`;
@@ -3826,9 +3861,9 @@
       const sessionToken = localStorage.getItem('sessionToken');
       const userEmail = localStorage.getItem('userEmail');
 
-      // Recupera o que temos guardado no celular
-      const localData = localStorage.getItem(cacheKey);
-      const localVersion = localStorage.getItem(versionKey);
+      // Recupera o que temos guardado no celular (AGORA DO GALPÃO ASSÍNCRONO)
+      const localData = await loadFromGalpao(cacheKey);
+      const localVersion = localStorage.getItem(versionKey); // Versão continua na mochila (é leve)
 
       let serverVersion = null;
       let shouldUseCache = false;
@@ -3947,12 +3982,12 @@
         if (loadedCards.length > 0) {
           // SUCESSO: Atualiza o Cache, a Versão e a Tela
           try {
-            localStorage.setItem(cacheKey, JSON.stringify(loadedCards));
+            await saveToGalpao(cacheKey, JSON.stringify(loadedCards));
             if (serverVersion) {
               localStorage.setItem(versionKey, serverVersion); // Atualiza a etiqueta de versão
             }
           } catch (e) {
-            console.warn("Memória local cheia, seguindo sem salvar offline.", e);
+            console.warn("Erro ao salvar no Galpão offline.", e);
           }
 
           processLoadedCards(loadedCards, false);

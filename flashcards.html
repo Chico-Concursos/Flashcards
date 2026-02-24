@@ -3177,11 +3177,10 @@
   </div>
   <script>
     // --- CONFIGURAÇÃO INICIAL ---
-    // --- CONFIGURAÇÃO INICIAL ---
     // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYpyzD80XnRBr_PpBYHALEYJyjuD9Y0Yx2dlzZvtA6ePM8ihcqMMInlgtorEB_I0_-sw/exec";
     // Suporte acesso aos Cards
-    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbyk6bPv7IIGBO6fef50xFnPU95krGUA-huwJiOr3TiC4ammvPaS93ryhzXy8CbRnIQftg/exec";
+    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbyBRzGi8N8MGTWwonEIEAAOQTMM4Ik2QjLIt9NGQ2I7baavk9njpPjRmSmKUBJWhqcm/exec";
     // URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
     let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec";
     // Professor IA
@@ -3606,10 +3605,12 @@
           void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
 
-          // Carrega dados do SRS (Armazém e Progresso) ESPERANDO a resposta
-          await loadAllDataFromBackend(userEmail);
-
-          await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
+          // Carrega dados do SRS e os Cards AO MESMO TEMPO
+          await Promise.all([
+            loadAllDataFromBackend(userEmail),
+            loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
+          ]);
+          
           hideLoadingIndicator();
 
           // Tenta recuperar a posição após ter certeza que baixou tudo
@@ -3654,14 +3655,12 @@
         startSessionTimer();
         showLoadingIndicator();
 
-        // --- ORDEM DE CARREGAMENTO CORRIGIDA (COM PAUSA ANTI-FLOOD) ---
-        // 1. Baixa seu progresso (Armazém + SRS)
-        loadAllDataFromBackend(userEmail).then(async () => {
-
-          console.log("Progresso baixado. Aguardando servidor esfriar...");
-          // 2. Baixa os Cards
-          return loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
-        }).then(() => {
+        // --- ORDEM DE CARREGAMENTO PARALELA (PISTA DUPLA LIBERADA) ---
+        // Dispara as duas requisições ao mesmo tempo (Corta o tempo pela metade)
+        Promise.all([
+          loadAllDataFromBackend(userEmail),
+          loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
+        ]).then(() => {
           // 3. Tudo pronto
           hideLoadingIndicator();
           checkForSavedPosition();

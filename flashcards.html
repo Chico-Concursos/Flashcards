@@ -4097,10 +4097,20 @@
       // Segurança básica contra injeção de HTML (Sanitize)
       textToShow = textToShow.replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-      if (showingFront) {
+     if (showingFront) {
         // Na FRENTE: Substitui {{texto}} por uma caixa [...]
         // Regex explica: Pega tudo entre {{ e }}
         textToShow = textToShow.replace(/{{(.*?)}}/g, "<span style='background:#333; color:gold; padding:2px 6px; border-radius:4px; border:1px solid #555; cursor:help;' title='Tente lembrar...'>[...]</span>");
+
+        // --- NOVA LÓGICA: QUESTÕES DE MÚLTIPLA ESCOLHA ---
+        const regexAlternativas = /^([a-eA-E])[\)\.]\s+(.+)$/gm;
+        if (regexAlternativas.test(textToShow)) {
+          textToShow = textToShow.replace(regexAlternativas, function(match, letra, textoAlternativa) {
+             const letraUp = letra.toUpperCase();
+             return `<button class="mcq-btn" onclick="checkAnswer('${letraUp}', this)" style="display:block; width:100%; text-align:left; margin: 8px 0; padding: 12px 15px; background: #222; color: white; border: 1px solid #555; border-radius: 8px; cursor: pointer; font-size: 1em; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><strong>${letraUp})</strong> ${textoAlternativa}</button>`;
+          });
+        }
+        // --------------------------------------------------
       } else {
         // No VERSO: Mostra o texto, destacando a resposta em verde
         // Remove as chaves e pinta o recheio
@@ -4195,6 +4205,62 @@
         }, 5000); // 5000 milissegundos = 5 segundos
       }
     }
+
+    // --- NOVA FUNÇÃO: CHECAR RESPOSTA DA MÚLTIPLA ESCOLHA ---
+    window.checkAnswer = function(letraClicada, btnElement) {
+      if (!showingFront) return; 
+
+      const card = cards[currentCard];
+      const respostaVerso = card.back.trim().toUpperCase();
+      
+      // O gabarito no verso deve começar com a letra. Ex: "B", "B)", "B - "
+      const regexGabarito = new RegExp(`^${letraClicada}[\\)\\-\\.\\s]|^${letraClicada}$`);
+      const isCorrect = regexGabarito.test(respostaVerso);
+
+      // Desativa todos os botões para evitar duplo clique e trapaça
+      const allBtns = document.querySelectorAll('.mcq-btn');
+      allBtns.forEach(b => b.style.pointerEvents = 'none');
+
+      // Feedback Visual de Acerto/Erro
+      if (isCorrect) {
+        btnElement.style.background = '#152b15';
+        btnElement.style.borderColor = '#00ff00';
+        btnElement.style.color = '#00ff00';
+        triggerVisualFeedback('success');
+        
+        // Registra acerto no sistema nativo
+        const realIndex = (card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
+        if (realIndex !== -1) {
+          if (!cardAccuracy[realIndex]) cardAccuracy[realIndex] = { correct: 0, incorrect: 0 };
+          cardAccuracy[realIndex].correct++;
+          if (cardAccuracy[realIndex].incorrect > 0) cardAccuracy[realIndex].incorrect--;
+          updateAccuracyButtons();
+          saveFlashcardState();
+        }
+      } else {
+        btnElement.style.background = '#2b1515';
+        btnElement.style.borderColor = '#ff5555';
+        btnElement.style.color = '#ff5555';
+        triggerVisualFeedback('error');
+
+        // Registra erro no sistema nativo
+        const realIndex = (card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
+        if (realIndex !== -1) {
+          checkLeech(realIndex);
+          if (!cardAccuracy[realIndex]) cardAccuracy[realIndex] = { correct: 0, incorrect: 0 };
+          cardAccuracy[realIndex].incorrect++;
+          updateAccuracyButtons();
+          saveFlashcardState();
+        }
+      }
+
+      // Vira o card automaticamente após quase 1 segundo para ler a explicação
+      setTimeout(() => {
+        flipCard();
+      }, 800);
+    };
+    // ----------------------------------------------------------
+
     function updateAccuracyButtons() {
       const correctButton = document.getElementById('correctButton');
       const incorrectButton = document.getElementById('incorrectButton');
@@ -6423,7 +6489,7 @@
           });
           // --- MODO 3: PROVAS ---
         } else {
-          filteredCards = initialCards.filter(card => card.tipo === 'Prova');
+          filteredCards = initialCards.filter(card => card.tipo === 'prova');
           const selectedYear = document.getElementById('provasAno').value;
           if (selectedYear !== 'todos') {
             cards = filteredCards.filter(card => card.ano === selectedYear);
@@ -6580,7 +6646,7 @@
     // Preenche a lista de seleção com os anos encontrados na planilha de provas
     function populateAnoDropdowns(allCards) {
       // Pega apenas os anos únicos dos cards de "Prova" e remove valores vazios
-      const anos = [...new Set(allCards.filter(c => c.tipo === 'Prova' && c.ano).map(card => card.ano))].sort((a, b) => b - a); // Ordena do mais novo para o mais antigo
+      const anos = [...new Set(allCards.filter(c => c.tipo === 'prova' && c.ano).map(card => card.ano))].sort((a, b) => b - a); // Ordena do mais novo para o mais antigo
       const select = document.getElementById('provasAno');
 
       // Limpa opções antigas, exceto a primeira ("Todos os Anos")

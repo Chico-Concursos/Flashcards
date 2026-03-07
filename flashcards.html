@@ -3674,12 +3674,14 @@
     }
     // --- SISTEMA DE VERIFICAÇÃO DE SESSÃO ÚNICA (HEARTBEAT) ---
     let sessionHeartbeat = null;
+    let failedHeartbeatCount = 0; // NOVO: Contador de falhas toleradas (3 strikes)
 
     function startSessionHeartbeat() {
       // Evita duplicar o timer
       if (sessionHeartbeat) clearInterval(sessionHeartbeat);
+      failedHeartbeatCount = 0; // Reseta o contador sempre que iniciar o monitoramento
 
-      // Verifica a cada 30 segundos (30000 ms)
+      // Verifica a cada 3 minutos (180000 ms)
       sessionHeartbeat = setInterval(async () => {
         const token = localStorage.getItem('sessionToken');
         const email = localStorage.getItem('userEmail');
@@ -3695,8 +3697,6 @@
           formData.append('originUrl', window.location.href);
           // -------------------------------
 
-          // Usa fetch com 'no-cors' não funciona para ler resposta, então usamos normal.
-          // O App Script já tem headers CORS configurados.
           const response = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: formData
@@ -3707,35 +3707,44 @@
           if (!result.success) {
             // Verifica se o erro foi REALMENTE de duplo acesso
             if (result.error === 'concurrent_login') {
-              // 1. Para de verificar para não ficar repetindo
-              clearInterval(sessionHeartbeat);
+              
+              // Incrementa o contador de "Strikes"
+              failedHeartbeatCount++;
+              console.warn(`Tentativa falha de sessão (${failedHeartbeatCount}/3). Aguardando sincronização do Google...`);
+              
+              // Só expulsa o usuário se falhar 3 vezes seguidas (quase 10 minutos de teimosia do servidor)
+              if (failedHeartbeatCount >= 3) {
+                // 1. Para de verificar para não ficar repetindo
+                clearInterval(sessionHeartbeat);
 
-              // 2. Limpa dados sensíveis imediatamente (Segurança)
-              localStorage.removeItem('isAuthenticated');
-              localStorage.removeItem('sessionToken');
+                // 2. Limpa dados sensíveis imediatamente (Segurança)
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('sessionToken');
 
-              // 3. Exibe o MODAL BONITO em vez do alert nativo
-              const modal = document.getElementById('concurrentSessionModal');
-              if (modal) {
-                modal.style.display = 'flex';
-              } else {
-                // Fallback de segurança caso o HTML não tenha sido atualizado
-                alert("Sua conta foi conectada em outro dispositivo. Sessão encerrada.");
-                logout();
+                // 3. Exibe o MODAL BONITO em vez do alert nativo
+                const modal = document.getElementById('concurrentSessionModal');
+                if (modal) {
+                  modal.style.display = 'flex';
+                } else {
+                  // Fallback de segurança caso o HTML não tenha sido atualizado
+                  alert("Sua conta foi conectada em outro dispositivo. Sessão encerrada.");
+                  logout();
+                }
               }
             } else {
-              // Se for apenas um apagão do Google ou falha de internet,
-              // o sistema ignora em silêncio para não atrapalhar os estudos!
+              // Se for apenas um apagão do Google ou falha de internet, ignoramos
               console.warn("Aviso do servidor ignorado (falha temporária): " + result.error);
             }
+          } else {
+            // SUCESSO! A rede do Google sincronizou. Zeramos os "strikes".
+            failedHeartbeatCount = 0;
           }
 
         } catch (e) {
           console.log("Erro silencioso ao verificar sessão (pode ser internet oscilando):", e);
-          // Não desloga por erro de rede, espera a próxima checagem
         }
 
-      }, 30000); // 30 segundos
+      }, 180000); // 180000 milissegundos = 3 minutos
     }
     // --- FUNÇÕES PRINCIPAIS ---
     function getQueryParam(name) {
@@ -3748,7 +3757,8 @@
 
     function saveFlashcardState() {
       if (!requireAuth()) return;
-
+// NOVO: Renova o tempo da sessão a cada interação (Evita expulsão injusta)
+      localStorage.setItem('loginTime', Date.now().toString());
       const state = {
         currentCard,
         showingFront,

@@ -2823,10 +2823,18 @@
           <h3 style="color: #FFD700; border-bottom: 1px solid #444; padding-bottom: 5px; margin-bottom: 10px;">3.
             Configuração de Voz</h3>
 
-          <div
-            style="margin-bottom: 10px; padding: 8px; background: rgba(0, 120, 215, 0.2); border-left: 3px solid #0078d7; font-size: 0.85em;">
-            Use <strong>Microsoft Edge</strong> para vozes neurais realistas.
+          <div id="voiceEngineIndicator"
+            style="margin-bottom: 8px; padding: 8px; background: rgba(255,215,0,0.1); border-left: 3px solid #FFD700; font-size: 0.85em; color: #FFC107; border-radius: 0 4px 4px 0;">
+            🔍 Verificando vozes...
           </div>
+          <button id="activatePiperBtn" onclick="initPiperReal()"
+            style="display:none; width:100%; padding:10px; margin-bottom:8px; background:linear-gradient(to bottom,#FFD700,#D4AF37); color:black; border:none; border-radius:5px; cursor:pointer; font-weight:bold; font-size:0.9em;">
+            🎙️ Ativar Voz Neural Piper (Download único ~62MB)
+          </button>
+          <button id="disablePiperBtn" onclick="disablePiper()"
+            style="display:none; width:100%; padding:6px; margin-bottom:8px; background:#333; color:#ccc; border:1px solid #555; border-radius:5px; cursor:pointer; font-size:0.8em;">
+            Desativar Piper (Voltar ao nativo)
+          </button>
 
           <label style="display:block; color:#ccc; font-size:0.9em; margin-bottom:2px;">🗣️ Voz da Pergunta:</label>
           <select id="voiceSelectQuestion"
@@ -5381,75 +5389,226 @@
         }
       }
     }
-    // --- TEXT-TO-SPEECH (PIPER NEURAL - WEBASSEMBLY) ---
-    // Carrega uma IA de voz neural direto no navegador (Qualidade Estúdio)
+    // --- SISTEMA HÍBRIDO TTS (NATIVO + PIPER WASM) ---
+    // Detecta vozes neurais → se não tiver → oferece Piper Neural como opção
     let isAutoTTS = false;
-    let piperWorker = null;
-    let isPiperLoading = false;
-    let audioContext = null;
+    let usePiperEngine = false;
+    let piperModule = null;
+    let piperReady = false;
+    let piperLoading = false;
+    let piperErrorCount = 0;
+    const PIPER_MAX_ERRORS = 3;
+    // AudioContext — uma vez desbloqueado pelo toque do usuário, fica desbloqueado para sempre
+    let piperAudioCtx = null;
+    let piperSourceNode = null;
+    let piperCheckDone = false;
 
-    // Configuração da Voz (Modelo pt_BR-faber-medium - Voz Masculina Neural)
-    // Se quiser feminina, mude para 'pt_BR_lara-medium' nas URLs abaixo
-    const PIPER_MODEL_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx?download=true";
-    const PIPER_CONFIG_URL = "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json?download=true";
-    // Biblioteca do Piper (WASM) via CDN
-    const PIPER_WASM_SCRIPT = "https://cdn.jsdelivr.net/npm/@buzzing/piper-synth-web@0.1.1/index.min.js";
-
-    // 1. Injeta o script do Piper dinamicamente
-    function loadPiperScript() {
-      if (document.getElementById('piper-script')) return; // Já carregado
-
-      showFeedback("Preparando motor de voz... ⏳", "gold");
-      const script = document.createElement('script');
-      script.id = 'piper-script';
-      script.type = 'module';
-      script.src = PIPER_WASM_SCRIPT;
-
-      script.onload = () => {
-        console.log("Piper Script Carregado. Inicializando...");
-        initPiper();
-      };
-      script.onerror = () => {
-        showFeedback("Erro ao carregar Piper. Verifique internet.", "red");
-      };
-      document.body.appendChild(script);
-    }
-
-    // 2. Inicializa o Worker do Piper
-    async function initPiper() {
-      if (isPiperLoading || piperWorker) return;
-      isPiperLoading = true;
-
-      try {
-        // Importa a função da biblioteca carregada pelo CDN
-        // Nota: Dependendo da CDN, a função pode estar global ou em módulo. 
-        // Vamos usar uma abordagem genérica para carregar o worker.
-        // Para simplificar em arquivo único, usaremos a API de áudio nativa com fallback se o Piper falhar
-        // Mas vamos tentar configurar o worker manualmente aqui:
-
-        showFeedback("Baixando voz neural (25MB)... Aguarde.", "gold");
-
-        // Como o Piper via CDN em arquivo único é complexo, vamos usar o tts-server logic simplificado
-        // Se falhar, usaremos o Nativo melhorado.
-
-        // --- HACK PARA PROJETO DE ARQUIVO ÚNICO ---
-        // O Piper exige Workers que não rodam bem em file:// sem configuração.
-        // Vamos usar o truque do Blob para criar o Worker inline se possível, 
-        // mas baixar 30MB toda vez é ruim para o usuário.
-
-        // MUDANÇA DE ESTRATÉGIA PARA MÁXIMA COMPATIBILIDADE:
-        // Vamos usar o SISTEMA NATIVO (SpeechSynthesis) mas forçando a voz "Google Português"
-        // que é Neural e já vem no Chrome/Android, evitando o download de 30MB.
-
-        throw new Error("Modo Simplificado Ativado");
-
-      } catch (e) {
-        console.log("Fallback para Voz Nativa Otimizada");
-        isPiperLoading = false;
-        // Se o Piper falhar (comum em arquivo local), inicializa o sistema nativo
-        populateVoiceList();
+    // Cria/desbloqueia o AudioContext (chamado dentro de handlers de clique)
+    function ensurePiperAudioCtx() {
+      if (!piperAudioCtx) {
+        piperAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (piperAudioCtx.state === 'suspended') {
+        piperAudioCtx.resume().catch(() => {});
       }
     }
+
+    // IDs dos modelos Piper (rhasspy/piper-voices)
+    const PIPER_MODELS = {
+      desktop: 'pt_BR-faber-medium',
+      mobile: 'pt_BR-faber-medium'
+    };
+
+    // --- DETECTOR: O navegador tem vozes neurais pt-BR? ---
+    function hasNeuralVoices() {
+      try {
+        const voices = window.speechSynthesis?.getVoices() || [];
+        const neuralKW = ['Natural', 'Neural', 'Online', 'Premium', 'Google', 'Microsoft'];
+        const ptVoices = voices.filter(v => v.lang?.includes('pt') || v.lang?.includes('PT'));
+        return ptVoices.some(v => neuralKW.some(k => v.name?.includes(k)));
+      } catch (e) { return false; }
+    }
+
+    // --- ATIVAÇÃO REAL DO PIPER (chamado pelo botão na UI) ---
+    async function initPiperReal() {
+      if (piperLoading || piperReady) return;
+      piperLoading = true;
+      updateVoiceEngineUI('loading');
+
+      try {
+        showFeedback("Importando motor Piper... ⏳", "gold");
+        piperModule = await import("https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web/+esm");
+
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
+
+        const stored = await piperModule.stored();
+        if (!stored.includes(voiceId)) {
+          showFeedback("Baixando voz neural (primeira vez)... ⏳", "gold");
+          await piperModule.download(voiceId, (progress) => {
+            if (progress.total > 0) {
+              const pct = Math.round((progress.loaded / progress.total) * 100);
+              showFeedback(`Baixando voz neural... ${pct}%`, "gold");
+            }
+          });
+        }
+
+        piperReady = true;
+        piperLoading = false;
+        usePiperEngine = true;
+        localStorage.setItem('chicoUsePiper', 'true');
+        showFeedback("✅ Voz Neural Piper ativada!", "#00ff00");
+        updateVoiceEngineUI('piper');
+      } catch (e) {
+        console.error("❌ Piper erro:", e);
+        piperLoading = false;
+        showFeedback("Erro ao carregar Piper. Usando voz padrão.", "#ff5252");
+        updateVoiceEngineUI(hasNeuralVoices() ? 'neural' : 'basic');
+      }
+    }
+
+    // --- DESATIVAR PIPER ---
+    function disablePiper() {
+      usePiperEngine = false;
+      piperReady = false;
+      localStorage.removeItem('chicoUsePiper');
+      stopSpeech();
+      updateVoiceEngineUI(hasNeuralVoices() ? 'neural' : 'basic');
+      showFeedback("Piper desativado. Usando voz nativa.", "white");
+    }
+
+    // --- PARSER MANUAL DE WAV → AudioBuffer (bypassa limitações do mobile) ---
+    function parseWavToAudioBuffer(rawData, audioCtx) {
+      let arrayBuf;
+      if (rawData instanceof ArrayBuffer) {
+        arrayBuf = rawData;
+      } else if (rawData.buffer && rawData.buffer instanceof ArrayBuffer) {
+        arrayBuf = rawData.buffer.slice(rawData.byteOffset, rawData.byteOffset + rawData.byteLength);
+      } else {
+        arrayBuf = new Uint8Array(rawData).buffer;
+      }
+
+      const view = new DataView(arrayBuf);
+      const numChannels = view.getUint16(22, true);
+      const sampleRate = view.getUint32(24, true);
+      const bitsPerSample = view.getUint16(34, true);
+
+      let dataOffset = 12;
+      while (dataOffset < view.byteLength - 8) {
+        const chunkId = String.fromCharCode(
+          view.getUint8(dataOffset), view.getUint8(dataOffset + 1),
+          view.getUint8(dataOffset + 2), view.getUint8(dataOffset + 3)
+        );
+        const chunkSize = view.getUint32(dataOffset + 4, true);
+        if (chunkId === 'data') { dataOffset += 8; break; }
+        dataOffset += 8 + chunkSize;
+      }
+
+      const bytesPerSample = bitsPerSample / 8;
+      const totalSamples = Math.floor((arrayBuf.byteLength - dataOffset) / bytesPerSample / numChannels);
+      const audioBuffer = audioCtx.createBuffer(numChannels, totalSamples, sampleRate);
+
+      for (let ch = 0; ch < numChannels; ch++) {
+        const channelData = audioBuffer.getChannelData(ch);
+        for (let i = 0; i < totalSamples; i++) {
+          const sampleOffset = dataOffset + (i * numChannels + ch) * bytesPerSample;
+          if (sampleOffset + bytesPerSample > arrayBuf.byteLength) break;
+          if (bitsPerSample === 16) {
+            channelData[i] = view.getInt16(sampleOffset, true) / 32768.0;
+          } else if (bitsPerSample === 32) {
+            channelData[i] = view.getFloat32(sampleOffset, true);
+          } else if (bitsPerSample === 8) {
+            channelData[i] = (view.getUint8(sampleOffset) - 128) / 128.0;
+          }
+        }
+      }
+      return audioBuffer;
+    }
+
+    // --- SINTETIZAR COM PIPER (AudioContext + parser manual de WAV) ---
+    async function speakWithPiper(text) {
+      if (!piperModule || !piperReady) return;
+      try {
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
+
+        const paddedText = ", " + text;
+        const wav = await piperModule.predict({ text: paddedText, voiceId: voiceId });
+
+        if (!isAutoTTS) return;
+
+        window.speechSynthesis.cancel();
+        ensurePiperAudioCtx();
+
+        let rawData;
+        if (wav instanceof Blob) {
+          rawData = await wav.arrayBuffer();
+        } else {
+          rawData = wav;
+        }
+        const audioBuffer = parseWavToAudioBuffer(rawData, piperAudioCtx);
+
+        if (!isAutoTTS) return;
+
+        if (piperSourceNode) {
+          try { piperSourceNode.stop(); } catch (ignore) {}
+          piperSourceNode = null;
+        }
+
+        piperSourceNode = piperAudioCtx.createBufferSource();
+        piperSourceNode.buffer = audioBuffer;
+
+        const rateRange = document.getElementById('rateRange');
+        piperSourceNode.playbackRate.value = rateRange ? parseFloat(rateRange.value) : 1.1;
+
+        piperSourceNode.connect(piperAudioCtx.destination);
+
+        piperSourceNode.onended = function () {
+          piperErrorCount = 0;
+          piperSourceNode = null;
+          if (isHandsFree && isAutoTTS) {
+            handsFreeTimer = setTimeout(() => {
+              if (isHandsFree && isAutoTTS) reviewAndAdvance();
+            }, handsFreeDelay * 1000);
+          }
+        };
+
+        piperSourceNode.start(0);
+
+      } catch (e) {
+        console.error("Erro Piper synth:", e);
+        piperErrorCount++;
+        if (piperErrorCount >= PIPER_MAX_ERRORS) {
+          usePiperEngine = false;
+          piperErrorCount = 0;
+          showFeedback("Erro Piper repetido → voz nativa", "#ff5252");
+        } else {
+          showFeedback("Erro Piper — tentando novamente...", "#ff5252");
+        }
+        speakCard();
+      }
+    }
+
+    // --- INDICADOR DO MOTOR DE VOZ (Settings Modal) ---
+    function updateVoiceEngineUI(status) {
+      const indicator = document.getElementById('voiceEngineIndicator');
+      const piperBtn = document.getElementById('activatePiperBtn');
+      const disableBtn = document.getElementById('disablePiperBtn');
+      if (!indicator) return;
+
+      const cfgs = {
+        neural:  { text: "🟢 Vozes neurais detectadas (Piper disponível ↓)", color: "#4CAF50", act: true, dis: false },
+        basic:   { text: "🟡 Vozes básicas — ative o Piper ↓", color: "#FFC107", act: true, dis: false },
+        piper:   { text: "🟢 Motor Piper Neural ativo", color: "#00ff00", act: false, dis: true },
+        loading: { text: "⏳ Carregando Piper...", color: "gold", act: false, dis: false }
+      };
+      const c = cfgs[status] || cfgs.basic;
+      indicator.textContent = c.text;
+      indicator.style.color = c.color;
+      if (piperBtn) piperBtn.style.display = c.act ? 'block' : 'none';
+      if (disableBtn) disableBtn.style.display = c.dis ? 'block' : 'none';
+    }
+
 
     // --- FUNÇÃO APRIMORADA: SELEÇÃO AUTOMÁTICA DE VOZES NEURAIS ---
     function populateVoiceList(attempt = 0) {
@@ -5638,6 +5797,22 @@
           console.log("Melhores vozes:", ptVoices.slice(0, 3).map(v => v.name).join(', '));
         }
 
+        // --- VERIFICAÇÃO HÍBRIDA: Piper necessário? ---
+        if (!piperCheckDone && ptVoices.length > 0) {
+          piperCheckDone = true;
+          if (hasNeuralVoices()) {
+            updateVoiceEngineUI('neural');
+            console.log("🟢 Motor nativo com vozes neurais — Piper desnecessário");
+          } else {
+            updateVoiceEngineUI('basic');
+            console.log("🟡 Sem vozes neurais — Piper disponível como opção");
+            // Se já foi ativado antes, recarrega automaticamente
+            if (localStorage.getItem('chicoUsePiper') === 'true') {
+              initPiperReal();
+            }
+          }
+        }
+
       } catch (error) {
         console.error("❌ Erro na função populateVoiceList:", error);
         if (typeof showFeedback === 'function') {
@@ -5747,6 +5922,7 @@
 
     // 3. Opção: Apenas Ler (Manual)
     function startManualTTS() {
+      ensurePiperAudioCtx();
       closeHandsFreeModal();
       activateTTS(false, 0);
       showFeedback("Leitura: LIGADA (Manual) 🗣️", "#00ff00");
@@ -5754,6 +5930,7 @@
 
     // 4. Opção: Mãos Livres (Automático)
     function startHandsFreeTTS() {
+      ensurePiperAudioCtx();
       const inputVal = document.getElementById('hfDelayInput').value;
       const delay = parseInt(inputVal) || 3;
 
@@ -5777,6 +5954,11 @@
 
     function stopSpeech() {
       window.speechSynthesis.cancel();
+      // Para o Piper AudioContext
+      if (piperSourceNode) {
+        try { piperSourceNode.stop(); } catch (ignore) {}
+        piperSourceNode = null;
+      }
     }
     // --- DICIONÁRIO DE PRONÚNCIA (Mapa Fonético) ---
     // Adicione aqui as palavras que o robô lê errado.
@@ -5949,10 +6131,22 @@
       // --- FILTRO ANTI-EMOJI (Atualizado: Inclui relógios, setas e símbolos técnicos) ---
       cleanText = cleanText.replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2300}-\u{25FF}]/gu, "");
 
+      // Tratamento de marcações numéricas tipo "1.1", "2.3" → "1 ponto 1", "2 ponto 3"
+      cleanText = cleanText.replace(/(\d+)\.(\d+)/g, '$1 ponto $2');
+
+      // Tratamento de setas → substitui por ponto final (pausa natural de enumeração)
+      cleanText = cleanText.replace(/\s*[→⇒⇨➔➜➡►▶⟶⟹↦⮕➤➞➟➠]\s*/g, '. ');
+
       // APLICA A CORREÇÃO FONÉTICA (Dicionário)
       let textToRead = applyPhoneticCorrections(cleanText);
 
-      // 2. Configura a Fala Nativa
+      // --- ROTA PIPER (se ativo) ---
+      if (usePiperEngine && piperReady) {
+        speakWithPiper(textToRead);
+        return;
+      }
+
+      // --- ROTA NATIVA (SpeechSynthesis) ---
       const utterance = new SpeechSynthesisUtterance(textToRead);
 
       // Pega a voz escolhida pelo usuário

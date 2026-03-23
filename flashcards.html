@@ -6137,6 +6137,15 @@
       // Tratamento de setas → substitui por ponto final (pausa natural de enumeração)
       cleanText = cleanText.replace(/\s*[→⇒⇨➔➜➡►▶⟶⟹↦⮕➤➞➟➠]\s*/g, '. ');
 
+      // NOVO: Remove referências em parênteses APÓS um ponto final, ex: "xxxxx. (pág. 10)"
+      // Exceção: Mantém se for artigo de lei, ex: (Art. 10, I) ou (Lei 8112)
+      cleanText = cleanText.replace(/(\.)\s*\(([^)]+)\)/gi, (match, p1, p2) => {
+        if (/art\.|artigo|lei|§|inciso|inc\.|par\.|alínea/i.test(p2)) {
+          return match; // Mantém
+        }
+        return p1; // Remove parênteses, devolve só o ponto
+      });
+
       // APLICA A CORREÇÃO FONÉTICA (Dicionário)
       let textToRead = applyPhoneticCorrections(cleanText);
 

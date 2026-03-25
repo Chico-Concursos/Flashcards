@@ -5965,7 +5965,7 @@
     // Formato: "Palavra Escrita" : "Jeito que deve ser falado",
     // --- DICIONÁRIO DE PRONÚNCIA
     const pronunciationDict = {
-      // === 1. SÍMBOLOS E PONTUAÇÃO ESPECIAL ===
+            // === 1. SÍMBOLOS E PONTUAÇÃO ESPECIAL ===
       "§": "parágrafo",
       "n.º": "número",
       "nº": "número",
@@ -5990,6 +5990,8 @@
       "LINDB": "Lei de Introdução às normas do Direito Brasileiro",
       "LEP": "Lei de Execução Penal",
       "Leman": "Lei do Mandado de Segurança",
+	  "CPP": "C-P-P",
+	  "CP": "C-P",
 
       // === 3. TRIBUNAIS E ÓRGÃOS ===
       "TJMG": "Tribunal de Justiça de Minas Gerais",
@@ -5997,12 +5999,12 @@
       "STJ": "Superior Tribunal de Justiça",
       "TST": "Tribunal Superior do Trabalho",
       "TSE": "Tribunal Superior Eleitoral",
-      "MP": "Ministério Público",
+      "MP": "M-P",
       "MPMG": "Ministério Público de Minas Gerais",
       "DPU": "Defensoria Pública da União",
       "AGU": "Advocacia Geral da União",
-      "PM": "Polícia Militar",
-      "PC": "Polícia Civil",
+      "PM": "P-M",
+      "PC": "P-C",
       "PF": "Polícia Federal",
       "PRF": "Polícia Rodoviária Federal",
       "11 RPM": "Décima primeira região da polícia militar",
@@ -6017,14 +6019,14 @@
       "ADPF": "Arguição de Descumprimento de Preceito Fundamental",
       "RE": "Recurso Extraordinário",
       "REsp": "Recurso Especial",
-      "Writ": "Ruit", // Pronúncia afrancesada comum no direito ou "rit" do inglês
+      "Writ": "Ruit",
 
-      // === 5. TERMOS EM LATIM (Pronúncia aportuguesada) ===
+      // === 5. TERMOS EM LATIM ===
       "caput": "cáput",
       "in fine": "in fíne",
       "vacatio legis": "vacátio légis",
-      "ex tunc": "ex túnc", // Retroage
-      "ex nunc": "ex núnc", // Não retroage
+      "ex tunc": "ex túnc",
+      "ex nunc": "ex núnc",
       "erga omnes": "érga ômnes",
       "inter partes": "ínter pártes",
       "bis in idem": "bis in ídem",
@@ -6044,8 +6046,7 @@
       "par.": "Parágrafo",
       "pg.": "Parágrafo",
 
-      // === 7. NÚMEROS ROMANOS (Expandido) ===
-      // A lógica agressiva garante que XVIII seja lido antes de V
+      // === 7. NÚMEROS ROMANOS ===
       "XVIII": "dezoito",
       "XVII": "dezessete",
       "XVI": "dezesseis",
@@ -6070,10 +6071,31 @@
       "X": "dez",
       "L": "cinquenta",
       "C": "cem",
-      "I": "um", // Cuidado: No contexto de Flashcards, I maiúsculo isolado geralmente é numeral.
+      "I": "um",
 
       // === 8. SIGLAS ===
       "CEDM": "C-E-D-M",
+      "MG": "Minas Gerais",
+      "ex.:": "Exemplo",
+      "ex.": "Exemplo",
+      "NYPD": "New York City Police Department",
+	  "GDO": "G-D-O",
+	  
+	  // === 9. Números e nomes entre parenteses ===
+	  "1 (um)": "1",
+	  "2 (dois)": "2",
+	  "3 (Três)": "3",
+	  "4 (quatro)": "4",
+	  "5 (cinco)": "5",
+	  "6 (seis)": "6",
+	  "7 (sete)": "7",
+	  "8 (oito)": "8",
+	  "9 (nove)": "9",
+	  "10 (dez)": "10",
+	  "24 (vinte e quatro)": "24",
+
+      // === 10. DIVERSOS ===
+      "Pág.": "Página",
 	  "EPI": "E-P-I",
 	  "Profissional": "Profissionau",
 	  "Letal": "Letau",
@@ -6082,6 +6104,14 @@
 	  "Policial": "Policiau",
 	  "Funcional": "Funcionau",
 	  "Diagonal": "Diagonau",
+	  "Federal": "Federau",
+	  "Inicial": "Iniciau",
+	  "Social": "Sociau",
+	  "Federal": "Federau",
+	  "Penal": "Penau",
+	  "45º": "45 graus",
+	  "Perimetral": "Perimetrau",
+	  "Criminal": "Criminau",
     };
 
     function applyPhoneticCorrections(text) {

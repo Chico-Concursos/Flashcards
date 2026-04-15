@@ -7,7 +7,7 @@
   <title>Chico Concursos - Flashcards com Progresso</title>
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#121212"">
+  <meta name="theme-color" content="#121212">
   <link rel=" apple-touch-icon" href="https://img.icons8.com/color/96/books.png">
   <link rel="icon" type="image/png" href="https://img.icons8.com/color/96/books.png">
   <!-- NOVA FONTE ROBOTO -->
@@ -21,6 +21,114 @@
       margin: 0;
       padding: 0;
       box-sizing: border-box;
+    }
+
+    /* --- COMPONENTES PADRONIZADOS (REFATORAÇÃO FASE 1) --- */
+    .chico-modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.9);
+      z-index: 2147483647 !important; /* CORREÇÃO 1: Z-Index MÁXIMO (Google Sites) */
+      justify-content: center;
+      backdrop-filter: blur(5px);
+      
+      /* CORREÇÃO 2: Alinha tudo no TOPO para não cortar na tela do Google Sites */
+      align-items: flex-start !important;
+      padding-top: 40px !important;
+      padding-bottom: 50px !important;
+      overflow-y: auto !important;
+    }
+
+    .chico-modal-box {
+      background: #222;
+      color: white;
+      padding: 25px;
+      border-radius: 10px;
+      max-width: 400px;
+      width: 90%;
+      box-shadow: 0 0 30px rgba(255, 215, 0, 0.4);
+      text-align: center;
+      border: 1px solid #444;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .chico-modal-box.wide {
+      max-width: 700px;
+      text-align: left;
+    }
+
+    .chico-modal-title {
+      color: gold;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #444;
+      padding-bottom: 10px;
+      text-align: center;
+    }
+
+    .chico-modal-btn {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #333;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+
+    .chico-modal-btn:hover {
+      background: #444;
+      border-color: gold;
+    }
+
+    .chico-modal-btn-primary {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: linear-gradient(to bottom, #FFD700, #D4AF37);
+      color: black;
+      border: none;
+      font-weight: bold;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 1.1em;
+    }
+
+    .chico-modal-btn-primary:hover {
+      box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+    }
+
+    .chico-modal-btn-danger {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #444;
+      color: #aaa;
+      border: 1px solid #555;
+      border-radius: 5px;
+      font-size: 1.1em;
+      cursor: pointer;
+    }
+
+    .chico-modal-btn-close {
+      background: transparent;
+      border: none;
+      color: #888;
+      margin-top: 5px;
+      cursor: pointer;
+      text-decoration: underline;
+      font-size: 1em;
+    }
+    
+    .chico-modal-btn-close:hover {
+      color: gold;
     }
 
     /* --- MICRO-INTERAÇÕES (NOVO) --- */
@@ -383,40 +491,6 @@
       cursor: pointer;
     }
 
-    #helpModal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-    }
-
-    #helpModalContent {
-      background: #222;
-      color: white;
-      padding: 30px;
-      border-radius: 10px;
-      max-width: 600px;
-      width: 90%;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
-      position: relative;
-      max-height: 80vh;
-      overflow-y: auto;
-      text-align: center;
-    }
-
-    #helpModalContent h2 {
-      color: gold;
-      margin-bottom: 20px;
-      font-size: 1.8em;
-    }
 
     #iconLegend p {
       display: flex;
@@ -563,41 +637,6 @@
       text-shadow: 0 0 5px rgba(0, 255, 0, 0.8);
     }
 
-    #statsModal {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 9999;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      backdrop-filter: blur(5px);
-      -webkit-backdrop-filter: blur(5px);
-    }
-
-    #statsModalContent {
-      background: #222;
-      color: white;
-      padding: 30px;
-      border-radius: 10px;
-      max-width: 600px;
-      width: 90%;
-      box-shadow: 0 0 30px rgba(255, 215, 0, 0.7);
-      position: relative;
-      max-height: 80vh;
-      overflow-y: auto;
-      text-align: left;
-    }
-
-    #statsModalContent h2 {
-      color: gold;
-      margin-bottom: 20px;
-      font-size: 1.8em;
-      text-align: center;
-    }
 
     .stats-section {
       margin-bottom: 20px;
@@ -656,8 +695,8 @@
       height: 100%;
       background: black;
       border-radius: 10px;
-      padding: 50px 10px 10px 10px;
-      /* Adiciona respiro superior */
+      padding: 15px 10px 10px 10px;
+      /* Respiro superior reduzido para visibilidade no iframe */
       box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
       z-index: 10;
       text-align: center;
@@ -1177,13 +1216,7 @@
     /* === REGRA MESTRA: CORREÇÃO DE TODOS OS MODAIS (POSIÇÃO E VISIBILIDADE) === */
     /* Aplica a correção ao Configurações, Ajuda, Manual, Stats, Filtro, Reporte, etc. */
     #settingsModal,
-    #helpModal,
-    #manualModal,
-    #statsModal,
-    #filterModal,
-    #reportModal,
-    #handsFreeModal,
-    #evalModal {
+    #reportModal {
       position: fixed;
       top: 0;
       left: 0;
@@ -1364,6 +1397,42 @@
       z-index: 9000 !important;
       cursor: pointer;
       box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.5);
+    }
+
+    /* --- BARRA DE NAVEGAÇÃO MCQ (Mobile) --- */
+    #mcqNavBar {
+      display: none;
+      width: 100%;
+      height: auto;
+      min-height: 50px;
+      margin-top: 25px;
+      margin-bottom: 20px;
+      background-color: transparent;
+      justify-content: center;
+      align-items: center;
+      gap: 15px; /* Espaço entre os botões */
+    }
+
+    #mcqNavBar button {
+      flex: 1;
+      padding: 12px;
+      background-color: #222;
+      border: 1px solid #FFD700;
+      border-radius: 8px; /* Cantos arredondados parecem mais modernos soltos na página */
+      color: #FFD700;
+      font-size: 1.1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    #mcqNavBar button:first-child {
+      border-right: 1px solid #FFD700;
+    }
+
+    #mcqNavBar button:active {
+      background: rgba(255, 215, 0, 0.15);
     }
 
     /* --- REGRAS EXCLUSIVAS PARA CELULAR (LAYOUT HÍBRIDO V8) --- */
@@ -1918,6 +1987,56 @@
       animation: flash-red 0.4s ease-out;
     }
 
+    /* --- BOTÕES DE MÚLTIPLA ESCOLHA (MCQ) — ULTRA PREMIUM --- */
+    .mcq-btn {
+      display: block;
+      width: 100%;
+      text-align: left;
+      margin: 2px 0;
+      padding: 12px 15px;
+      background: #222;
+      color: white;
+      border: 1px solid #555;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1em;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+      white-space: normal;       /* Garante quebra de texto no mobile */
+      word-wrap: break-word;     /* Palavra longa não foge da tela */
+      line-height: 1.4;
+    }
+
+    /* Hover Premium — Botão "levanta" ao passar o mouse */
+    .mcq-btn:hover:not(.mcq-disabled) {
+      background: #2a2a2a;
+      border-color: #FFD700;
+      box-shadow: 0 6px 12px rgba(255, 215, 0, 0.2);
+      transform: translateY(-2px);
+    }
+
+    /* Estado: Resposta CORRETA */
+    .mcq-btn.mcq-correct {
+      background: #152b15 !important;
+      border-color: #00ff00 !important;
+      color: #00ff00 !important;
+      box-shadow: 0 0 12px rgba(0, 255, 0, 0.3);
+    }
+
+    /* Estado: Resposta ERRADA */
+    .mcq-btn.mcq-wrong {
+      background: #2b1515 !important;
+      border-color: #ff5555 !important;
+      color: #ff5555 !important;
+      opacity: 0.8;
+    }
+
+    /* Bloqueio anti-trapaça */
+    .mcq-btn.mcq-disabled {
+      pointer-events: none;
+      cursor: default;
+    }
+
     /* --- ESTILO DO MODAL DE REPORTE --- */
     #reportModal {
       position: fixed;
@@ -2062,13 +2181,7 @@
 
     /* 1. Alinha Modais de Tela Cheia (Config, Ajuda, Stats, Login) no Topo */
     #settingsModal,
-    #helpModal,
-    #manualModal,
-    #statsModal,
-    #filterModal,
     #reportModal,
-    #handsFreeModal,
-    #evalModal,
     #customAlertModal,
     #loginModal,
     #sessionExpiredModal {
@@ -2219,7 +2332,8 @@
     .discipline-select,
     select,
     input[type="text"] {
-      <-- Só sobram o select e o texto padding: 6px 10px !important;
+      /* Só sobram o select e o texto */
+      padding: 6px 10px !important;
       /* Reduzido drasticamente o "ar" interno */
       height: auto !important;
       /* Altura automática baseada no texto */
@@ -2279,19 +2393,170 @@
       margin-top: 10px !important;
       padding-top: 10px !important;
     }
+
+    /* --- NOVAS CLASSES DE MODAIS (V2) --- */
+    .chico-modal-overlay-top {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0,0,0,0.95);
+      z-index: 2147483647; 
+      display: none;
+      justify-content: center;
+      align-items: flex-start;
+      padding-top: 30px;
+      overflow-y: auto;
+      backdrop-filter: blur(5px);
+    }
+    
+    .chico-modal-overlay-confirm {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.85); 
+      z-index: 999999; 
+      display: none;
+      justify-content: center; 
+      align-items: flex-start;
+      padding-top: 50px;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+
+    .chico-modal-box-danger {
+      border: 1px solid #ff4d4d; 
+      box-shadow: 0 0 40px rgba(255, 77, 77, 0.4);
+    }
+
+    .chico-modal-box-confirm {
+      background: #1e1e1e; 
+      border: 1px solid #ff4d4d; 
+      padding: 25px; 
+      border-radius: 12px; 
+      width: 90%; 
+      max-width: 350px; 
+      text-align: center; 
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .ai-modal-overlay {
+      display: none; 
+      position: fixed; 
+      top: 20px; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      width: 95%; 
+      max-width: 800px; 
+      max-height: 85vh; 
+      height: auto;     
+      background: #121212; 
+      border: 1px solid #333; 
+      border-radius: 12px; 
+      z-index: 99999; 
+      box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
+      flex-direction: column; 
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+
+    .ai-modal-header {
+      padding: 18px; 
+      background: #1f1f1f; 
+      border-bottom: 1px solid #333; 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center;
+    }
+
+    .ai-chat-history {
+      flex-grow: 1; 
+      padding: 20px; 
+      overflow-y: auto; 
+      display: flex; 
+      flex-direction: column; 
+      gap: 18px; 
+      background: #0d0d0d;
+      font-size: 16px; 
+      line-height: 1.6;
+      color: #e0e0e0;
+    }
+
+    .ai-modal-footer {
+      padding: 15px; 
+      background: #1f1f1f; 
+      border-top: 1px solid #333; 
+      display: flex; 
+      gap: 10px; 
+      align-items: center;
+    }
+
+    .ai-input-field {
+      flex-grow: 1; 
+      padding: 12px 18px; 
+      border-radius: 25px; 
+      border: 1px solid #444; 
+      background: #2a2a2a; 
+      color: white; 
+      outline: none;
+      font-size: 15px;
+    }
+
+    .ai-send-btn {
+      background: #FFD700;
+      color: #000; 
+      border: none; 
+      width: 45px; 
+      height: 45px; 
+      border-radius: 50%; 
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 18px;
+      transition: transform 0.2s;
+      flex-shrink: 0;
+      box-shadow: 0 2px 10px rgba(167, 139, 250, 0.3);
+    }
+    
+    .ghost-ruler-tool {
+      display: none;
+      position: fixed;
+      bottom: 0;
+      right: 0;
+      background-color: #FFD700;
+      color: black;
+      font-family: monospace;
+      font-size: 16px;
+      font-weight: bold;
+      padding: 8px 12px;
+      z-index: 2147483647;
+      border-top-left-radius: 8px;
+      box-shadow: -2px -2px 10px rgba(0,0,0,0.5);
+      pointer-events: none;
+    }
   </style>
 </head>
 
 <body>
   <button id="mobileAnswerBtn" onclick="flipCard()" style="display:none;">MOSTRAR RESPOSTA</button>
-  <div class="top-bar">
+  <!-- BARRA DE NAVEGAÇÃO MCQ (Anterior / Próximo) -->
+  <div id="mcqNavBar">
+    <button onclick="reviewAndRetreat()">◀</button>
+    <button onclick="reviewAndAdvance()">▶</button>
+  </div>
+  <div class="top-bar" role="toolbar" aria-label="Barra de ferramentas principal">
     <!-- 1. BOTÃO MENU (HAMBÚRGUER) -->
     <div style="position: relative;">
-      <button class="hamburger-btn tooltip" data-tooltip="Menu Principal" onmouseover="showTooltipOnHover(this)"
-        onmouseleave="hideTooltipOnLeave(this)" onclick="toggleHamburgerMenu()"><i class="fas fa-bars"></i></button>
+      <button class="hamburger-btn tooltip" data-tooltip="Menu Principal" aria-label="Menu Principal" aria-expanded="false" aria-controls="mainMenuDropdown" onmouseover="showTooltipOnHover(this)"
+        onmouseleave="hideTooltipOnLeave(this)" onclick="toggleHamburgerMenu()"><i class="fas fa-bars" aria-hidden="true"></i></button>
 
       <!-- GAVETA DO MENU (CONTEÚDO ESCONDIDO) -->
-      <div id="mainMenuDropdown" class="menu-dropdown">
+      <div id="mainMenuDropdown" class="menu-dropdown" role="menu" aria-label="Menu de opções">
 
         <div class="menu-item-row">
           <i class="fas fa-paint-brush" style="width:25px;"></i>
@@ -2370,38 +2635,38 @@
 
     <!-- 2. ITENS VISÍVEIS (ESSENCIAIS) -->
     <!-- Filtro -->
-    <button id="filterBtn" class="tooltip" data-tooltip="Filtrar Cards" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="openFilterModal()"><i class="fas fa-folder-open"></i></button>
+    <button id="filterBtn" class="tooltip" data-tooltip="Filtrar Cards" aria-label="Filtrar Cards" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="openFilterModal()"><i class="fas fa-folder-open" aria-hidden="true"></i></button>
 
-    <button id="searchToggleBtn" class="tooltip" data-tooltip="Buscar (Ctrl+F)" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSearchBar()"><i class="fas fa-search"></i></button>
-    <input type="text" id="topSearchBar" placeholder="Buscar..." onkeyup="runRealTimeSearch(this.value)">
+    <button id="searchToggleBtn" class="tooltip" data-tooltip="Buscar (Ctrl+F)" aria-label="Buscar cards" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSearchBar()"><i class="fas fa-search" aria-hidden="true"></i></button>
+    <input type="text" id="topSearchBar" placeholder="Buscar..." aria-label="Campo de busca" onkeyup="runRealTimeSearch(this.value)">
 
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
       style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
-    <button id="aiBtn" class="tooltip" data-tooltip="Professor IA" onmouseover="showTooltipOnHover(this)"
+    <button id="aiBtn" class="tooltip" data-tooltip="Professor IA" aria-label="Professor IA" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="explainWithAI()"
       style="background: none; border: none; color: #a78bfa; font-size: 1.2em; cursor: pointer; margin-left: 5px;">
-      <i class="fas fa-robot"></i>
+      <i class="fas fa-robot" aria-hidden="true"></i>
     </button>
-    <span id="mobileCardCounter"
+    <span id="mobileCardCounter" aria-live="polite" aria-atomic="true"
       style="display:none; font-size: 0.9em; margin: 0 8px; color: gold; font-weight: bold;">0/0</span>
     <span id="desktopTimer" class="tooltip" data-tooltip="Zerar Tempo" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer;">⏱️ <span
         id="timer">00:00</span></span>
 
-    <button id="notesBtn" class="tooltip" data-tooltip="Anotações (Atalho: A)" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="openNotesModal()"><i class="fas fa-sticky-note"></i></button>
+    <button id="notesBtn" class="tooltip" data-tooltip="Anotações (Atalho: A)" aria-label="Anotações" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="openNotesModal()"><i class="fas fa-sticky-note" aria-hidden="true"></i></button>
 
-    <button id="mobileTopTTS" class="tooltip" data-tooltip="Ler em Voz Alta" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSpeech()"><i class="fas fa-volume-up"></i></button>
+    <button id="mobileTopTTS" class="tooltip" data-tooltip="Ler em Voz Alta" aria-label="Ler em Voz Alta" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSpeech()"><i class="fas fa-volume-up" aria-hidden="true"></i></button>
 
-    <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar Erros" onmouseover="showTooltipOnHover(this)"
+    <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar Erros" aria-label="Revisar Erros" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="toggleReviewErrors()" style="display:none;"><i
-        class="fas fa-search"></i></button>
+        class="fas fa-search" aria-hidden="true"></i></button>
   </div>
-  <div id="progressBarContainer">
+  <div id="progressBarContainer" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Progresso dos cards">
     <div id="progressBarFill"></div>
   </div>
   <div id="highlightFeedback"></div>
@@ -2414,15 +2679,14 @@
     </div>
   </div>
   <div id="autoAdvanceOverlay" onclick="cancelAutoAdvanceDelay()"></div>
-  <div id="card-container">
-    <div id="flashcard-content">
+  <div id="card-container" role="region" aria-label="Área do flashcard">
+    <div id="flashcard-content" aria-live="polite">
     </div>
     <div id="end-screen">
       <div id="end-message">Chico Concursos<br>Bloco de estudo concluído</div>
       <button id="restart-button">RECOMEÇAR</button>
       <div id="accuracy-results" style="font-size: 1.5em;"></div>
-      <button id="review-errors-button" class="review-button" style="margin-top: 15px; display: none;">REVISAR
-        ERROS</button>
+      <button id="review-errors-button" class="review-button" style="margin-top: 15px; display: none; white-space: nowrap;">REVISAR ERROS</button>
     </div>
   </div>
   <div class="bottom-bar">
@@ -2445,7 +2709,7 @@
       </div>
     </div>
     <input type="number" id="goToCard" placeholder="#" onchange="goToSpecificCard()" style="margin: 0 5px;" />
-    <span id="cardCounter">0/0</span>
+    <span id="cardCounter" aria-live="polite" aria-atomic="true">0/0</span>
     <button id="evalMenuBtn" data-tooltip="Menu de Avaliação" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="openEvalModal()"
       style="color: gold; border: 1px solid #444; border-radius: 5px; padding: 0 10px; margin-right: 5px;"><i
@@ -2477,26 +2741,26 @@
         style="position: relative; color: #00ff00; border: 1px solid #00ff00; border-radius: 5px; font-size: 1em; padding: 0px 10px; min-width: 70px;"
         onclick="rateCardSRS('easy', this, '#00ff00')">Fácil</button>
     </div>
-    <button class="accuracy-button" data-tooltip="Acertei (Tecla 1)" onmouseover="showTooltipOnHover(this)"
+    <button class="accuracy-button" data-tooltip="Acertei (Tecla 1)" aria-label="Acertei" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="markAsCorrect()" id="correctButton">✅</button>
-    <button class="accuracy-button" data-tooltip="Errei (Tecla 2)" onmouseover="showTooltipOnHover(this)"
+    <button class="accuracy-button" data-tooltip="Errei (Tecla 2)" aria-label="Errei" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="markAsIncorrect()" id="incorrectButton">❌</button>
-    <button id="shuffleButton" data-tooltip="Embaralhar cartas" onmouseover="showTooltipOnHover(this)"
+    <button id="shuffleButton" data-tooltip="Embaralhar cartas" aria-label="Embaralhar cartas" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="toggleShuffleMode()">🔀</button>
-    <button data-tooltip="Virar Card / Anterior (Alt)" onmouseover="showTooltipOnHover(this)"
+    <button data-tooltip="Virar Card / Anterior (Alt)" aria-label="Virar Card ou Anterior" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndRetreat()">↩️</button>
-    <button data-tooltip="Voltar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
+    <button data-tooltip="Voltar" aria-label="Card anterior" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
       onclick="prevCard()">⏪</button>
-    <button data-tooltip="Resposta/Perg." onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
+    <button data-tooltip="Resposta/Perg." aria-label="Virar card" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
       onclick="flipCard()">⬇️</button>
-    <button data-tooltip="Avançar" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
+    <button data-tooltip="Avançar" aria-label="Próximo card" onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
       onclick="nextCard()">⏩</button>
     <button id="nextAndShow" data-tooltip="Virar Card / Próximo" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()">↪️</button>
   </div>
-  <div id="helpModal" style="display:none;">
-    <div id="helpModalContent">
-      <h2>Ajuda - Significado dos Ícones</h2>
+  <div id="helpModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Atalhos do teclado">
+    <div id="helpModalContent" class="chico-modal-box wide">
+      <h2 class="chico-modal-title">Ajuda - Significado dos Ícones</h2>
       <div id="iconLegend">
         <p><span>⚙️</span> Configurações: Define o Modo de Estudo (Simulado, SRS, Provas), Pesos e Voz.</p>
         <p><span>⚠️</span> Reportar Erro: Abre uma janela para informar falhas no card sem parar o estudo.</p>
@@ -2535,13 +2799,9 @@
       <button class="close-button" onclick="toggleHelpModal()">Fechar</button>
     </div>
   </div>
-  <div id="manualModal"
-    style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 9999; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-    <div id="manualModalContent"
-      style="background: #222; color: white; padding: 30px; border-radius: 10px; max-width: 700px; width: 90%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); position: relative; max-height: 85vh; overflow-y: auto; text-align: left;">
-      <h2
-        style="color: gold; margin-bottom: 20px; text-align: center; border-bottom: 1px solid #444; padding-bottom: 10px;">
-        Manual do Usuário</h2>
+  <div id="manualModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Manual do usuário">
+    <div id="manualModalContent" class="chico-modal-box wide">
+      <h2 class="chico-modal-title">Manual do Usuário</h2>
 
       <h3 style="color: #FFD700;">📖 Como Usar</h3>
       <p style="margin-bottom: 15px;">Bem-vindo ao Chico Concursos! Este sistema utiliza repetição espaçada e
@@ -2638,9 +2898,9 @@
       </div>
     </div>
   </div>
-  <div id="statsModal" style="display:none;">
-    <div id="statsModalContent">
-      <h2>Estatísticas de Estudo</h2>
+  <div id="statsModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Estatísticas de desempenho">
+    <div id="statsModalContent" class="chico-modal-box wide">
+      <h2 class="chico-modal-title">Estatísticas de Estudo</h2>
 
       <div class="stats-tabs">
         <div class="stats-tab active" onclick="changeStatsTab('time')">Tempo por Card</div>
@@ -2692,7 +2952,7 @@
     </div>
   </div>
   <!-- INÍCIO DO NOVO MODAL DE CONFIGURAÇÕES (COLE AQUI) -->
-  <div id="settingsModal" style="display:none;">
+  <div id="settingsModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Configurações de estudo">
     <div id="settingsModalContent">
       <h2 style="margin-top:0; margin-bottom: 15px; text-align:center; color:gold;">Configurações de Estudo</h2>
 
@@ -2912,12 +3172,10 @@
     </div>
   </div>
   <!-- FIM DO NOVO MODAL DE CONFIGURAÇÕES -->
-  <div id="filterModal"
-    style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 9999; justify-content: center; align-items: center;">
-    <div id="filterModalContent"
-      style="background: #222; color: white; padding: 25px; border-radius: 10px; max-width: 400px; width: 90%; box-shadow: 0 0 30px rgba(255, 215, 0, 0.7); text-align: center; border: 1px solid #444; max-height: 90vh; overflow-y: auto;">
+  <div id="filterModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Filtro inteligente de cards">
+    <div id="filterModalContent" class="chico-modal-box">
 
-      <h2 style="color: gold; margin-bottom: 20px; border-bottom: 1px solid #444; padding-bottom: 10px;">Filtrar Cards
+      <h2 class="chico-modal-title">Filtrar Cards
       </h2>
 
       <div style="margin-bottom: 15px; text-align: left;">
@@ -2961,13 +3219,9 @@
       </div>
 
       <div style="display: flex; gap: 8px; justify-content: center; margin-top: 15px; flex-direction: column;">
-        <button onclick="applyModalFilter()"
-          style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 8px; font-weight: bold; border-radius: 5px; cursor: pointer; font-size: 1.1em;">APLICAR
-          FILTRO</button>
+        <button onclick="applyModalFilter()" class="chico-modal-btn-primary">APLICAR FILTRO</button>
 
-        <button onclick="clearAndCloseFilter()"
-          style="background: #444; color: white; border: 1px solid #666; padding: 6px; border-radius: 5px; cursor: pointer;">Limpar
-          Filtros (Ver Tudo)</button>
+        <button onclick="clearAndCloseFilter()" class="chico-modal-btn-danger">Limpar Filtros (Ver Tudo)</button>
 
         <button onclick="closeFilterModal()"
           style="background: transparent; border: none; color: #888; margin-top: 5px; cursor: pointer; text-decoration: underline;">Fechar</button>
@@ -2975,7 +3229,7 @@
     </div>
   </div>
 
-  <div id="loginModal" style="display: flex;">
+  <div id="loginModal" style="display: flex;" role="dialog" aria-modal="true" aria-label="Login">
     <div class="login-container-clean">
       <div class="login-logo-clean">CHICO <span>CONCURSOS</span></div>
       <div class="login-badge">ACESSO AOS FLASHCARDS</div>
@@ -3000,30 +3254,16 @@
     <div class="loading-spinner"></div>
     <div class="loading-text">Carregando flashcards...</div>
   </div>
-  <div id="sessionExpiredModal" style="display:none;">
+  <div id="sessionExpiredModal" style="display:none;" role="alertdialog" aria-modal="true" aria-label="Sessão expirada">
     <div class="session-expired-container">
       <h2><i class="fas fa-exclamation-triangle"></i> Sessão Expirada</h2>
       <p>Sua sessão expirou devido à inatividade. Por favor, faça login novamente.</p>
       <button class="login-button" onclick="location.reload()">Fazer Login Novamente</button>
     </div>
   </div>
-  <div id="concurrentSessionModal" style="
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background-color: rgba(0,0,0,0.95);
-      z-index: 2147483647; 
-      display: none;
-      justify-content: center;
-      align-items: flex-start; /* ◄--- Mudou de center para flex-start (Topo) */
-      padding-top: 30px;      /* ◄--- Adicionado espaçamento do teto */
-      overflow-y: auto;        /* ◄--- Adicionado rolagem se necessário */
-      backdrop-filter: blur(5px);">
+  <div id="concurrentSessionModal" role="alertdialog" aria-modal="true" aria-label="Acesso interrompido" class="chico-modal-overlay-top">
 
-    <div class="session-expired-container"
-      style="border: 1px solid #ff4d4d; box-shadow: 0 0 40px rgba(255, 77, 77, 0.4);">
+    <div class="session-expired-container chico-modal-box-danger">
       <h2 style="color: #ff4d4d; margin-bottom: 20px; font-size: 1.8em;">
         <i class="fas fa-user-lock"></i> Acesso Interrompido
       </h2>
@@ -3040,7 +3280,7 @@
       </button>
     </div>
   </div>
-  <div id="reportModal">
+  <div id="reportModal" role="dialog" aria-modal="true" aria-label="Reportar erro no card">
     <div id="reportModalContent">
       <h3 style="color: #FFD700; margin-bottom: 10px;">⚠️ Reportar Erro</h3>
       <p>O que há de errado com este card?</p>
@@ -3054,75 +3294,63 @@
       </div>
     </div>
   </div>
-  <div id="lightboxModal" onclick="closeLightbox()">
+  <div id="lightboxModal" onclick="closeLightbox()" role="dialog" aria-modal="true" aria-label="Visualização de imagem ampliada">
     <img id="lightboxImage" src="" alt="Zoom">
     <p style="position: absolute; bottom: 20px; color: #888; font-size: 0.9em;">Toque em qualquer lugar para fechar</p>
   </div>
-  <div id="customAlertModal">
+  <div id="customAlertModal" role="alertdialog" aria-modal="true" aria-label="Alerta">
     <div class="custom-alert-box">
       <h3 style="color: #FFD700; margin-bottom: 15px; font-size: 1.5em;">⚠️ Atenção</h3>
       <p id="customAlertMessage" style="color: white; font-size: 1.1em; line-height: 1.5;">Mensagem aqui</p>
       <button class="custom-alert-btn" onclick="closeCustomAlert()">OK</button>
     </div>
   </div>
-  <div id="evalModal"
-    style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); z-index: 21000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-    <div
-      style="background: #222; color: white; padding: 25px; border-radius: 10px; max-width: 350px; width: 90%; border: 1px solid gold; text-align: center; box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);">
-      <h3 style="color: gold; margin-bottom: 20px;">Escolha a Avaliação</h3>
+  <div id="evalModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Escolha de modo de avaliação">
+    <div class="chico-modal-box">
+      <h3 class="chico-modal-title">Escolha a Avaliação</h3>
 
-      <button onclick="setEvalMode('normal')"
-        style="width: 100%; padding: 12px; margin-bottom: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em; cursor: pointer;">
+      <button onclick="setEvalMode('normal')" class="chico-modal-btn">
         ✅ Certo / Errado
       </button>
 
-      <button onclick="setEvalMode('srs')"
-        style="width: 100%; padding: 12px; margin-bottom: 10px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1.1em; cursor: pointer;">
+      <button onclick="setEvalMode('srs')" class="chico-modal-btn">
         🧠 SRS (Repetição Espaçada)
       </button>
 
-      <button onclick="setEvalMode('hidden')"
-        style="width: 100%; padding: 12px; margin-bottom: 20px; background: #444; color: #aaa; border: 1px solid #555; border-radius: 5px; font-size: 1.1em; cursor: pointer;">
+      <button onclick="setEvalMode('hidden')" class="chico-modal-btn-danger">
         ⛔ Limpar Botões (Ocultar)
       </button>
 
-      <button onclick="closeEvalModal()"
-        style="background: transparent; border: none; color: gold; font-weight: bold; cursor: pointer; text-decoration: underline;">
+      <button onclick="closeEvalModal()" class="chico-modal-btn-close" style="color: gold; font-weight: bold;">
         Fechar
       </button>
     </div>
   </div>
-  <div id="handsFreeModal"
-    style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 22000; justify-content: center; align-items: center; backdrop-filter: blur(5px);">
-    <div
-      style="background: #222; color: white; padding: 25px; border-radius: 10px; max-width: 400px; width: 90%; border: 1px solid #FFD700; box-shadow: 0 0 30px rgba(255, 215, 0, 0.4); text-align: center;">
+  <div id="handsFreeModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true" aria-label="Modo mãos livres">
+    <div class="chico-modal-box">
 
       <div id="hfStep1">
-        <h3 style="color: #FFD700; margin-bottom: 15px;">Modo de Leitura 🗣️</h3>
+        <h3 class="chico-modal-title">Modo de Leitura 🗣️</h3>
         <p style="margin-bottom: 20px; font-size: 1.1em;">Deseja ativar o avanço automático (Mãos Livres)?</p>
 
-        <button onclick="showHfStep2()"
-          style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%; margin-bottom: 10px;">
+        <button onclick="showHfStep2()" class="chico-modal-btn-primary">
           SIM (Automático)
         </button>
 
-        <button onclick="startManualTTS()"
-          style="background: #333; color: white; border: 1px solid #555; padding: 12px 20px; border-radius: 5px; cursor: pointer; width: 100%;">
+        <button onclick="startManualTTS()" class="chico-modal-btn">
           NÃO (Apenas Ler)
         </button>
-        <div style="margin-top:15px; cursor:pointer; color:#888; text-decoration:underline;"
-          onclick="closeHandsFreeModal()">Cancelar</div>
+        <div class="chico-modal-btn-close" onclick="closeHandsFreeModal()">Cancelar</div>
       </div>
 
       <div id="hfStep2" style="display:none;">
-        <h3 style="color: #FFD700; margin-bottom: 15px;">⏱️ Tempo de Espera</h3>
+        <h3 class="chico-modal-title">⏱️ Tempo de Espera</h3>
         <p style="margin-bottom: 10px;">Quantos segundos esperar após a resposta?</p>
 
         <input type="number" id="hfDelayInput" value="3" min="1" max="60"
           style="width: 80px; padding: 10px; font-size: 1.5em; text-align: center; border-radius: 5px; border: 1px solid gold; background: #000; color: white; margin-bottom: 20px;">
 
-        <button onclick="startHandsFreeTTS()"
-          style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; width: 100%;">
+        <button onclick="startHandsFreeTTS()" class="chico-modal-btn-primary">
           INICIAR
         </button>
         <div style="margin-top:15px; cursor:pointer; color:#888; text-decoration:underline;" onclick="resetHfModal()">
@@ -3131,7 +3359,7 @@
 
     </div>
   </div>
-  <div id="notesModal" style="display:none;">
+  <div id="notesModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Minhas anotações">
     <div id="notesModalContent">
       <h2 style="color: gold; margin-bottom: 15px; border-bottom: 1px solid #444; padding-bottom: 10px;">
         <i class="fas fa-sticky-note"></i> Minhas Anotações
@@ -3174,7 +3402,7 @@
       </div>
     </div>
   </div>
-  <div id="resumeModal" style="display:none;">
+  <div id="resumeModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Retomar progresso">
     <div class="custom-alert-box" style="text-align: center;">
       <h3 style="color: #FFD700; margin-bottom: 15px; font-size: 1.5em;">Bem-vindo de volta! 👋</h3>
       <p id="resumeMessage" style="color: white; font-size: 1.1em; line-height: 1.5; margin-bottom: 20px;">
@@ -3188,6 +3416,10 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 1: CONFIGURAÇÃO INICIAL E VARIÁVEIS GLOBAIS            -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
   <script>
     // --- CONFIGURAÇÃO INICIAL ---
     // Usuário e Senha
@@ -3258,7 +3490,12 @@
     let cardAccuracy = {};
     let isReviewErrorsMode = false;
     let loadedSettingsCards = []; // NOVA VARIÁVEL
+  </script>
 
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 2: AUTENTICAÇÃO, SESSÃO E LOGIN                       -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // Função para verificar autenticação e sessão
     function requireAuth() {
       if (!isAuthenticated) {
@@ -3759,6 +3996,12 @@
 
       }, 180000); // 180000 milissegundos = 3 minutos
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 3: CACHE, DADOS E SINCRONIZAÇÃO (GALPÃO)               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- FUNÇÕES PRINCIPAIS ---
     function getQueryParam(name) {
       const urlParams = new URLSearchParams(window.location.search);
@@ -4112,17 +4355,34 @@
     }
 
     // Alteração: Aceita parâmetro para pular o salvamento automático
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 4: CARDS — EXIBIÇÃO, NAVEGAÇÃO E MCQ                   -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
+    // Alteração: Aceita parâmetro para pular o salvamento automático
     function updateCard(skipAutoSave = false) {
       if (typeof handsFreeTimer !== 'undefined') clearTimeout(handsFreeTimer);
       stopSpeech();
       if (!requireAuth() || cards.length === 0 || isFinished) return;
       const card = cards[currentCard];
       const contentElement = document.getElementById("flashcard-content");
+
+      // --- DETECÇÃO UNIVERSAL DE MCQ ---
+      // Identifica se o card atual é múltipla escolha independentemente da face exibida
+      const regexAlternativasGeral = /^([a-eA-E])[\)\.]\s+(.+)$/gm;
+      let textFrontTemp = card.front.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/&lt;br\s*\/?&gt;/gi, "\n");
+      const isCurrentCardMCQ = regexAlternativasGeral.test(textFrontTemp);
       // --- LÓGICA DE CLOZE (OMISSÃO) ---
       let textToShow = showingFront ? card.front : card.back;
 
       // Segurança básica contra injeção de HTML (Sanitize)
       textToShow = textToShow.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      // Restaura quebras de linha (<br> transformado em \n)
+      // O \n é ESSENCIAL aqui porque ativa o '^' do regex de opções múltiplas!
+      textToShow = textToShow.replace(/&lt;br\s*\/?&gt;/gi, "\n");
 
      if (showingFront) {
         // Na FRENTE: Substitui {{texto}} por uma caixa [...]
@@ -4134,7 +4394,7 @@
         if (regexAlternativas.test(textToShow)) {
           textToShow = textToShow.replace(regexAlternativas, function(match, letra, textoAlternativa) {
              const letraUp = letra.toUpperCase();
-             return `<button class="mcq-btn" onclick="checkAnswer('${letraUp}', this)" style="display:block; width:100%; text-align:left; margin: 8px 0; padding: 12px 15px; background: #222; color: white; border: 1px solid #555; border-radius: 8px; cursor: pointer; font-size: 1em; transition: 0.2s; box-shadow: 0 4px 6px rgba(0,0,0,0.3);"><strong>${letraUp})</strong> ${textoAlternativa}</button>`;
+             return `<button class="mcq-btn" onclick="checkAnswer('${letraUp}', this)"><strong>${letraUp})</strong> ${textoAlternativa}</button>`;
           });
         }
         // --------------------------------------------------
@@ -4142,6 +4402,54 @@
         // No VERSO: Mostra o texto, destacando a resposta em verde
         // Remove as chaves e pinta o recheio
         textToShow = textToShow.replace(/{{(.*?)}}/g, "<span style='color:#00ff00; font-weight:bold; border-bottom:1px solid #00ff00;'>$1</span>");
+
+        // --- DESTAQUE DAS RESPOSTAS TRADICIONAIS NO TEXTO DO VERSO ---
+        if (isCurrentCardMCQ) {
+          const respostaVerso = card.back.trim().toUpperCase();
+          const regexExtrair = /(?:^|GABARITO[\s:]*|RESP(?:OSTA)?[\s:]*|LETRA[\s:]*)([A-E])(?:[\)\-\.\s]|$)/i;
+          const matchGabarito = respostaVerso.match(regexExtrair);
+          const gabaritoLetra = matchGabarito ? matchGabarito[1].toUpperCase() : respostaVerso.charAt(0).toUpperCase();
+          
+          // Regex definitiva de Força Bruta:
+          // Engole silenciosamente qualquer tipo de espaço, tag escapada ou entidade HTML de indentação (mesmo as de duplo escape como &amp;nbsp;)
+          // que costumam empurrar as alternativas para a direita (como no caso de A, B, C do print) escondendo a Letra do código.
+          const regexAlternativasVerso = /^((?:\s|&[a-zA-Z0-9#]+;|&amp;[a-zA-Z0-9#]+;|<[^>]+>|&lt;.*?&gt;)*)([a-eA-E])([\)\.])(.*)$/gim;
+          
+          textToShow = textToShow.replace(regexAlternativasVerso, function(match, espacosInicio, letra, divisor, resto) {
+             const letraUp = letra.toUpperCase();
+             let style = 'padding: 4px 8px; border-radius: 4px; display: inline-block; box-sizing: border-box; margin: 4px 0; word-wrap: break-word; max-width: 100%;';
+             
+             // Fundo verde para a correta
+             if (letraUp === gabaritoLetra) {
+                 style += ' background: #152b15; border: 1px solid #00ff00; color: #00ff00; font-weight: bold;';
+             } 
+             // Fundo vermelho para a alternativa que o usuário escolheu e errou
+             else if (typeof window.lastMCQClickedOption !== 'undefined' && window.lastMCQClickedOption === letraUp) {
+                 style += ' background: #2b1515; border: 1px solid #ff5555; color: #ff5555; opacity: 0.9;';
+             } else {
+                 return match; // Devolve puro, sem marcações
+             }
+             
+             return `${espacosInicio}<span style="${style}"><strong>${letraUp}${divisor}</strong>${resto}</span>`;
+          });
+        }
+      }
+
+      // --- SALVAGUARDA DA NAV BAR ANTES DE LIMPAR O HTML ---
+      // Como o mcqNavBar agora viverá dentro do flashcard-content, precisamos
+      // tirá-lo de lá temporariamente antes que o innerHTML dele seja apagado!
+      const mcqNav = document.getElementById('mcqNavBar');
+      if (mcqNav && mcqNav.parentNode === contentElement) {
+        document.body.appendChild(mcqNav); 
+      }
+
+      // --- ALTERAÇÃO: Alinhamento Ouro (Esquerda para textos longos, Centro para curtos) ---
+      // Calcula a quantidade de caracteres reais visíveis (ignorando o peso de dados de tags HTML invisíveis)
+      const rawTextLength = textToShow.replace(/<[^>]*>?/gm, '').trim().length;
+      if (rawTextLength < 45) {
+        contentElement.style.textAlign = 'center';
+      } else {
+        contentElement.style.textAlign = 'left';
       }
 
       contentElement.innerHTML = textToShow;
@@ -4198,22 +4506,51 @@
 
       if (isMobile) {
         if (showingFront) {
-          // ESTADO 1: PERGUNTA (FRENTE)
-          // Mostra botão grande "Mostrar Resposta"
-          if (mobileBtn) mobileBtn.style.display = 'block';
-          // Esconde botões SRS
-          if (srsDiv) srsDiv.style.display = 'none';
+          if (isCurrentCardMCQ) {
+            // ESTADO MCQ: Esconde "Mostrar Resposta" — as alternativas já são o mecanismo de resposta
+            if (mobileBtn) mobileBtn.style.setProperty('display', 'none', 'important');
+            // Esconde botões SRS na frente
+            if (srsDiv) srsDiv.style.display = 'none';
+            // MCQ Respondido na frente: Mostra nav bar para o aluno poder avançar ou ver resposta
+            if (mcqNav) {
+              if (typeof isMCQAnswered !== 'undefined' && isMCQAnswered) {
+                contentElement.appendChild(mcqNav);
+                mcqNav.style.display = 'flex';
+              } else {
+                mcqNav.style.display = 'none';
+              }
+            }
+          } else {
+            // ESTADO FLASHCARD NORMAL: Mostra botão grande "Mostrar Resposta"
+            if (mobileBtn) mobileBtn.style.setProperty('display', 'block', 'important');
+            // Esconde botões SRS na frente
+            if (srsDiv) srsDiv.style.display = 'none';
+            if (mcqNav) mcqNav.style.display = 'none';
+          }
         } else {
           // ESTADO 2: RESPOSTA (VERSO)
           // Esconde botão grande
-          if (mobileBtn) mobileBtn.style.display = 'none';
-          // Mostra botões SRS (Se estiver no modo SRS ou Normal)
-          // Nota: Forçamos o display flex para garantir que apareça no mobile
-          if (srsDiv) srsDiv.style.display = 'flex';
+          if (mobileBtn) mobileBtn.style.setProperty('display', 'none', 'important');
+
+          if (isCurrentCardMCQ) {
+            // SEMPRE que for MCQ e estiver no verso, esconde SRS e mostra NAV bar.
+            // Isso evita mostrar "Fácil/Difícil" caso o aluno tenha apenas avançado (bypass) sem clicar
+            if (srsDiv) srsDiv.style.display = 'none';
+            if (mcqNav) {
+              contentElement.appendChild(mcqNav);
+              mcqNav.style.display = 'flex';
+            }
+          } else {
+            // Flashcard normal: Mostra botões SRS
+            if (srsDiv) srsDiv.style.display = 'flex';
+            if (mcqNav) mcqNav.style.display = 'none';
+          }
         }
       } else {
-        // No PC, esconde o botão mobile para não atrapalhar
-        if (mobileBtn) mobileBtn.style.display = 'none';
+        // No PC, esconde o botão mobile e nav bar MCQ
+        if (mobileBtn) mobileBtn.style.setProperty('display', 'none', 'important');
+        const mcqNav = document.getElementById('mcqNavBar');
+        if (mcqNav) mcqNav.style.display = 'none';
       }
       // Ajuste extra para o botão de embaralhar (Opcional: esconde no SRS visualmente)
       // Nota: A lógica principal de esconder botões já está dentro do updateEvalButtonsUI
@@ -4234,25 +4571,35 @@
     }
 
     // --- NOVA FUNÇÃO: CHECAR RESPOSTA DA MÚLTIPLA ESCOLHA ---
+    let isMCQAnswered = false; // Flag: card já foi avaliado via alternativa MCQ
+    window.lastMCQClickedOption = null;
+
     window.checkAnswer = function(letraClicada, btnElement) {
-      if (!showingFront) return; 
+      if (!showingFront) return;
+      // Impede clique duplo ou cliques subsequentes enquanto o card prepara para virar
+      if (typeof isMCQAnswered !== 'undefined' && isMCQAnswered) return;
+      
+      isMCQAnswered = true; // Marca que este card já foi avaliado via MCQ
+      window.lastMCQClickedOption = letraClicada; // Rastreia o clique para uso no verso
 
       const card = cards[currentCard];
       const respostaVerso = card.back.trim().toUpperCase();
       
-      // O gabarito no verso deve começar com a letra. Ex: "B", "B)", "B - "
-      const regexGabarito = new RegExp(`^${letraClicada}[\\)\\-\\.\\s]|^${letraClicada}$`);
-      const isCorrect = regexGabarito.test(respostaVerso);
+      // --- REGEX ROBUSTO: Aceita "A", "A)", "Gabarito: A", "Resp: A", "Resposta: B)", "LETRA C" ---
+      const regexExtrair = /(?:^|GABARITO[\s:]*|RESP(?:OSTA)?[\s:]*|LETRA[\s:]*)([A-E])(?:[\)\-\.\s]|$)/i;
+      const matchGabarito = respostaVerso.match(regexExtrair);
+      // Fallback: se nenhum padrão bater, usa o primeiro caractere do verso
+      const gabaritoLetra = matchGabarito ? matchGabarito[1].toUpperCase() : respostaVerso.charAt(0).toUpperCase();
+      const isCorrect = (letraClicada === gabaritoLetra);
 
-      // Desativa todos os botões para evitar duplo clique e trapaça
+      // Desativa todos os botões (anti-trapaça via CSS)
       const allBtns = document.querySelectorAll('.mcq-btn');
-      allBtns.forEach(b => b.style.pointerEvents = 'none');
+      allBtns.forEach(b => b.classList.add('mcq-disabled'));
 
-      // Feedback Visual de Acerto/Erro
+      // --- FEEDBACK VISUAL INSTANTÂNEO ---
       if (isCorrect) {
-        btnElement.style.background = '#152b15';
-        btnElement.style.borderColor = '#00ff00';
-        btnElement.style.color = '#00ff00';
+        // ACERTOU: Pinta o botão clicado de verde
+        btnElement.classList.add('mcq-correct');
         triggerVisualFeedback('success');
         
         // Registra acerto no sistema nativo
@@ -4265,10 +4612,17 @@
           saveFlashcardState();
         }
       } else {
-        btnElement.style.background = '#2b1515';
-        btnElement.style.borderColor = '#ff5555';
-        btnElement.style.color = '#ff5555';
+        // ERROU: Pinta o clicado de VERMELHO...
+        btnElement.classList.add('mcq-wrong');
         triggerVisualFeedback('error');
+
+        // ...e REVELA o gabarito correto em VERDE (efeito "Revelação")
+        allBtns.forEach(b => {
+          const btnLetra = b.textContent.trim().charAt(0).toUpperCase();
+          if (btnLetra === gabaritoLetra) {
+            b.classList.add('mcq-correct');
+          }
+        });
 
         // Registra erro no sistema nativo
         const realIndex = (card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
@@ -4322,6 +4676,7 @@
 
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
+      if (typeof isMCQAnswered !== 'undefined') isMCQAnswered = false; // Reset flag ao mudar de card
       updateCard();
       saveFlashcardState();
     }
@@ -4331,6 +4686,8 @@
 
       currentCard = (currentCard - 1 + cards.length) % cards.length;
       showingFront = true;
+      if (typeof isMCQAnswered !== 'undefined') isMCQAnswered = false; // Reset flag ao mudar de card
+      window.lastMCQClickedOption = null;
       updateCard();
       saveFlashcardState();
     }
@@ -4372,6 +4729,8 @@
           currentCard--;
         }
         showingFront = false;
+        if (typeof isMCQAnswered !== 'undefined') isMCQAnswered = false; // Reset flag ao mudar de card
+        window.lastMCQClickedOption = null;
         updateCard();
       }
       saveFlashcardState();
@@ -4454,6 +4813,12 @@
         saveFlashcardState();
       }
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 5: AVALIAÇÃO, ESTATÍSTICAS E TELA FINAL                -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- LÓGICA DO MENU DE AVALIAÇÃO (COM MEMÓRIA) ---
     // 1. Ao iniciar, tenta recuperar o que estava salvo. Se não tiver nada, usa 'normal'.
     let currentEvalState = localStorage.getItem('chicoEvalMode') || 'normal';
@@ -5148,6 +5513,11 @@
       document.getElementById('end-screen').style.display = 'flex';
       isFinished = true;
 
+      // Rola para o topo do iframe (e do Google Sites pai)
+      try {
+        document.querySelector('.top-bar').scrollIntoView({ block: 'start', behavior: 'smooth' });
+      } catch (e) { }
+
       // --- INÍCIO DA ANIMAÇÃO DE CONFETES ---
       try {
         var duration = 3 * 1000; // Duração: 3 segundos
@@ -5262,6 +5632,14 @@
       touchArea.addEventListener('touchend', function (e) {
         touchEndX = e.changedTouches[0].screenX;
         touchEndY = e.changedTouches[0].screenY;
+        
+        // --- PREVENT FLIP-FLOP NO CLIQUE DE ALTERNATIVA ---
+        // Se o toque ocorreu em um botão MCQ, o evento onclick do botão vai rodar checkAnswer.
+        // Ignoramos a resposta de gesto aqui para não acionar um flipCard acidental e duplicado!
+        if (e.target && e.target.closest && e.target.closest('.mcq-btn')) {
+          return; 
+        }
+
         handleGesture();
       }, { passive: true });
     }
@@ -5290,29 +5668,40 @@
           else if (touchX > screenWidth * 0.7) {
             reviewAndAdvance();
           }
-          // 3. ZONA CENTRAL (40%): Apenas Vira
+          // 3. ZONA CENTRAL (40%): Apenas Vira (ou avança se MCQ já respondido)
           else {
-            flipCard();
+            if (typeof isMCQAnswered !== 'undefined' && isMCQAnswered && !showingFront) {
+              // MCQ já respondido no verso: avança em vez de virar (evita flip-flop)
+              nextCard();
+            } else {
+              flipCard();
+            }
           }
         }
         return;
       }
 
+      // --- SWIPE DIREITA (→) ---
       if (xDiff > 0) {
-        triggerVisualFeedback('success');
-        // SWIPE DIREITA (→) = Acertei / Avançar
-        showSwipeFeedback('right');
-        if (!showingFront) {
+        if (!showingFront && typeof isMCQAnswered !== 'undefined' && isMCQAnswered) {
+          // MCQ já respondido: apenas avança sem contar novamente
+          nextCard();
+        } else if (!showingFront) {
+          triggerVisualFeedback('success');
+          showSwipeFeedback('right');
           if (typeof isSRSMode !== 'undefined' && isSRSMode) rateCardSRS('good', null, '#90ee90');
           else markAsCorrect();
         } else {
           flipCard();
         }
       } else {
-        triggerVisualFeedback('error');
-        // SWIPE ESQUERDA (←) = Errei / Repetir
-        showSwipeFeedback('left');
-        if (!showingFront) {
+        // --- SWIPE ESQUERDA (←) ---
+        if (!showingFront && typeof isMCQAnswered !== 'undefined' && isMCQAnswered) {
+          // MCQ já respondido: volta para ver a pergunta
+          reviewAndRetreat();
+        } else if (!showingFront) {
+          triggerVisualFeedback('error');
+          showSwipeFeedback('left');
           if (typeof isSRSMode !== 'undefined' && isSRSMode) rateCardSRS('again', null, '#ff5555');
           else markAsIncorrect();
         } else {
@@ -5389,6 +5778,12 @@
         }
       }
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 6: TTS — LEITURA DE VOZ (NATIVO + PIPER + DICIONÁRIO) -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- SISTEMA HÍBRIDO TTS (NATIVO + PIPER WASM) ---
     // Detecta vozes neurais → se não tiver → oferece Piper Neural como opção
     let isAutoTTS = false;
@@ -6401,9 +6796,9 @@
         feedback.textContent = "Destaque ATIVADO";
         feedback.style.color = "#4CAF50"; // Verde
       } else {
-        const contentElement = document.getElementById("flashcard-content");
-        const currentText = showingFront ? cards[currentCard].front : cards[currentCard].back;
-        contentElement.textContent = currentText;
+        // Desativar destaque: recarrega o card pela via correta (updateCard)
+        // para que o <br> seja tratado e não apareça como texto literal
+        updateCard(true);
         feedback.textContent = "Destaque DESATIVADO";
         feedback.style.color = "#F44336"; // Vermelho
       }
@@ -6451,7 +6846,8 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#039;')
-            .replace(/\*/g, '&#42;'); // Trata * solto como caractere literal
+            .replace(/\*/g, '&#42;') // Trata * solto como caractere literal
+            .replace(/&lt;br\s*\/?&gt;/gi, '<br>'); // Restaura <br> para quebra de linha real
         }
       });
 
@@ -6577,6 +6973,12 @@
         activeGroup.style.display = 'none';
       }
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 7: CONFIGURAÇÕES, FILTROS E MODOS DE ESTUDO            -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- FUNÇÕES PARA O NOVO MODAL DE CONFIGURAÇÕES ---
 
     // Abre a janela de configurações
@@ -7055,13 +7457,6 @@
     }
 
     // 4. Ao escolher Tópico -> Habilita Passo 3 (Refinar Busca)
-    // --- NOVA FUNÇÃO DE TROCA DO PASSO 3 ---
-    function toggleStep3FilterType(type) {
-      document.getElementById('modalFocoSelect').style.display = (type === 'foco') ? 'block' : 'none';
-      document.getElementById('modalPesoContainer').style.display = (type === 'peso') ? 'flex' : 'none';
-    }
-
-    // 4. Ao escolher Tópico -> Habilita Passo 3 (Refinar Busca)
     function modalHandleTopicChange(selectedTopic) {
       const step3Container = document.getElementById('modalStep3Container');
       const focoSelect = document.getElementById('modalFocoSelect');
@@ -7229,6 +7624,12 @@
       updateCard();
       saveFlashcardState();
     }
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 8: SRS — REPETIÇÃO ESPAÇADA (SM-2)                     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- LÓGICA DO SISTEMA DE REPETIÇÃO ESPAÇADA (SRS) ---
 
     let userSRSProgress = {}; // Guarda o progresso carregado do servidor
@@ -7321,9 +7722,11 @@
         }
       }
 
-      let state = userSRSProgress[cardId] || { interval: 0, easeFactor: 2.5, nextReview: null };
+      let state = userSRSProgress[cardId] || { interval: 0, easeFactor: 2.5, reps: 0, nextReview: null };
       let newInterval = 0;
       let newEase = state.easeFactor;
+      if (newEase === undefined) newEase = 2.5;
+      let newReps = state.reps || 0;
       let nextReviewDate = new Date();
 
       const applyFuzz = (val) => {
@@ -7333,12 +7736,30 @@
         return val + shift;
       };
 
+      // ALGORITMO SM-2 REAL
+      // 1. Mapear o botão clicado para 'quality' (q) de 1 a 5
+      let q = 4; // Padrão: Good
+      if (rating === 'again') q = 1;
+      else if (rating === 'hard') q = 3;
+      else if (rating === 'good') q = 4;
+      else if (rating === 'easy') q = 5;
+
+      // 2. Atualizar Easiness Factor (EF)
+      newEase = newEase + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
+      newEase = Math.max(1.3, newEase); // floor em 1.3 (Evita "ease hell")
+
+      // 3. Atualizar Repetições Bem Sucedidas (n)
+      if (q < 3) {
+        newReps = 0;
+      } else {
+        newReps++;
+      }
+
       if (rating === 'again') {
         const realIndexRef = initialCards.indexOf(cards[currentCard]);
         if (realIndexRef !== -1) checkLeech(realIndexRef);
 
         newInterval = 0;
-        newEase = Math.max(1.3, newEase - 0.2);
         nextReviewDate.setMinutes(nextReviewDate.getMinutes() + 10);
 
         const cardToRepeat = cards[currentCard];
@@ -7352,30 +7773,38 @@
           cards.push(cardToRepeat);
           showFeedback("↺ Reagendado para o FINAL da fila", colorHex);
         }
-      } else if (rating === 'hard') {
-        newInterval = state.interval === 0 ? 1 : Math.round(state.interval * 1.2);
-        newEase = Math.max(1.3, newEase - 0.15);
+      } else {
+        // SM-2: Calcular Novo Intervalo
+        if (newReps === 1) {
+          newInterval = 1;
+          if (rating === 'easy') newInterval = 4; // Bônus de primeiro acerto
+        } else if (newReps === 2) {
+          newInterval = 6;
+          if (rating === 'easy' && state.interval > 0) newInterval = Math.round(state.interval * newEase * 1.3);
+        } else {
+          let prevInterval = state.interval === 0 ? 1 : state.interval;
+          let intervalMultiplier = newEase;
+          if (rating === 'easy') intervalMultiplier += 0.15; // Leve bônus extra no SM-2 modificado
+          if (rating === 'hard') intervalMultiplier = 1.2; // Penalidade do botão 'Hard' (mantém o card mais próximo)
+          newInterval = Math.round(prevInterval * intervalMultiplier);
+        }
+
         newInterval = applyFuzz(newInterval);
         nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(1, newInterval));
-      } else if (rating === 'good') {
-        let multiplier = state.easeFactor || 2.5;
-        newInterval = state.interval === 0 ? 1 : Math.round(state.interval * multiplier);
-        newInterval = applyFuzz(newInterval);
-        nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(1, newInterval));
-      } else if (rating === 'easy') {
-        newInterval = state.interval === 0 ? 4 : Math.round(state.interval * newEase * 1.3);
-        newEase += 0.15;
-        newInterval = applyFuzz(newInterval);
-        nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(4, newInterval));
+        
+        // Exibe o intervalo futuro sutilmente (1 dia, 6 dias, etc)
+        // Isso ajuda o usuário a confiar no algoritmo
+        // showFeedback(`📅 Agendado para daqui a ${newInterval} dia(s)`, colorHex);
       }
 
       userSRSProgress[cardId] = {
         interval: newInterval,
         easeFactor: newEase,
+        reps: newReps,
         nextReview: nextReviewDate.toISOString()
       };
 
-      saveSRSToBackend(cardId, nextReviewDate.toISOString(), newInterval, newEase);
+      saveSRSToBackend(cardId, nextReviewDate.toISOString(), newInterval, newEase, newReps);
 
       setTimeout(() => {
         nextCard();
@@ -7487,7 +7916,7 @@
     });
 
     // 4. Salvar no Backend (Atualizado para usar a Fila)
-    function saveSRSToBackend(cardId, nextReview, interval, ease) {
+    function saveSRSToBackend(cardId, nextReview, interval, ease, reps = 0) {
       if (!userEmail) return;
 
       // Cria um objeto simples com os dados
@@ -7498,7 +7927,8 @@
         cardId: cardId,
         nextReview: nextReview,
         interval: interval,
-        easeFactor: ease
+        easeFactor: ease,
+        reps: reps
       };
 
       // Manda para a fila (seguro) em vez de fetch direto
@@ -7654,6 +8084,12 @@
         savePositionToBackend();
       }
     });
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 9: EXTRAS — REPORTE, ZOOM, STREAK, MENU, ANOTAÇÕES     -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- NOVO SISTEMA DE EMBARALHAMENTO INTELIGENTE (INTERLEAVING) ---
     // --- FUNÇÃO DE REPORTAR ERRO (FLUXO CONTÍNUO) ---
     // --- NOVAS FUNÇÕES DE REPORTE (VISUAL E COM TEXTO) ---
@@ -8064,6 +8500,12 @@
     }
     // ============================================
     // ============================================
+  </script>
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- MÓDULO 10: PROFESSOR IA E BUSCA                               -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <script>
     // --- ÁREA DO PROFESSOR IA (VERSÃO FINAL - WIDESCREEN & FORMATADA) ---
 
     let chatHistoryContext = [];
@@ -8323,32 +8765,9 @@
       }
     };
   </script>
-  <div id="aiModal" style="
-    display: none; 
-    position: fixed; 
-    top: 20px; 
-    left: 50%; 
-    transform: translateX(-50%); 
-    width: 95%; 
-    max-width: 800px; /* <-- AUMENTADO PARA 800px (Era 450px) */
-    max-height: 85vh; /* Define altura máxima para não cortar na tela */
-    height: auto;     /* Altura automática: ajusta ao conteúdo */
-    background: #121212; /* Fundo mais escuro para contraste */
-    border: 1px solid #333; 
-    border-radius: 12px; 
-    z-index: 99999; 
-    box-shadow: 0 10px 40px rgba(0,0,0,0.9); 
-    flex-direction: column; 
-    font-family: 'Roboto', sans-serif;
-    overflow: hidden;">
+  <div id="aiModal" role="dialog" aria-modal="true" aria-label="Professor IA" class="ai-modal-overlay">
 
-    <div style="
-        padding: 18px; 
-        background: #1f1f1f; 
-        border-bottom: 1px solid #333; 
-        display: flex; 
-        justify-content: space-between; 
-        align-items: center;">
+    <div class="ai-modal-header">
 
       <div style="display: flex; align-items: center; gap: 12px; color: #f7ef8a;">
         <i class="fas fa-robot" style="font-size: 1.4rem;"></i>
@@ -8361,81 +8780,21 @@
       </button>
     </div>
 
-    <div id="aiChatHistory" style="
-        flex-grow: 1; 
-        padding: 20px; 
-        overflow-y: auto; 
-        display: flex; 
-        flex-direction: column; 
-        gap: 18px; 
-        background: #0d0d0d;
-        font-size: 16px; /* <-- FONTE MAIOR PARA LEGIBILIDADE */
-        line-height: 1.6;
-        color: #e0e0e0;">
+    <div id="aiChatHistory" class="ai-chat-history">
     </div>
 
-    <div style="
-        padding: 15px; 
-        background: #1f1f1f; 
-        border-top: 1px solid #333; 
-        display: flex; 
-        gap: 10px; 
-        align-items: center;">
+    <div class="ai-modal-footer">
 
-      <input type="text" id="aiUserInput" placeholder="Digite sua dúvida aqui..." style="
-               flex-grow: 1; 
-               padding: 12px 18px; 
-               border-radius: 25px; 
-               border: 1px solid #444; 
-               background: #2a2a2a; 
-               color: white; 
-               outline: none;
-               font-size: 15px;" onkeydown="if(event.key === 'Enter') sendUserMessage()">
+      <input type="text" id="aiUserInput" placeholder="Digite sua dúvida aqui..." class="ai-input-field" onkeydown="if(event.key === 'Enter') sendUserMessage()">
 
-      <button onclick="sendUserMessage()" style="
-            background: #FFD700;
-            color: #000; 
-            border: none; 
-            width: 45px; 
-            height: 45px; 
-            border-radius: 50%; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-size: 18px;
-            transition: transform 0.2s;
-            flex-shrink: 0;
-            box-shadow: 0 2px 10px rgba(167, 139, 250, 0.3);">
+      <button onclick="sendUserMessage()" class="ai-send-btn">
         <i class="fas fa-paper-plane"></i>
       </button>
     </div>
   </div>
-  <div id="customConfirmModal" style="
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 100%; 
-    background: rgba(0,0,0,0.85); 
-    z-index: 999999; 
-    justify-content: center; 
-    align-items: flex-start; /* ← MUDOU DE center PARA flex-start (TOPO) */
-    padding-top: 50px;       /* ← ESPAÇO NO TOPO */
-    overflow-y: auto;        /* ← GARANTE ROLAGEM SE O IFRAME FOR PEQUENO */
-    backdrop-filter: blur(2px);">
+  <div id="customConfirmModal" role="alertdialog" aria-modal="true" aria-label="Confirmação de reiniciar sessão" class="chico-modal-overlay-confirm">
 
-    <div style="
-        background: #1e1e1e; 
-        border: 1px solid #ff4d4d; 
-        padding: 25px; 
-        border-radius: 12px; 
-        width: 90%; 
-        max-width: 350px; 
-        text-align: center; 
-        box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        font-family: 'Roboto', sans-serif;">
+    <div class="chico-modal-box-confirm">
 
       <i class="fas fa-exclamation-triangle" style="font-size: 3em; color: #ff4d4d; margin-bottom: 15px;"></i>
 
@@ -8473,22 +8832,7 @@
       </div>
     </div>
   </div>
-  <div id="ghostRuler" style="
-    display: none;
-    position: fixed;
-    bottom: 0;
-    right: 0;
-    background-color: #FFD700;
-    color: black;
-    font-family: monospace;
-    font-size: 16px;
-    font-weight: bold;
-    padding: 8px 12px;
-    z-index: 2147483647;
-    border-top-left-radius: 8px;
-    box-shadow: -2px -2px 10px rgba(0,0,0,0.5);
-    pointer-events: none;
-"></div>
+  <div id="ghostRuler" class="ghost-ruler-tool"></div>
 
   <script>
     (function () {

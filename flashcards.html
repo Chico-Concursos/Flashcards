@@ -5850,8 +5850,8 @@
       showFeedback("Piper desativado. Usando voz nativa.", "white");
     }
 
-    // --- PARSER MANUAL DE WAV → AudioBuffer (bypassa limitações do mobile) ---
-    function parseWavToAudioBuffer(rawData, audioCtx) {
+    // --- PARSER DE WAV → AudioBuffer (nativo + fallback manual) ---
+    async function parseWavToAudioBuffer(rawData, audioCtx) {
       let arrayBuf;
       if (rawData instanceof ArrayBuffer) {
         arrayBuf = rawData;
@@ -5861,6 +5861,17 @@
         arrayBuf = new Uint8Array(rawData).buffer;
       }
 
+      // Tenta decodeAudioData nativo (rápido, hardware-accelerated)
+      try {
+        return await audioCtx.decodeAudioData(arrayBuf.slice(0));
+      } catch (e) {
+        // Fallback: parser manual (compatível com mobile)
+        return parseWavManual(arrayBuf, audioCtx);
+      }
+    }
+
+    // --- FALLBACK: Parser manual sample-a-sample ---
+    function parseWavManual(arrayBuf, audioCtx) {
       const view = new DataView(arrayBuf);
       const numChannels = view.getUint16(22, true);
       const sampleRate = view.getUint32(24, true);
@@ -5898,15 +5909,33 @@
       return audioBuffer;
     }
 
-    // --- SINTETIZAR COM PIPER (AudioContext + parser manual de WAV) ---
+    // --- PREPEND SILÊNCIO AO AUDIOBUFFER ---
+    function prependSilence(audioBuffer, audioCtx, silenceDuration) {
+      const sampleRate = audioBuffer.sampleRate;
+      const silenceSamples = Math.floor(sampleRate * silenceDuration);
+      const newLength = audioBuffer.length + silenceSamples;
+
+      const paddedBuffer = audioCtx.createBuffer(
+        audioBuffer.numberOfChannels, newLength, sampleRate
+      );
+
+      for (let ch = 0; ch < audioBuffer.numberOfChannels; ch++) {
+        const src = audioBuffer.getChannelData(ch);
+        const dst = paddedBuffer.getChannelData(ch);
+        dst.set(src, silenceSamples);
+      }
+      return paddedBuffer;
+    }
+
+    // --- SINTETIZAR COM PIPER (AudioContext + parser otimizado) ---
     async function speakWithPiper(text) {
       if (!piperModule || !piperReady) return;
       try {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
 
-        const paddedText = ", " + text;
-        const wav = await piperModule.predict({ text: paddedText, voiceId: voiceId });
+        // Texto limpo (sem padding de texto que causava vírgula audível)
+        const wav = await piperModule.predict({ text: text, voiceId: voiceId });
 
         if (!isAutoTTS) return;
 
@@ -5919,7 +5948,10 @@
         } else {
           rawData = wav;
         }
-        const audioBuffer = parseWavToAudioBuffer(rawData, piperAudioCtx);
+        const audioBuffer = await parseWavToAudioBuffer(rawData, piperAudioCtx);
+
+        // Protege primeira sílaba com 30ms de silêncio digital (sem artefatos)
+        const finalBuffer = prependSilence(audioBuffer, piperAudioCtx, 0.03);
 
         if (!isAutoTTS) return;
 
@@ -5929,7 +5961,7 @@
         }
 
         piperSourceNode = piperAudioCtx.createBufferSource();
-        piperSourceNode.buffer = audioBuffer;
+        piperSourceNode.buffer = finalBuffer;
 
         const rateRange = document.getElementById('rateRange');
         piperSourceNode.playbackRate.value = rateRange ? parseFloat(rateRange.value) : 1.1;

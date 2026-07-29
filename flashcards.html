@@ -3628,47 +3628,12 @@
     }
 
     function saveLoginTime() {
-      localStorage.setItem('cards_loginTime', Date.now().toString());
+      localStorage.setItem('loginTime', Date.now().toString());
     }
 
     function isSessionExpired() {
-      const loginTime = localStorage.getItem('cards_loginTime');
+      const loginTime = localStorage.getItem('loginTime');
       if (!loginTime) return true;
-
-      const currentTime = Date.now();
-      const elapsedTime = currentTime - parseInt(loginTime);
-
-      return elapsedTime > SESSION_DURATION;
-    }
-
-    function startSessionTimer() {
-      if (sessionTimer) {
-        clearInterval(sessionTimer);
-      }
-
-      sessionTimer = setInterval(() => {
-        if (isSessionExpired()) {
-          clearInterval(sessionTimer);
-          expireSession();
-        }
-      }, 60000);
-    }
-
-    function expireSession() {
-      if (isAutoAdvanceActive) {
-        stopAutoAdvance();
-      }
-
-      localStorage.removeItem('cards_isAuthenticated');
-      localStorage.removeItem('cards_userEmail');
-      localStorage.removeItem('cards_sessionToken');
-      localStorage.removeItem('cards_loginTime');
-
-      isAuthenticated = false;
-      userEmail = '';
-
-      document.getElementById('sessionExpiredModal').style.display = 'flex';
-    }
 
       const currentTime = Date.now();
       const elapsedTime = currentTime - parseInt(loginTime);
@@ -3814,8 +3779,8 @@
     }
     function logout() {
       // 1. AVISA O SERVIDOR (Libera memória lá na nuvem)
-      const token = localStorage.getItem('cards_sessionToken');
-      const email = localStorage.getItem('cards_userEmail');
+      const token = localStorage.getItem('sessionToken');
+      const email = localStorage.getItem('userEmail');
 
       if (token && email) {
         // Envia o aviso em segundo plano (sem travar o usuário)
@@ -3845,10 +3810,10 @@
         sessionTimer = null;
       }
 
-      localStorage.removeItem('cards_isAuthenticated');
-      localStorage.removeItem('cards_userEmail');
-      localStorage.removeItem('cards_sessionToken'); // Remove o crachá local
-      localStorage.removeItem('cards_loginTime');
+      localStorage.removeItem('isAuthenticated');
+      localStorage.removeItem('userEmail');
+      localStorage.removeItem('sessionToken'); // Remove o crachá local
+      localStorage.removeItem('loginTime');
 
       // Reset de variáveis globais
       if (typeof isAuthenticated !== 'undefined') isAuthenticated = false;
@@ -3901,10 +3866,10 @@
           // (Verificação local removida para segurança - A validação será feita pelo Servidor ao carregar os cards) 
 
           // Se passou pela verificação, prossegue com o login normal
-          localStorage.setItem('cards_isAuthenticated', 'true');
-          localStorage.setItem('cards_userEmail', userEmail);
-          localStorage.setItem('cards_sessionToken', result.sessionToken); // <--- NOVA LINHA DE SEGURANÇA
-          localStorage.setItem('cards_userAllowedCourses', JSON.stringify(userAllowedCourses)); // Salva no localStorage para persistência
+          localStorage.setItem('isAuthenticated', 'true');
+          localStorage.setItem('userEmail', userEmail);
+          localStorage.setItem('sessionToken', result.sessionToken); // <--- NOVA LINHA DE SEGURANÇA
+          localStorage.setItem('userAllowedCourses', JSON.stringify(userAllowedCourses)); // Salva no localStorage para persistência
           saveLoginTime();
           startSessionTimer();
           hideLoginModal();
@@ -3942,8 +3907,8 @@
     }
 
     function checkAuthentication() {
-      const savedAuth = localStorage.getItem('cards_isAuthenticated');
-      const savedEmail = localStorage.getItem('cards_userEmail');
+      const savedAuth = localStorage.getItem('isAuthenticated');
+      const savedEmail = localStorage.getItem('userEmail');
       if (savedAuth === 'true' && savedEmail) {
         if (isSessionExpired()) {
           expireSession();
@@ -3953,7 +3918,7 @@
         userEmail = savedEmail;
 
         // Carrega cursos permitidos
-        const savedAllowedCourses = localStorage.getItem('cards_userAllowedCourses');
+        const savedAllowedCourses = localStorage.getItem('userAllowedCourses');
         userAllowedCourses = savedAllowedCourses ? JSON.parse(savedAllowedCourses) : [];
 
         // (Verificação local removida - O Servidor bloqueará o download dos cards se a permissão for inválida)
@@ -3991,8 +3956,8 @@
 
       // Verifica a cada 3 minutos (180000 ms)
       sessionHeartbeat = setInterval(async () => {
-        const token = localStorage.getItem('cards_sessionToken');
-        const email = localStorage.getItem('cards_userEmail');
+        const token = localStorage.getItem('sessionToken');
+        const email = localStorage.getItem('userEmail');
 
         if (!token || !email) return; // Se não tiver logado, não verifica
 
@@ -4026,8 +3991,8 @@
                 clearInterval(sessionHeartbeat);
 
                 // 2. Limpa dados sensíveis imediatamente (Segurança)
-                localStorage.removeItem('cards_isAuthenticated');
-                localStorage.removeItem('cards_sessionToken');
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('sessionToken');
 
                 // 3. Exibe o MODAL BONITO em vez do alert nativo
                 const modal = document.getElementById('concurrentSessionModal');

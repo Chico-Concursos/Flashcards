@@ -3954,7 +3954,7 @@
       if (sessionHeartbeat) clearInterval(sessionHeartbeat);
       failedHeartbeatCount = 0; // Reseta o contador sempre que iniciar o monitoramento
 
-      // Verifica a cada 3 minutos (180000 ms)
+      // Verifica a cada 5 minutos (300000 ms)
       sessionHeartbeat = setInterval(async () => {
         const token = localStorage.getItem('sessionToken');
         const email = localStorage.getItem('userEmail');
@@ -3985,7 +3985,7 @@
               failedHeartbeatCount++;
               console.warn(`Tentativa falha de sessão (${failedHeartbeatCount}/3). Aguardando sincronização do Google...`);
 
-              // Só expulsa o usuário se falhar 3 vezes seguidas (quase 10 minutos de teimosia do servidor)
+              // Só expulsa o usuário se falhar 3 vezes seguidas (15 minutos de tolerância)
               if (failedHeartbeatCount >= 3) {
                 // 1. Para de verificar para não ficar repetindo
                 clearInterval(sessionHeartbeat);
@@ -4017,7 +4017,7 @@
           console.log("Erro silencioso ao verificar sessão (pode ser internet oscilando):", e);
         }
 
-      }, 180000); // 180000 milissegundos = 3 minutos
+      }, 300000); // 300000 milissegundos = 5 minutos
     }
   </script>
 

@@ -4019,6 +4019,42 @@
 
       }, 300000); // 300000 milissegundos = 5 minutos
     }
+
+    // =================================================================
+    // 👁️ PAUSA INTELIGENTE: PAGE VISIBILITY API (Economia de Cota)
+    // =================================================================
+    document.addEventListener('visibilitychange', () => {
+      if (!isAuthenticated) return;
+
+      if (document.hidden) {
+        if (sessionHeartbeat) {
+          clearInterval(sessionHeartbeat);
+          sessionHeartbeat = null;
+          console.log("👁️ Aba oculta: Heartbeat do Cards pausado (economia de cota).");
+        }
+      } else {
+        console.log("👁️ Aba visível: Retomando heartbeat do Cards.");
+        const token = localStorage.getItem('sessionToken');
+        const email = localStorage.getItem('userEmail');
+        if (token && email) {
+          const formData = new URLSearchParams();
+          formData.append('action', 'checkStatus');
+          formData.append('email', email);
+          formData.append('sessionToken', token);
+          formData.append('originUrl', window.location.href);
+          fetch(WEB_APP_URL, { method: 'POST', body: formData })
+            .then(r => r.json())
+            .then(result => {
+              if (result.success) {
+                failedHeartbeatCount = 0;
+              }
+            })
+            .catch(() => { });
+        }
+        startSessionHeartbeat();
+      }
+    });
+
   </script>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->

@@ -3844,7 +3844,7 @@
         formData.append('originUrl', window.location.href);
         // ----------------------------------------------
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s (Dá tempo para o Cold Start do Apps Script)
         const response = await fetch(WEB_APP_URL, {
           method: 'POST',
           headers: {
@@ -4233,7 +4233,7 @@
         formData.append('gid', gid);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15s timeout
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout para download dos cards
 
         const response = await fetch(SRS_BACKEND_URL, {
           method: 'POST',

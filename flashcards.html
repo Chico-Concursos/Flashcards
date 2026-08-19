@@ -4200,8 +4200,9 @@
       // --- ETAPA 1: O VIGIA (Pergunta ao servidor qual a versão atual) ---
       try {
         if (navigator.onLine) {
-          const formData = new URLSearchParams();
+         const formData = new URLSearchParams();
           formData.append('action', 'checkVersion');
+          formData.append('sheetId', sheetId); // <--- Identifica a planilha individual
 
           // Controller para não deixar o app travado se a internet estiver lenta (3s timeout)
           const controller = new AbortController();

@@ -4408,6 +4408,9 @@
       textToShow = textToShow.replace(/&lt;br\s*\/?&gt;/gi, "\n");
 
       if (showingFront) {
+        // Atenua visualmente o texto de ancoragem [Tema] mantendo na mesma linha
+        textToShow = textToShow.replace(/^(\s*\[[^\]\r\n]+\])/, '<span style="opacity: 0.70; font-size: 0.9em; font-weight: normal;">$1</span>');
+
         // Na FRENTE: Substitui {{texto}} por uma caixa [...]
         // Regex explica: Pega tudo entre {{ e }}
         textToShow = textToShow.replace(/{{(.*?)}}/g, "<span style='background:#333; color:gold; padding:2px 6px; border-radius:4px; border:1px solid #555; cursor:help;' title='Tente lembrar...'>[...]</span>");
@@ -6897,6 +6900,11 @@
             .replace(/&lt;br\s*\/?&gt;/gi, '<br>'); // Restaura <br> para quebra de linha real
         }
       });
+
+      if (showingFront) {
+        // Mantém a atenuação visual do [Tema] mesmo com o destaque ligado
+        result = result.replace(/^(\s*\[[^\]\r\n]+\])/, '<span style="opacity: 0.70; font-size: 0.9em; font-weight: normal;">$1</span>');
+      }
 
       contentElement.innerHTML = result;
     }

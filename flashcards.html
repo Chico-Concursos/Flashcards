@@ -3860,10 +3860,16 @@
         const result = await response.json();
         if (result.success) {
           userEmail = email;
-          userAllowedCourses = result.allowedCourses || []; // Armazena a lista de cursos permitidos vinda do App Script
+          userAllowedCourses = result.allowedCourses || [];
 
-          // Verifica se o usuário tem permissão para acessar ESTA planilha específica
-          // (Verificação local removida para segurança - A validação será feita pelo Servidor ao carregar os cards) 
+          // --- TRAVA DE SEGURANÇA: VALIDAÇÃO DE CURSO PERMITIDO ---
+          if (SHEET_ID && userAllowedCourses && userAllowedCourses.length > 0) {
+            if (!userAllowedCourses.includes(SHEET_ID)) {
+              showLoginError('⚠️ Acesso Negado: Sua conta não possui permissão para acessar este curso.');
+              setLoginButtonLoading(false);
+              return;
+            }
+          }
 
           // Se passou pela verificação, prossegue com o login normal
           localStorage.setItem('isAuthenticated', 'true');
@@ -3917,11 +3923,18 @@
         isAuthenticated = true;
         userEmail = savedEmail;
 
-        // Carrega cursos permitidos
+       // Carrega cursos permitidos salvos no navegador
         const savedAllowedCourses = localStorage.getItem('userAllowedCourses');
         userAllowedCourses = savedAllowedCourses ? JSON.parse(savedAllowedCourses) : [];
 
-        // (Verificação local removida - O Servidor bloqueará o download dos cards se a permissão for inválida)
+        // --- TRAVA DE SEGURANÇA: VALIDAÇÃO AO REABRIR A PÁGINA ---
+        if (SHEET_ID && userAllowedCourses && userAllowedCourses.length > 0) {
+          if (!userAllowedCourses.includes(SHEET_ID)) {
+            document.getElementById('loginModal').style.display = 'flex';
+            showLoginError('⚠️ Acesso Negado: Sua conta não possui permissão para acessar este curso.');
+            return;
+          }
+        }
 
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById("flashcard-content").textContent = "Carregando flashcards...";
@@ -5826,7 +5839,8 @@
       }
     }
 
-    // IDs dos modelos Piper (rhasspy/piper-voices)
+   // Endereço Próprio no Vercel e IDs dos modelos
+    const PIPER_VERCEL_BASE = 'https://piper-tts-beige.vercel.app';
     const PIPER_MODELS = {
       desktop: 'pt_BR-faber-medium',
       mobile: 'pt_BR-faber-medium'
@@ -5842,7 +5856,7 @@
       } catch (e) { return false; }
     }
 
-    // --- ATIVAÇÃO REAL DO PIPER (chamado pelo botão na UI) ---
+    // --- ATIVAÇÃO REAL DO PIPER (CONECTADO DIRETO AO SEU VERCEL) ---
     async function initPiperReal() {
       if (piperLoading || piperReady) return;
       piperLoading = true;
@@ -5850,20 +5864,65 @@
 
       try {
         showFeedback("Importando motor Piper... ⏳", "gold");
-        piperModule = await import("https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web/+esm");
+        // Versão estável travada para evitar quebras por atualizações externas
+        piperModule = await import("https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/+esm");
 
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
 
         const stored = await piperModule.stored();
         if (!stored.includes(voiceId)) {
-          showFeedback("Baixando voz neural (primeira vez)... ⏳", "gold");
-          await piperModule.download(voiceId, (progress) => {
-            if (progress.total > 0) {
-              const pct = Math.round((progress.loaded / progress.total) * 100);
+          showFeedback("Conectando ao seu Vercel... ⏳", "gold");
+
+          const cache = await caches.open("piper-voices");
+
+          // 1. Baixar Configuração de Áudio (.json)
+          const jsonRes = await fetch(`${PIPER_VERCEL_BASE}/${voiceId}.onnx.json`);
+          if (!jsonRes.ok) throw new Error("Falha ao baixar configuração (.json) do Vercel");
+          const jsonBlob = await jsonRes.blob();
+
+          // 2. Baixar Modelo Neural (.onnx) com cálculo de progresso
+          const onnxRes = await fetch(`${PIPER_VERCEL_BASE}/${voiceId}.onnx`);
+          if (!onnxRes.ok) throw new Error("Falha ao baixar modelo (.onnx) do Vercel");
+
+          const contentLength = onnxRes.headers.get('content-length');
+          const totalBytes = contentLength ? parseInt(contentLength, 10) : 0;
+          let loadedBytes = 0;
+
+          const reader = onnxRes.body.getReader();
+          const chunks = [];
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            loadedBytes += value.length;
+            if (totalBytes > 0) {
+              const pct = Math.round((loadedBytes / totalBytes) * 100);
               showFeedback(`Baixando voz neural... ${pct}%`, "gold");
             }
-          });
+          }
+
+          const onnxBlob = new Blob(chunks);
+
+          // 3. Registra os arquivos no armazenamento local para o Piper encontrar
+          const modelPaths = [
+            `/${voiceId}.onnx`,
+            `/${voiceId}/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx`,
+            `pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx`
+          ];
+          const configPaths = [
+            `/${voiceId}.onnx.json`,
+            `/${voiceId}/pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json`,
+            `pt/pt_BR/faber/medium/pt_BR-faber-medium.onnx.json`
+          ];
+
+          for (const path of modelPaths) {
+            await cache.put(path, new Response(onnxBlob));
+          }
+          for (const path of configPaths) {
+            await cache.put(path, new Response(jsonBlob));
+          }
         }
 
         piperReady = true;
@@ -5875,6 +5934,8 @@
       } catch (e) {
         console.error("❌ Piper erro:", e);
         piperLoading = false;
+        // Limpa cache incompleto se houver falha durante o download
+        try { await caches.delete("piper-voices"); } catch (err) {}
         showFeedback("Erro ao carregar Piper. Usando voz padrão.", "#ff5252");
         updateVoiceEngineUI(hasNeuralVoices() ? 'neural' : 'basic');
       }

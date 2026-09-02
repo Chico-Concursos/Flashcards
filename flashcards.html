@@ -2652,7 +2652,7 @@
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
       style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
-    <button id="aiBtn" class="tooltip" data-tooltip="Professor IA" aria-label="Professor IA"
+    <button id="aiBtn" class="tooltip" data-tooltip="Professor Chico" aria-label="Professor Chico"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="explainWithAI()"
       style="background: none; border: none; color: #a78bfa; font-size: 1.2em; cursor: pointer; margin-left: 5px;">
       <i class="fas fa-robot" aria-hidden="true"></i>
@@ -3927,14 +3927,23 @@
         const savedAllowedCourses = localStorage.getItem('userAllowedCourses');
         userAllowedCourses = savedAllowedCourses ? JSON.parse(savedAllowedCourses) : [];
 
-        // --- TRAVA DE SEGURANÇA: VALIDAÇÃO AO REABRIR A PÁGINA ---
-        if (SHEET_ID && userAllowedCourses && userAllowedCourses.length > 0) {
-          if (!userAllowedCourses.includes(SHEET_ID)) {
-            document.getElementById('loginModal').style.display = 'flex';
-            showLoginError('⚠️ Acesso Negado: Sua conta não possui permissão para acessar este curso.');
-            return;
-          }
-        }
+        // --- TRAVA DE SEGURANÇA INTELIGENTE: RENOVAÇÃO DE PERMISSÕES ---
+            if (SHEET_ID && userAllowedCourses && userAllowedCourses.length > 0) {
+              if (!userAllowedCourses.includes(SHEET_ID)) {
+                // O navegador do aluno tem um crachá antigo. Limpamos a sessão antiga
+                // para que ele autentique e receba a lista atualizada do servidor.
+                localStorage.removeItem('isAuthenticated');
+                localStorage.removeItem('sessionToken');
+                localStorage.removeItem('userAllowedCourses');
+                isAuthenticated = false;
+                if (savedEmail) {
+                  document.getElementById('loginEmail').value = savedEmail;
+                }
+                document.getElementById('loginModal').style.display = 'flex';
+                showLoginError('Novo material detectado: Confirme sua senha para liberar o acesso.');
+                return;
+              }
+            }
 
         document.getElementById('loginModal').style.display = 'none';
         document.getElementById("flashcard-content").textContent = "Carregando flashcards...";
@@ -4217,9 +4226,9 @@
           formData.append('action', 'checkVersion');
           formData.append('sheetId', sheetId); // <--- Identifica a planilha individual
 
-          // Controller para não deixar o app travado se a internet estiver lenta (3s timeout)
+          // Controller para não deixar o app travado se a internet estiver lenta (10s timeout)
           const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000);
+          const timeoutId = setTimeout(() => controller.abort(), 10000);
 
           const response = await fetch(SRS_BACKEND_URL, {
             method: 'POST',
@@ -4282,8 +4291,9 @@
         formData.append('sheetId', sheetId);
         formData.append('gid', gid);
 
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout para download dos cards
+       const controller = new AbortController();
+        // Tempo expandido para 60 segundos (permite o Google acordar em cold start)
+        const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         const response = await fetch(SRS_BACKEND_URL, {
           method: 'POST',
@@ -4347,7 +4357,18 @@
           showFeedback("Erro na conexão. Usando versão antiga.", "#ffa500");
           processLoadedCards(JSON.parse(localData), true);
         } else {
-          document.getElementById("flashcard-content").textContent = `Erro: ${error.message}`;
+          const isTimeout = error.name === 'AbortError' || (error.message && error.message.includes('abort'));
+          const msgAviso = isTimeout 
+            ? "O servidor demorou para responder (o material é extenso ou a conexão oscilou)."
+            : `Falha ao carregar os cards: ${error.message}`;
+            
+          document.getElementById("flashcard-content").innerHTML = `
+            <div style="padding: 30px 15px; text-align: center;">
+              <p style="color: #ff5555; font-size: 1.1em; margin-bottom: 20px; font-weight: bold;">⚠️ ${msgAviso}</p>
+              <button onclick="loadFlashcardsFromGoogleSheet('${sheetId}', '${gid}')" style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+                🔄 Tentar Novamente
+              </button>
+            </div>`;
         }
       } finally {
         hideLoadingIndicator();
@@ -8689,7 +8710,7 @@
       } else {
         messageDiv.style.background = '#1a1a1a';
         messageDiv.style.borderLeft = '4px solid #FFD700';
-        messageDiv.innerHTML = `<b style="color: #f7ef8a; font-weight: 900; font-size: 1.1em;">🤖 Professor IA:</b><br><div style="color: #f5f5f5; margin-top: 5px;">${message}</div>`;
+        messageDiv.innerHTML = `<b style="color: #f7ef8a; font-weight: 900; font-size: 1.1em;">🤖 Professor Chico:</b><br><div style="color: #f5f5f5; margin-top: 5px;">${message}</div>`;
       }
 
       chatHistory.appendChild(messageDiv);
@@ -8828,7 +8849,7 @@
       // Se chegou aqui, é um card novo. Atualiza o índice e limpa o chat.
       lastExplainedCardIndex = currentCard;
       chatHistoryContext = [];
-      chatHistory.innerHTML = `<div class="ai-message"><strong style="color: #f7ef8a;">Professor IA:</strong><br><i class="fas fa-spinner fa-spin" style="color: #f7ef8a;"></i> <span style="color: #f7ef8a;">Analisando...</span></div>`;
+      chatHistory.innerHTML = `<div class="ai-message"><strong style="color: #f7ef8a;">Professor Chico:</strong><br><i class="fas fa-spinner fa-spin" style="color: #f7ef8a;"></i> <span style="color: #f7ef8a;">Analisando...</span></div>`;
 
       try {
         const promptInicial = generatePromptFromCard();
@@ -8877,13 +8898,13 @@
       }
     };
   </script>
-  <div id="aiModal" role="dialog" aria-modal="true" aria-label="Professor IA" class="ai-modal-overlay">
+  <div id="aiModal" role="dialog" aria-modal="true" aria-label="Professor Chico" class="ai-modal-overlay">
 
     <div class="ai-modal-header">
 
       <div style="display: flex; align-items: center; gap: 12px; color: #f7ef8a;">
         <i class="fas fa-robot" style="font-size: 1.4rem;"></i>
-        <h3 style="margin: 0; font-size: 18px; font-weight: Extra Bold; letter-spacing: 0.5px;">PROFESSOR IA</h3>
+        <h3 style="margin: 0; font-size: 18px; font-weight: Extra Bold; letter-spacing: 0.5px;">PROFESSOR CHICO</h3>
       </div>
 
       <button onclick="document.getElementById('aiModal').style.display='none'"

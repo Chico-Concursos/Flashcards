@@ -3457,6 +3457,7 @@
     let isAuthenticated = false;
     let userEmail = '';
     let userAllowedCourses = []; // Nova variável: armazena os IDs de planilhas que o usuário pode acessar
+    let isForceRefreshLogin = false; // Flag para forçar atualização no servidor após detecção de novo material
     let initialCards = [];
     let cards = [];
     let currentCard = 0;
@@ -3842,6 +3843,9 @@
         formData.append('password', password);
         // --- NOVO: ENVIANDO O CRACHÁ (URL DE ORIGEM) ---
         formData.append('originUrl', window.location.href);
+        if (typeof isForceRefreshLogin !== 'undefined' && isForceRefreshLogin) {
+          formData.append('forceRefresh', 'true');
+        }
         // ----------------------------------------------
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s (Dá tempo para o Cold Start do Apps Script)
@@ -3858,6 +3862,7 @@
           throw new Error(`Erro HTTP: ${response.status}`);
         }
         const result = await response.json();
+        isForceRefreshLogin = false; // Reset da flag de atualização forçada
         if (result.success) {
           userEmail = email;
           userAllowedCourses = result.allowedCourses || [];
@@ -3903,6 +3908,7 @@
         }
       } catch (error) {
         console.error('Erro no login:', error);
+        isForceRefreshLogin = false;
         if (error.name === 'AbortError') {
           showLoginError('Tempo limite excedido. Verifique sua conexão e tente novamente.');
         } else {
@@ -3932,6 +3938,7 @@
               if (!userAllowedCourses.includes(SHEET_ID)) {
                 // O navegador do aluno tem um crachá antigo. Limpamos a sessão antiga
                 // para que ele autentique e receba a lista atualizada do servidor.
+                isForceRefreshLogin = true; // Força o backend a ignorar o cache da Via Expressa
                 localStorage.removeItem('isAuthenticated');
                 localStorage.removeItem('sessionToken');
                 localStorage.removeItem('userAllowedCourses');
@@ -4089,7 +4096,7 @@
       return urlParams.get(name);
     }
 
-    const SHEET_ID = getQueryParam('sheetId');
+    const SHEET_ID = getQueryParam('sheetId') || (getQueryParam('id') && getQueryParam('id').length > 25 ? getQueryParam('id') : '');
     const GID = getQueryParam('gid') || '0';
 
     function saveFlashcardState() {

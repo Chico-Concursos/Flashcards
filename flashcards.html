@@ -3889,16 +3889,15 @@
           void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
 
-          // 1. Carrega os flashcards primeiro (em navegador virgem, baixa sozinho sem concorrência)
+          // 1. Carrega os flashcards primeiro (bloqueante — libera a tela assim que terminar)
           await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
           hideLoadingIndicator();
 
-          // 2. Busca histórico SRS e última posição em seguida (rápido via TextFinder)
-          await loadAllDataFromBackend(userEmail);
-
-          // 3. Valida a posição salva com segurança e inicia monitoramento
-          checkForSavedPosition();
-          startSessionHeartbeat();
+          // 2. 🚀 Busca histórico SRS e posição em SEGUNDO PLANO (não trava a tela)
+          loadAllDataFromBackend(userEmail).then(() => {
+            checkForSavedPosition();
+            startSessionHeartbeat();
+          });
 
         } else {
           showLoginError(result.error || 'Erro durante a autenticação.');
@@ -3955,16 +3954,15 @@
         startSessionTimer();
         showLoadingIndicator();
 
-        // --- CARREGAMENTO SEQUENCIAL DEDICADO (SEM CONCORRÊNCIA NA PLANILHA) ---
-        // 1. Carrega os flashcards (instantâneo se já houver Galpão, ou download dedicado)
+        // --- 🚀 CARREGAMENTO OTIMIZADO ---
+        // 1. Carrega cards primeiro (bloqueante — libera a tela assim que pronto)
         loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
           .then(() => {
             hideLoadingIndicator();
-            // 2. Busca histórico SRS e última posição na nuvem com TextFinder
+            // 2. Busca histórico SRS e posição em SEGUNDO PLANO (não bloqueia)
             return loadAllDataFromBackend(userEmail);
           })
           .then(() => {
-            // 3. Valida a posição salva e inicia monitoramento de sessão única
             checkForSavedPosition();
             checkAndIncrementStreak();
             startSessionHeartbeat();
@@ -7986,6 +7984,8 @@
 
     // 3. Processador da Fila em Lotes (Atacado - Para 1000 alunos)
     async function processSaveQueue() {
+      // 🛡️ Não dispara batch syncs enquanto o download inicial de cards estiver rodando
+      if (window.isDownloadingFirstTime) return;
       if (isSyncing || saveQueue.length === 0 || !navigator.onLine) return;
 
       isSyncing = true;

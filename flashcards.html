@@ -4279,10 +4279,13 @@
         formData.append('gid', gid);
 
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000);
+        const timeoutId = setTimeout(() => controller.abort(), 90000);
 
         const response = await fetch(SRS_BACKEND_URL, {
           method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          },
           body: formData,
           signal: controller.signal
         });
@@ -4329,6 +4332,7 @@
         }
 
         showLoadingIndicator("Baixando flashcards pela primeira vez...");
+        window.isDownloadingFirstTime = true;
 
         try {
           // Vai direto ao download dos cards com 100% da atenção do servidor
@@ -4354,6 +4358,7 @@
               </button>
             </div>`;
         } finally {
+          window.isDownloadingFirstTime = false;
           hideLoadingIndicator();
         }
         return;
@@ -8249,6 +8254,12 @@
     // Se o usuário sair antes do tempo definido, cancelamos a espera e salvamos AGORA.
     window.addEventListener('visibilitychange', () => {
       if (document.visibilityState === 'hidden') {
+        // 🛡️ Ignora salvamento prematuro se o primeiro download ainda estiver em andamento
+        if (typeof isDownloadingFirstTime !== 'undefined' && isDownloadingFirstTime) {
+          console.log("👁️ Ignorando savePosition: download inicial de cards ainda em andamento.");
+          return;
+        }
+
         // 1. Se existir um timer rodando, cancela ele para não duplicar
         if (savePositionTimer) {
           clearTimeout(savePositionTimer);

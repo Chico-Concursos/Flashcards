@@ -3448,7 +3448,7 @@
     // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYpyzD80XnRBr_PpBYHALEYJyjuD9Y0Yx2dlzZvtA6ePM8ihcqMMInlgtorEB_I0_-sw/exec";
     // Suporte acesso aos Cards
-    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycbyBRzGi8N8MGTWwonEIEAAOQTMM4Ik2QjLIt9NGQ2I7baavk9njpPjRmSmKUBJWhqcm/exec";
+    let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycby2Scbe8l1x0gSC3tGemmDTu24MdBXtaryTeeOtmtOaFTB0dwGUPVxIruLqY5nTPxkYfA/exec";
     // URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
     let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec";
     // Professor IA
@@ -3889,17 +3889,15 @@
           void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
 
-          // Carrega dados do SRS e os Cards AO MESMO TEMPO
-          await Promise.all([
-            loadAllDataFromBackend(userEmail),
-            loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
-          ]);
-
+          // 1. Carrega os flashcards primeiro (em navegador virgem, baixa sozinho sem concorrência)
+          await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
           hideLoadingIndicator();
 
-          // Tenta recuperar a posição após ter certeza que baixou tudo
+          // 2. Busca histórico SRS e última posição em seguida (rápido via TextFinder)
+          await loadAllDataFromBackend(userEmail);
+
+          // 3. Valida a posição salva com segurança e inicia monitoramento
           checkForSavedPosition();
-          // INICIA O MONITORAMENTO
           startSessionHeartbeat();
 
         } else {
@@ -3957,19 +3955,20 @@
         startSessionTimer();
         showLoadingIndicator();
 
-        // --- ORDEM DE CARREGAMENTO PARALELA (PISTA DUPLA LIBERADA) ---
-        // Dispara as duas requisições ao mesmo tempo (Corta o tempo pela metade)
-        Promise.all([
-          loadAllDataFromBackend(userEmail),
-          loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
-        ]).then(() => {
-          // 3. Tudo pronto
-          hideLoadingIndicator();
-          checkForSavedPosition();
-          checkAndIncrementStreak();
-          // INICIA O MONITORAMENTO DE SESSÃO ÚNICA
-          startSessionHeartbeat();
-        });
+        // --- CARREGAMENTO SEQUENCIAL DEDICADO (SEM CONCORRÊNCIA NA PLANILHA) ---
+        // 1. Carrega os flashcards (instantâneo se já houver Galpão, ou download dedicado)
+        loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
+          .then(() => {
+            hideLoadingIndicator();
+            // 2. Busca histórico SRS e última posição na nuvem com TextFinder
+            return loadAllDataFromBackend(userEmail);
+          })
+          .then(() => {
+            // 3. Valida a posição salva e inicia monitoramento de sessão única
+            checkForSavedPosition();
+            checkAndIncrementStreak();
+            startSessionHeartbeat();
+          });
       } else {
         document.getElementById('loginModal').style.display = 'flex';
       }
@@ -4124,58 +4123,90 @@
     }
 
     function loadFlashcardState() {
-      // Tenta ler o estado específico desta matéria
+      // 1. Tenta ler o estado visual e preferências desta matéria
       const savedState = localStorage.getItem(`flashcardState_${SHEET_ID}_${GID}`) || localStorage.getItem('flashcardState');
-      if (!savedState) return false;
+      let state = null;
+      if (savedState) {
+        try {
+          const parsed = JSON.parse(savedState);
+          if (parsed.deckId === `${SHEET_ID}_${GID}`) {
+            state = parsed;
+          }
+        } catch (e) {}
+      }
+
+      // 2. Busca a posição mais recente registrada neste aparelho (Mochila ou Estado)
+      let localCardIdx = state ? state.currentCard : 0;
+      const lastQuickPos = localStorage.getItem(`lastLocalCard_${SHEET_ID}`);
+      if (lastQuickPos !== null) {
+        localCardIdx = parseInt(lastQuickPos, 10);
+      }
 
       try {
-        const state = JSON.parse(savedState);
-        // Só aplica se pertencer EXATAMENTE a este baralho
-        if (state.deckId === `${SHEET_ID}_${GID}`) {
-          currentCard = state.currentCard >= cards.length ? 0 : state.currentCard;
-          showingFront = state.showingFront;
-          fontSize = state.fontSize;
-          currentCategory = state.currentCategory || "Todas";
-
-          if (state.cardAccuracy) cardAccuracy = state.cardAccuracy;
-          if (state.isReviewErrorsMode !== undefined) {
-            isReviewErrorsMode = state.isReviewErrorsMode;
-            document.getElementById('reviewErrorsButton').style.display = isReviewErrorsMode ? 'inline-block' : 'none';
-            if (isReviewErrorsMode) {
-              document.getElementById('reviewErrorsButton').style.color = '#ff5555';
-              document.getElementById('reviewErrorsButton').style.textShadow = '0 0 10px rgba(255, 85, 85, 0.7)';
-            }
+        const localQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
+        for (let i = localQueue.length - 1; i >= 0; i--) {
+          if (localQueue[i].data && localQueue[i].data.action === 'savePosition' && localQueue[i].data.sheetId === SHEET_ID) {
+            localCardIdx = localQueue[i].data.cardIndex - 1;
+            break;
           }
-
-          if (state.isShuffleActive !== isShuffleActive) {
-            isShuffleActive = state.isShuffleActive;
-            if (isShuffleActive) {
-              cards = [...cards].sort(() => Math.random() - 0.5);
-            } else {
-              cards = [...initialCards];
-            }
-          }
-          if (state.currentCardColor !== undefined) {
-            currentCardColor = state.currentCardColor;
-            cardContainer.style.backgroundColor = currentCardColor;
-            document.getElementById("cardColor").value = currentCardColor;
-          }
-          if (state.currentTextColor !== undefined) {
-            currentTextColor = state.currentTextColor;
-            document.getElementById("flashcard-content").style.color = currentTextColor;
-            document.getElementById("textColor").value = currentTextColor;
-          }
-
-          // --- CARREGA MODO LEITURA ---
-          if (state.currentFontMode) {
-            setFontMode(state.currentFontMode);
-          }
-          return true; // Sucesso: estado desta matéria carregado!
         }
+      } catch(e) {}
+
+      // 3. Aplica a posição otimista imediatamente na tela
+      if (cards && cards.length > 0) {
+        currentCard = (localCardIdx >= 0 && localCardIdx < cards.length) ? localCardIdx : 0;
+      }
+
+      if (!state) return (localCardIdx > 0);
+
+      try {
+        showingFront = state.showingFront !== undefined ? state.showingFront : true;
+        fontSize = state.fontSize || fontSize;
+        currentCategory = state.currentCategory || "Todas";
+
+        if (state.cardAccuracy) cardAccuracy = state.cardAccuracy;
+        if (state.isReviewErrorsMode !== undefined) {
+          isReviewErrorsMode = state.isReviewErrorsMode;
+          const revBtn = document.getElementById('reviewErrorsButton');
+          if (revBtn) {
+            revBtn.style.display = isReviewErrorsMode ? 'inline-block' : 'none';
+            if (isReviewErrorsMode) {
+              revBtn.style.color = '#ff5555';
+              revBtn.style.textShadow = '0 0 10px rgba(255, 85, 85, 0.7)';
+            }
+          }
+        }
+
+        if (state.isShuffleActive !== isShuffleActive) {
+          isShuffleActive = state.isShuffleActive;
+          if (isShuffleActive) {
+            cards = [...cards].sort(() => Math.random() - 0.5);
+          } else {
+            cards = [...initialCards];
+          }
+        }
+        if (state.currentCardColor !== undefined) {
+          currentCardColor = state.currentCardColor;
+          cardContainer.style.backgroundColor = currentCardColor;
+          const cCol = document.getElementById("cardColor");
+          if (cCol) cCol.value = currentCardColor;
+        }
+        if (state.currentTextColor !== undefined) {
+          currentTextColor = state.currentTextColor;
+          const fCont = document.getElementById("flashcard-content");
+          if (fCont) fCont.style.color = currentTextColor;
+          const tCol = document.getElementById("textColor");
+          if (tCol) tCol.value = currentTextColor;
+        }
+
+        if (state.currentFontMode) {
+          setFontMode(state.currentFontMode);
+        }
+        return true;
       } catch (e) {
         console.error("Erro ao carregar estado:", e);
       }
-      return false; // Se a matéria for diferente, recusa e permite o início limpo
+      return false;
     }
 
     // --- NOVO: SISTEMA DE GALPÃO (IndexedDB) ---
@@ -4217,82 +4248,29 @@
       const cacheKey = `cachedCards_${sheetId}_${gid}`;
       const versionKey = `version_${sheetId}_${gid}`;
 
-      // Recupera credenciais
       const sessionToken = localStorage.getItem('sessionToken');
       const userEmail = localStorage.getItem('userEmail');
 
-      // Recupera o que temos guardado no celular (AGORA DO GALPÃO ASSÍNCRONO)
+      // 1. CARREGAMENTO INSTANTÂNEO DO GALPÃO (0,1s)
       const localData = await loadFromGalpao(cacheKey);
-      const localVersion = localStorage.getItem(versionKey); // Versão continua na mochila (é leve)
+      const localVersion = localStorage.getItem(versionKey);
 
-      let serverVersion = null;
-      let shouldUseCache = false;
-
-      // --- ETAPA 1: O VIGIA (Pergunta ao servidor qual a versão atual) ---
-      try {
-        if (navigator.onLine) {
-         const formData = new URLSearchParams();
-          formData.append('action', 'checkVersion');
-          formData.append('sheetId', sheetId); // <--- Identifica a planilha individual
-
-          // Controller para não deixar o app travado se a internet estiver lenta (10s timeout)
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 10000);
-
-          const response = await fetch(SRS_BACKEND_URL, {
-            method: 'POST',
-            body: formData,
-            signal: controller.signal
-          });
-          clearTimeout(timeoutId);
-
-          if (response.ok) {
-            const json = await response.json();
-            if (json.result === 'success') {
-              serverVersion = json.version;
-              console.log(`📡 Versão Servidor: ${serverVersion} | Versão Local: ${localVersion}`);
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("⚠️ O Vigia não conseguiu contatar o servidor (Offline ou erro).", e);
-        // Se falhar a verificação, assumimos que é melhor usar o cache do que travar
-        if (localData) shouldUseCache = true;
-      }
-
-      // --- ETAPA 2: A DECISÃO ---
-      // Se temos dados locais E (a versão é igual OU estamos offline), usamos o cache
-      if (localData && (localVersion === serverVersion || !serverVersion)) {
-        shouldUseCache = true;
-      }
-
-      // --- ETAPA 3: EXECUÇÃO (Caminho A: Cache Local) ---
-      if (shouldUseCache) {
+      let hasLocalCards = false;
+      if (localData) {
         try {
-          console.log("🚀 O Vigia liberou: Carregando do Cache Local (Instantâneo)");
           const parsedData = JSON.parse(localData);
           if (parsedData && parsedData.length > 0) {
-            processLoadedCards(parsedData, true); // true = origem cache
-            showFeedback("⚡ Dados carregados da memória (Atualizados)", "#4CAF50");
-            hideLoadingIndicator();
-            return; // Encerra aqui, economizando dados!
+            processLoadedCards(parsedData, true);
+            hideLoadingIndicator(); // Libera a tela imediatamente para o aluno
+            hasLocalCards = true;
           }
         } catch (e) {
-          console.error("Cache corrompido, forçando download...", e);
+          console.warn("Erro ao ler Galpão local:", e);
         }
       }
 
-      // --- ETAPA 4: EXECUÇÃO (Caminho B: Download da Nuvem) ---
-      // Se chegamos aqui, ou não tem cache, ou a versão mudou.
-
-      if (!isAuthenticated) {
-        document.getElementById("flashcard-content").textContent = "Por favor, faça login.";
-        return;
-      }
-
-      showLoadingIndicator("Baixando atualização do servidor...");
-
-      try {
+      // Função auxiliar interna para baixar baralho completo da nuvem
+      const baixarDoServidor = async (versaoServidorParaSalvar) => {
         const formData = new URLSearchParams();
         formData.append('action', 'loadCards');
         formData.append('email', userEmail);
@@ -4300,8 +4278,7 @@
         formData.append('sheetId', sheetId);
         formData.append('gid', gid);
 
-       const controller = new AbortController();
-        // Tempo expandido para 60 segundos (permite o Google acordar em cold start)
+        const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 60000);
 
         const response = await fetch(SRS_BACKEND_URL, {
@@ -4312,24 +4289,17 @@
         clearTimeout(timeoutId);
 
         if (!response.ok) throw new Error(`Erro HTTP: ${response.status}`);
-
         const jsonResponse = await response.json();
+        if (!jsonResponse.success) throw new Error(jsonResponse.error || "Erro ao baixar cards.");
 
-        if (!jsonResponse.success) {
-          throw new Error(jsonResponse.error || "Erro desconhecido ao baixar cards.");
-        }
-
-        // Processamento dos dados (Mapeamento das colunas)
         const rawData = jsonResponse.data.slice(1);
         let loadedCards = [];
 
         rawData.forEach(row => {
-          // Mapeamento: 0:Frente, 1:Verso, 2:Foco, 3:Disciplina, 4:Tópico, 5:Peso, 6:Tipo, 7:Ano
           const frontText = (row[0] || '').toString().trim();
           const backText = (row[1] || '').toString().trim();
           const foco = (row[2] || "").toString().trim();
-          let disciplina = (row[3] || "").toString().trim();
-          if (disciplina === "") disciplina = "Geral";
+          let disciplina = (row[3] || "").toString().trim() || "Geral";
           const topico = (row[4] || "").toString().trim();
           const peso = parseInt(row[5]) || 1;
           let tipoRaw = (row[6] || "").toString().trim().toLowerCase();
@@ -4342,45 +4312,81 @@
         });
 
         if (loadedCards.length > 0) {
-          // SUCESSO: Atualiza o Cache, a Versão e a Tela
-          try {
-            await saveToGalpao(cacheKey, JSON.stringify(loadedCards));
-            if (serverVersion) {
-              localStorage.setItem(versionKey, serverVersion); // Atualiza a etiqueta de versão
-            }
-          } catch (e) {
-            console.warn("Erro ao salvar no Galpão offline.", e);
+          await saveToGalpao(cacheKey, JSON.stringify(loadedCards));
+          if (versaoServidorParaSalvar) {
+            localStorage.setItem(versionKey, versaoServidorParaSalvar);
           }
+          return loadedCards;
+        }
+        return null;
+      };
 
-          processLoadedCards(loadedCards, false);
-          showFeedback("Lista de cards atualizada com sucesso!", "gold");
-        } else {
-          document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
-          cardCounter.textContent = "0/0";
+      // 2. SE NÃO TEM NADA NO GALPÃO: Baixa direto da nuvem (Sem chamada concorrente de versão)
+      if (!hasLocalCards) {
+        if (!isAuthenticated) {
+          document.getElementById("flashcard-content").textContent = "Por favor, faça login.";
+          return;
         }
 
-      } catch (error) {
-        console.error("Erro ao baixar cards:", error);
-        // Último recurso: Se falhar o download mas tiver cache velho, usa ele
-        if (localData) {
-          showFeedback("Erro na conexão. Usando versão antiga.", "#ffa500");
-          processLoadedCards(JSON.parse(localData), true);
-        } else {
+        showLoadingIndicator("Baixando flashcards pela primeira vez...");
+
+        try {
+          // Vai direto ao download dos cards com 100% da atenção do servidor
+          const novosCards = await baixarDoServidor(null);
+          if (novosCards) {
+            processLoadedCards(novosCards, false);
+            showFeedback("Baralho carregado com sucesso!", "gold");
+          } else {
+            document.getElementById("flashcard-content").textContent = "Nenhum flashcard encontrado na planilha.";
+            cardCounter.textContent = "0/0";
+          }
+        } catch (error) {
+          console.error("Erro no primeiro download:", error);
           const isTimeout = error.name === 'AbortError' || (error.message && error.message.includes('abort'));
           const msgAviso = isTimeout 
-            ? "O servidor demorou para responder (o material é extenso ou a conexão oscilou)."
+            ? "O servidor demorou para responder (conexão oscilou ou planilha extensa)."
             : `Falha ao carregar os cards: ${error.message}`;
-            
           document.getElementById("flashcard-content").innerHTML = `
             <div style="padding: 30px 15px; text-align: center;">
               <p style="color: #ff5555; font-size: 1.1em; margin-bottom: 20px; font-weight: bold;">⚠️ ${msgAviso}</p>
-              <button onclick="loadFlashcardsFromGoogleSheet('${sheetId}', '${gid}')" style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1.05em; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
+              <button onclick="loadFlashcardsFromGoogleSheet('${sheetId}', '${gid}')" style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 12px 25px; font-weight: bold; border-radius: 6px; cursor: pointer; font-size: 1.05em;">
                 🔄 Tentar Novamente
               </button>
             </div>`;
+        } finally {
+          hideLoadingIndicator();
         }
-      } finally {
-        hideLoadingIndicator();
+        return;
+      }
+
+      // 3. SE JÁ TEM DADOS LOCAIS: O VIGIA TRABALHA SILENCIOSAMENTE EM SEGUNDO PLANO
+      // (Não bloqueia o aluno; verifica se a planilha foi editada enquanto ele estuda)
+      if (navigator.onLine) {
+        setTimeout(async () => {
+          try {
+            const formDataV = new URLSearchParams();
+            formDataV.append('action', 'checkVersion');
+            formDataV.append('sheetId', sheetId);
+            const resV = await fetch(SRS_BACKEND_URL, { method: 'POST', body: formDataV });
+            const jsonV = await resV.json();
+
+            if (jsonV.result === 'success' && jsonV.version && jsonV.version !== localVersion) {
+              console.log(`📡 Vigia: Nova versão detectada (${jsonV.version}). Atualizando em segundo plano...`);
+              const cardsAtualizados = await baixarDoServidor(jsonV.version);
+              if (cardsAtualizados) {
+                // Se o aluno ainda não começou a navegar, atualiza a tela na hora
+                if (currentCard === 0 && showingFront) {
+                  processLoadedCards(cardsAtualizados, false);
+                  showFeedback("Matéria atualizada pelo professor! 🔄", "gold");
+                } else {
+                  showFeedback("Nova versão salva no dispositivo! 🔄", "gold");
+                }
+              }
+            }
+          } catch(e) {
+            console.warn("Vigia silencioso aguardando próxima conexão:", e);
+          }
+        }, 1500); // Aguarda 1,5s após a tela abrir para não disputar banda de rede
       }
     }
 
@@ -8132,6 +8138,8 @@
       };
 
       console.log(`Salvando posição na fila: Card #${realIndex}`);
+      // Salva imediatamente no navegador para permitir a abertura otimista sem Card 1
+      localStorage.setItem(`lastLocalCard_${SHEET_ID}`, realIndex);
       addToSaveQueue(SRS_BACKEND_URL, payload);
     }
     // 6. Verificar e Perguntar se quer continuar (Resume) - VERSÃO INTELIGENTE COM MOCHILA LOCAL
@@ -8226,6 +8234,14 @@
     document.getElementById('resumeModal').style.display = 'none';
     isInitialPositionResolved = true; // 🛡️ Libera o salvamento na nuvem
     window.savedPosition = null;     // 🛡️ Desarma a posição para o modal nunca mais reabrir
+
+    // Retorna a visualização para o Card 1
+    currentCard = 0;
+    showingFront = true;
+    localStorage.setItem(`lastLocalCard_${SHEET_ID}`, 0);
+    updateCard();
+    saveFlashcardState();
+
     showFeedback("Iniciando do começo.", "white");
   }
     // Tenta salvar se o usuário fechar a aba ou o navegador

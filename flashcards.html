@@ -4101,7 +4101,7 @@
 
     function saveFlashcardState() {
       if (!requireAuth()) return;
-      // NOVO: Renova o tempo da sessão a cada interação (Evita expulsão injusta)
+      // Renova o tempo da sessão a cada interação (Evita expulsão injusta)
       localStorage.setItem('loginTime', Date.now().toString());
       const state = {
         currentCard,
@@ -4111,23 +4111,26 @@
         deckId: `${SHEET_ID}_${GID}`,
         currentCategory,
         cardAccuracy,
-        isReviewErrorsMode,       // ← Vírgula adicionada aqui
+        isReviewErrorsMode,
         currentCardColor,
         currentTextColor,
-        currentFontMode           // Nova preferência salva
+        currentFontMode
       };
 
-      localStorage.setItem('flashcardState', JSON.stringify(state));
+      // Salva isolado por matéria para não sobrepor outras apostilas/baralhos
+      localStorage.setItem(`flashcardState_${SHEET_ID}_${GID}`, JSON.stringify(state));
       cardCounter.classList.add('saved');
       setTimeout(() => cardCounter.classList.remove('saved'), 1000);
     }
 
     function loadFlashcardState() {
-      const savedState = localStorage.getItem('flashcardState');
+      // Tenta ler o estado específico desta matéria
+      const savedState = localStorage.getItem(`flashcardState_${SHEET_ID}_${GID}`) || localStorage.getItem('flashcardState');
       if (!savedState) return false;
 
       try {
         const state = JSON.parse(savedState);
+        // Só aplica se pertencer EXATAMENTE a este baralho
         if (state.deckId === `${SHEET_ID}_${GID}`) {
           currentCard = state.currentCard >= cards.length ? 0 : state.currentCard;
           showingFront = state.showingFront;
@@ -4162,18 +4165,17 @@
             document.getElementById("flashcard-content").style.color = currentTextColor;
             document.getElementById("textColor").value = currentTextColor;
           }
-          document.getElementById("textColor").value = currentTextColor;
-        }
 
-        // --- CARREGA MODO LEITURA ---
-        if (state.currentFontMode) {
-          setFontMode(state.currentFontMode);
+          // --- CARREGA MODO LEITURA ---
+          if (state.currentFontMode) {
+            setFontMode(state.currentFontMode);
+          }
+          return true; // Sucesso: estado desta matéria carregado!
         }
-        return true;
       } catch (e) {
         console.error("Erro ao carregar estado:", e);
       }
-      return false;
+      return false; // Se a matéria for diferente, recusa e permite o início limpo
     }
 
     // --- NOVO: SISTEMA DE GALPÃO (IndexedDB) ---
@@ -7774,7 +7776,7 @@
 
     let userSRSProgress = {}; // Guarda o progresso carregado do servidor
     let isSRSMode = false;    // Indica se estamos no modo SRS
-
+    let isInitialPositionResolved = false; // 🛡️ TRAVA MESTRA: Impede salvar na nuvem até definir a posição inicial
     // 1. Gerador de ID Único (Robustez Aumentada)
     // Agora ignora maiúsculas, acentos e espaços extras para evitar perda de progresso ao corrigir erros simples.
     function generateCardId(text) {
@@ -7792,10 +7794,10 @@
       }
       return "ID_" + Math.abs(hash);
     }
-    // 2. Carregar Dados Completos (SRS + Armazem)
+   // 2. Carregar Dados Completos (SRS + Armazem)
     async function loadAllDataFromBackend(email) {
+      window.savedPosition = null; // Zera resíduo de matérias anteriores na memória
       try {
-        // CORREÇÃO: Usar POST para evitar erro de CORS e garantir compatibilidade com doPost
         const formData = new URLSearchParams();
         formData.append('action', 'loadAllData');
         formData.append('email', email);
@@ -7813,9 +7815,10 @@
 
           // Lógica do Armazém (Continuar de onde parou)
           if (json.position && json.position.index > 0) {
-            // Salva numa variável global para usarmos depois do login
             window.savedPosition = json.position;
             console.log("Posição salva encontrada:", window.savedPosition);
+          } else {
+            window.savedPosition = null; // Se não tem registro nesta matéria, garante vazio
           }
         }
       } catch (e) {
@@ -7972,25 +7975,31 @@
 
     // 3. Processador da Fila em Lotes (Atacado - Para 1000 alunos)
     async function processSaveQueue() {
-      // Se já está enviando, fila vazia ou sem internet, para.
       if (isSyncing || saveQueue.length === 0 || !navigator.onLine) return;
 
       isSyncing = true;
 
-      // Pega um lote de até 20 itens para enviar tudo de uma vez
-      const tamanhoLote = Math.min(saveQueue.length, 20);
-      const lote = saveQueue.slice(0, tamanhoLote);
+      // Descobre a planilha dona do primeiro item pendente da fila
+      const targetSheetId = (saveQueue[0].data && saveQueue[0].data.sheetId) ? saveQueue[0].data.sheetId : SHEET_ID;
+
+      // Agrupa apenas os itens que pertencem ESTRITAMENTE a essa mesma planilha (máx 20)
+      const lote = [];
+      for (let i = 0; i < saveQueue.length && lote.length < 20; i++) {
+        const itemSheet = (saveQueue[i].data && saveQueue[i].data.sheetId) ? saveQueue[i].data.sheetId : SHEET_ID;
+        if (itemSheet === targetSheetId) {
+          lote.push(saveQueue[i]);
+        }
+      }
 
       try {
         const formData = new URLSearchParams();
-        formData.append('action', 'batchSync'); // 🚨 NOVO IDIOMA (O Backend precisará aprender)
+        formData.append('action', 'batchSync');
         formData.append('email', userEmail);
-        formData.append('sheetId', SHEET_ID);
-        formData.append('batchData', JSON.stringify(lote)); // Transforma o lote num pacote só
+        formData.append('sheetId', targetSheetId); // Garante que a gravação vá para a planilha correta
+        formData.append('batchData', JSON.stringify(lote));
 
-        const endpoint = lote[0].endpoint; // Usa a URL padrão
+        const endpoint = lote[0].endpoint;
 
-        // NOVO CÓDIGO INÍCIO
         const response = await fetch(endpoint, {
           method: 'POST',
           body: formData
@@ -7998,19 +8007,18 @@
 
         const result = await response.json();
 
-        // SÓ apaga da mochila SE o Google confirmar o sucesso!
+        // SÓ apaga da mochila se o Google confirmar o sucesso!
         if (result.result === "success") {
-          console.log(`🚀 Lote de ${tamanhoLote} itens enviado e CONFIRMADO pelo servidor!`);
+          console.log(`🚀 Lote de ${lote.length} itens enviado e CONFIRMADO para ${targetSheetId}!`);
 
-          // Remove apenas os itens enviados e confirmados
-          saveQueue.splice(0, tamanhoLote);
+          // Remove da fila apenas os itens que acabaram de ser confirmados
+          saveQueue = saveQueue.filter(item => !lote.includes(item));
           localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
         } else {
-          console.warn("⚠️ O servidor não confirmou a gravação. O lote será mantido na mochila para a próxima tentativa.");
+          console.warn("⚠️ O servidor não confirmou a gravação. O lote será mantido para nova tentativa.");
         }
 
         isSyncing = false;
-        // NOVO CÓDIGO FIM
 
       } catch (err) {
         console.error("Erro na rede. O lote aguardará a próxima tentativa.", err);
@@ -8078,7 +8086,11 @@
     /// 5. Salvar Posição (Atualizado para usar a Fila)
     function savePositionToBackend() {
       if (!userEmail || cards.length === 0) return;
-
+// 🛡️ ESCUDO MESTRE: Bloqueia salvamento até que o progresso inicial seja completamente carregado e definido
+    if (!isInitialPositionResolved) {
+      console.log("🛡️ Salvamento bloqueado: Posição inicial ainda não foi resolvida/confirmada.");
+      return;
+    }
       // 🛡️ ESCUDO DE FILTRO: Bloqueia salvamento na nuvem se houver um filtro temporário ativo
       if (typeof isTemporaryFilterActive !== 'undefined' && isTemporaryFilterActive) {
         console.log("🛡️ Salvamento bloqueado: Filtro temporário de revisão ativo.");
@@ -8124,90 +8136,98 @@
     }
     // 6. Verificar e Perguntar se quer continuar (Resume) - VERSÃO INTELIGENTE COM MOCHILA LOCAL
     function checkForSavedPosition() {
-      console.log("Verificando posição salva...");
+    console.log("Verificando posição salva...");
 
-      let targetIndex = null;
-      let targetMode = 'sequencial';
+    // 🛡️ FIM DO MODAL DUPLO: Se a posição já foi resolvida nesta sessão, não processa novamente
+    if (isInitialPositionResolved) return;
 
-      // --- 1. PRIMEIRO: Olha na "Mochila" (Fila local não enviada) ---
-      try {
-        const localQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
-        // Procura de trás para a frente (do mais recente para o mais antigo)
-        for (let i = localQueue.length - 1; i >= 0; i--) {
-          if (localQueue[i].data && localQueue[i].data.action === 'savePosition') {
-            targetIndex = localQueue[i].data.cardIndex;
-            targetMode = localQueue[i].data.modo || 'sequencial';
-            console.log("📍 Posição recuperada da mochila local:", targetIndex);
-            break; // Achou o mais recente, pára de procurar
-          }
+    let targetIndex = null;
+    let targetMode = 'sequencial';
+
+    // --- 1. PRIMEIRO: Olha na "Mochila" (Fila local não enviada) ---
+    try {
+      const localQueue = JSON.parse(localStorage.getItem('chicoSaveQueue_v2') || '[]');
+      for (let i = localQueue.length - 1; i >= 0; i--) {
+        // Validação estrita: só aceita se for gravação de posição E pertencer a ESTA planilha
+        if (localQueue[i].data && 
+            localQueue[i].data.action === 'savePosition' && 
+            localQueue[i].data.sheetId === SHEET_ID) {
+          targetIndex = localQueue[i].data.cardIndex;
+          targetMode = localQueue[i].data.modo || 'sequencial';
+          console.log("📍 Posição recuperada da mochila local para esta matéria:", targetIndex);
+          break;
         }
-      } catch (e) {
-        console.log("Erro ao ler mochila local:", e);
       }
-
-      // --- 2. SEGUNDO: Se a mochila não tiver posição, confia no Google ---
-      if (targetIndex === null && window.savedPosition && typeof window.savedPosition.index === 'number') {
-        targetIndex = window.savedPosition.index;
-        targetMode = window.savedPosition.modo;
-        console.log("☁️ Posição recuperada do servidor Google:", targetIndex);
-      }
-
-      // --- 3. EXIBE A MENSAGEM SE TIVERMOS UMA POSIÇÃO VÁLIDA ---
-      if (targetIndex !== null && targetIndex > 0) {
-
-        // Segurança: O índice salvo ainda existe no baralho atual?
-        if (targetIndex > cards.length) return;
-
-        // Como o targetIndex é o número "humano" (1, 2, 3...), temos de subtrair 1 para achar no código (0, 1, 2...)
-        const card = cards[targetIndex - 1];
-        if (!card) return;
-
-        // Texto curto para mostrar no modal
-        let cardText = (card.front || "").length > 50 ? card.front.substring(0, 50) + "..." : (card.front || "Card sem texto");
-
-        // Preenche o texto do Modal
-        const msgElement = document.getElementById('resumeMessage');
-        if (msgElement) {
-          msgElement.innerHTML = `
-                    Você parou no Card <strong>${targetIndex}</strong> de ${cards.length}:<br><br>
-                    <em style="color: gold;">"${cardText}"</em><br><br>
-                    Deseja continuar de onde parou?
-                `;
-        }
-
-        // Atualiza a variável global do sistema para o botão "CONTINUAR" saber para onde ir
-        window.savedPosition = { index: targetIndex, modo: targetMode };
-
-        // Mostra o Modal Personalizado
-        const modal = document.getElementById('resumeModal');
-        if (modal) modal.style.display = 'flex';
-      }
+    } catch (e) {
+      console.log("Erro ao ler mochila local:", e);
     }
 
-    // Função chamada ao clicar em "CONTINUAR"
-    function acceptResume() {
-      document.getElementById('resumeModal').style.display = 'none';
+    // --- 2. SEGUNDO: Se a mochila não tiver posição, confia no Google ---
+    if (targetIndex === null && window.savedPosition && typeof window.savedPosition.index === 'number') {
+      targetIndex = window.savedPosition.index;
+      targetMode = window.savedPosition.modo;
+      console.log("☁️ Posição recuperada do servidor Google:", targetIndex);
+    }
 
-      if (window.savedPosition) {
-        currentCard = window.savedPosition.index - 1; // VOLTA PARA ÍNDICE DE ARRAY
-        showingFront = true;
-
-        // Lógica SRS (Opcional)
-        if (window.savedPosition.modo === 'srs') {
-          console.log("Retomando modo SRS");
-        }
-
-        updateCard();
-        showFeedback("Continuando estudos... 🚀", "#00ff00");
+    // --- 3. EXIBE A MENSAGEM SE TIVERMOS UMA POSIÇÃO VÁLIDA ---
+    if (targetIndex !== null && targetIndex > 0) {
+      if (targetIndex > cards.length) {
+        isInitialPositionResolved = true; // Índice inválido: destrava para uso normal
+        return;
       }
-    }
 
-    // Função chamada ao clicar em "INÍCIO"
-    function declineResume() {
-      document.getElementById('resumeModal').style.display = 'none';
-      // Não faz nada, apenas fecha, mantendo o usuário no card 1 (padrão)
-      showFeedback("Iniciando do começo.", "white");
+      const card = cards[targetIndex - 1];
+      if (!card) {
+        isInitialPositionResolved = true;
+        return;
+      }
+
+      let cardText = (card.front || "").length > 50 ? card.front.substring(0, 50) + "..." : (card.front || "Card sem texto");
+
+      const msgElement = document.getElementById('resumeMessage');
+      if (msgElement) {
+        msgElement.innerHTML = `
+                  Você parou no Card <strong>${targetIndex}</strong> de ${cards.length}:<br><br>
+                  <em style="color: gold;">"${cardText}"</em><br><br>
+                  Deseja continuar de onde parou?
+              `;
+      }
+
+      window.savedPosition = { index: targetIndex, modo: targetMode };
+
+      const modal = document.getElementById('resumeModal');
+      if (modal) modal.style.display = 'flex';
+    } else {
+      // Aluno novo ou sem histórico: destrava salvamento imediatamente
+      isInitialPositionResolved = true;
     }
+  }
+
+   function acceptResume() {
+    document.getElementById('resumeModal').style.display = 'none';
+    isInitialPositionResolved = true; // 🛡️ Libera o salvamento na nuvem
+
+    if (window.savedPosition) {
+      currentCard = window.savedPosition.index - 1;
+      showingFront = true;
+
+      if (window.savedPosition.modo === 'srs') {
+        console.log("Retomando modo SRS");
+      }
+
+      window.savedPosition = null; // 🛡️ Desarma a posição para o modal nunca mais reabrir
+      updateCard();
+      showFeedback("Continuando estudos... 🚀", "#00ff00");
+    }
+  }
+
+  // Função chamada ao clicar em "INÍCIO"
+  function declineResume() {
+    document.getElementById('resumeModal').style.display = 'none';
+    isInitialPositionResolved = true; // 🛡️ Libera o salvamento na nuvem
+    window.savedPosition = null;     // 🛡️ Desarma a posição para o modal nunca mais reabrir
+    showFeedback("Iniciando do começo.", "white");
+  }
     // Tenta salvar se o usuário fechar a aba ou o navegador
     // --- REDE DE SEGURANÇA: Salvar ao sair ---
     // Se o usuário sair antes do tempo definido, cancelamos a espera e salvamos AGORA.

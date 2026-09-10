@@ -3847,6 +3847,21 @@
           formData.append('forceRefresh', 'true');
         }
         // ----------------------------------------------
+        // 🚀 PRÉ-AQUECIMENTO ANTECIPADO (Warmup Pipeline)
+        // Enquanto o script de Login valida senha e permissões (2 a 4s),
+        // enviamos um sinal ultraleve em segundo plano para acordar o script de Suporte do Cold Start.
+        // 100% assíncrono: não usa await, não trava o login e não gasta cota de abertura de planilha.
+        try {
+          if (typeof SRS_BACKEND_URL !== 'undefined' && SRS_BACKEND_URL && SHEET_ID) {
+            fetch(`${SRS_BACKEND_URL}?action=checkVersion&sheetId=${encodeURIComponent(SHEET_ID)}`)
+              .then(res => res.json())
+              .then(data => console.log('🔥 [Warmup] Script de Suporte já acordado e pronto:', data))
+              .catch(() => console.log('🔥 [Warmup] Sinal de despertar enviado ao Suporte.'));
+          }
+        } catch (e) {
+          console.warn('Erro ao disparar warmup:', e);
+        }
+
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 25000); // 25s (Dá tempo para o Cold Start do Apps Script)
         const response = await fetch(WEB_APP_URL, {
@@ -3889,15 +3904,16 @@
           void cardContainer.offsetWidth;
           cardContainer.style.animation = 'pulseSuccess 2s';
 
-          // 1. Carrega os flashcards primeiro (bloqueante — libera a tela assim que terminar)
+          // 1. Carrega os flashcards primeiro (em navegador virgem, baixa sozinho sem concorrência)
           await loadFlashcardsFromGoogleSheet(SHEET_ID, GID);
           hideLoadingIndicator();
 
-          // 2. 🚀 Busca histórico SRS e posição em SEGUNDO PLANO (não trava a tela)
-          loadAllDataFromBackend(userEmail).then(() => {
-            checkForSavedPosition();
-            startSessionHeartbeat();
-          });
+          // 2. Busca histórico SRS e última posição em seguida (rápido via TextFinder)
+          await loadAllDataFromBackend(userEmail);
+
+          // 3. Valida a posição salva com segurança e inicia monitoramento
+          checkForSavedPosition();
+          startSessionHeartbeat();
 
         } else {
           showLoginError(result.error || 'Erro durante a autenticação.');
@@ -3954,15 +3970,16 @@
         startSessionTimer();
         showLoadingIndicator();
 
-        // --- 🚀 CARREGAMENTO OTIMIZADO ---
-        // 1. Carrega cards primeiro (bloqueante — libera a tela assim que pronto)
+        // --- CARREGAMENTO SEQUENCIAL DEDICADO (SEM CONCORRÊNCIA NA PLANILHA) ---
+        // 1. Carrega os flashcards (instantâneo se já houver Galpão, ou download dedicado)
         loadFlashcardsFromGoogleSheet(SHEET_ID, GID)
           .then(() => {
             hideLoadingIndicator();
-            // 2. Busca histórico SRS e posição em SEGUNDO PLANO (não bloqueia)
+            // 2. Busca histórico SRS e última posição na nuvem com TextFinder
             return loadAllDataFromBackend(userEmail);
           })
           .then(() => {
+            // 3. Valida a posição salva e inicia monitoramento de sessão única
             checkForSavedPosition();
             checkAndIncrementStreak();
             startSessionHeartbeat();

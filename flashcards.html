@@ -15,6 +15,8 @@
     href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Merriweather:wght@300;400;700&display=swap"
     rel="stylesheet">
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <!-- BIBLIOTECA OFICIAL DO SUPABASE -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
@@ -3614,10 +3616,14 @@
     // --- CONFIGURAÇÃO INICIAL ---
     // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYpyzD80XnRBr_PpBYHALEYJyjuD9Y0Yx2dlzZvtA6ePM8ihcqMMInlgtorEB_I0_-sw/exec";
-    // Suporte acesso aos Cards
+    // --- CONEXÃO COM O SUPABASE (BANCO POSTGRESQL) ---
+    const SUPABASE_URL = "https://undfphhyptxskeuffoqt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_HJY9SONBEzOh4i4wSm-MgQ_2k7dh0hG";
+    const supabaseClient = (typeof window.supabase !== 'undefined' && window.supabase.createClient)
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+      : null;
+	// Suporte acesso aos Cards
     let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycby2Scbe8l1x0gSC3tGemmDTu24MdBXtaryTeeOtmtOaFTB0dwGUPVxIruLqY5nTPxkYfA/exec";
-    // URL do Backend das Anotações (Copiado do seu arquivo anotações.html)
-    let NOTES_WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyeWFpisAExqCY5FscF_tF5c_WUWavp3Y-8MPkgPhL3Mj0RoDikM4432hmnDhc-g79Y/exec";
     // Professor IA
     let AI_BACKEND_URL = "https://script.google.com/macros/s/AKfycbygSW2z33jnRiVq8S_PAcucOSXkKHsLSZ6DKXYSfP4O9XdziYuHo7yGBF4iCNUv5No6sA/exec";
 
@@ -8115,35 +8121,66 @@
       }
       return "ID_" + Math.abs(hash);
     }
-   // 2. Carregar Dados Completos (SRS + Armazem)
+  // 2. Carregar Dados Completos via Supabase (SRS + Onde Parou)
     async function loadAllDataFromBackend(email) {
       window.savedPosition = null; // Zera resíduo de matérias anteriores na memória
+      if (!email) return;
+
+      // Escudo de segurança: se o cliente Supabase não estiver carregado, não quebra a tela
+      if (!supabaseClient) {
+        console.warn("⚠️ Supabase não inicializado. Carregamento remoto ignorado.");
+        return;
+      }
+
       try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'loadAllData');
-        formData.append('email', email);
-        formData.append('sheetId', SHEET_ID || "");
+        const currentSheet = SHEET_ID || "";
 
-        const response = await fetch(SRS_BACKEND_URL, {
-          method: 'POST',
-          body: formData
-        });
+        // Busca paralela e ultrarrápida no banco PostgreSQL (SRS e Posição)
+        const [srsResponse, posResponse] = await Promise.all([
+          supabaseClient
+            .from('srs_progress')
+            .select('card_id, next_review, interval, ease_factor, reps, lapses')
+            .eq('user_email', email)
+            .eq('sheet_id', currentSheet),
+          supabaseClient
+            .from('student_positions')
+            .select('card_index, modo')
+            .eq('user_email', email)
+            .eq('sheet_id', currentSheet)
+            .maybeSingle()
+        ]);
 
-        const json = await response.json();
-
-        if (json.result === "success") {
-          userSRSProgress = json.progress || {};
-
-          // Lógica do Armazém (Continuar de onde parou)
-          if (json.position && json.position.index > 0) {
-            window.savedPosition = json.position;
-            console.log("Posição salva encontrada:", window.savedPosition);
-          } else {
-            window.savedPosition = null; // Se não tem registro nesta matéria, garante vazio
-          }
+        // 1. Processa o Histórico de Repetição Espaçada (SRS)
+        if (srsResponse.data && srsResponse.data.length > 0) {
+          const progressMap = {};
+          srsResponse.data.forEach(item => {
+            progressMap[item.card_id] = {
+              interval: item.interval,
+              easeFactor: parseFloat(item.ease_factor) || 2.50,
+              reps: item.reps || 0,
+              lapses: item.lapses || 0,
+              nextReview: item.next_review
+            };
+          });
+          userSRSProgress = progressMap;
+          console.log(`🧠 [Supabase] ${srsResponse.data.length} cards SRS carregados.`);
+        } else {
+          userSRSProgress = {};
         }
+
+        // 2. Processa o Marcador de Página ("Onde Parou")
+        if (posResponse.data && posResponse.data.card_index > 0) {
+          window.savedPosition = {
+            index: posResponse.data.card_index,
+            modo: posResponse.data.modo || 'sequencial'
+          };
+          console.log("📍 [Supabase] Posição recuperada:", window.savedPosition);
+        } else {
+          window.savedPosition = null;
+        }
+
       } catch (e) {
-        console.error("Erro ao carregar dados:", e);
+        console.error("Erro ao carregar dados do Supabase:", e);
       }
     }
 
@@ -8294,57 +8331,85 @@
       // O envio imediato foi REMOVIDO aqui. O relógio de 15s é quem vai enviar.
     }
 
-    // 3. Processador da Fila em Lotes (Atacado - Para 1000 alunos)
+    // 3. Processador da Fila em Lotes (Supabase - Gravação Atómica em Milissegundos)
     async function processSaveQueue() {
-      // 🛡️ Não dispara batch syncs enquanto o download inicial de cards estiver rodando
+      // 🛡️ Não dispara sincronização enquanto o download inicial de cards estiver em curso
       if (window.isDownloadingFirstTime) return;
       if (isSyncing || saveQueue.length === 0 || !navigator.onLine) return;
 
-      isSyncing = true;
-
-      // Descobre a planilha dona do primeiro item pendente da fila
-      const targetSheetId = (saveQueue[0].data && saveQueue[0].data.sheetId) ? saveQueue[0].data.sheetId : SHEET_ID;
-
-      // Agrupa apenas os itens que pertencem ESTRITAMENTE a essa mesma planilha (máx 20)
-      const lote = [];
-      for (let i = 0; i < saveQueue.length && lote.length < 20; i++) {
-        const itemSheet = (saveQueue[i].data && saveQueue[i].data.sheetId) ? saveQueue[i].data.sheetId : SHEET_ID;
-        if (itemSheet === targetSheetId) {
-          lote.push(saveQueue[i]);
-        }
+      // Se o cliente Supabase não estiver inicializado, aguarda a próxima tentativa
+      if (!supabaseClient) {
+        console.warn("⚠️ Supabase não inicializado. Gravação em lote adiada.");
+        return;
       }
 
+      isSyncing = true;
+
+      // Retira um lote de até 20 itens da fila para processamento
+      const lote = saveQueue.slice(0, 20);
+
       try {
-        const formData = new URLSearchParams();
-        formData.append('action', 'batchSync');
-        formData.append('email', userEmail);
-        formData.append('sheetId', targetSheetId); // Garante que a gravação vá para a planilha correta
-        formData.append('batchData', JSON.stringify(lote));
+        // Mapas para desduplicação dentro do lote (garante envio único por chave primária)
+        const srsMap = new Map();
+        const posMap = new Map();
 
-        const endpoint = lote[0].endpoint;
+        lote.forEach(item => {
+          const d = item.data;
+          if (!d) return;
 
-        const response = await fetch(endpoint, {
-          method: 'POST',
-          body: formData
+          if (d.action === 'saveProgress') {
+            const key = `${d.email}___${d.sheetId}___${d.cardId}`;
+            srsMap.set(key, {
+              user_email: d.email,
+              sheet_id: d.sheetId,
+              card_id: d.cardId,
+              next_review: d.nextReview,
+              interval: d.interval,
+              ease_factor: d.easeFactor,
+              reps: d.reps || 0,
+              updated_at: new Date().toISOString()
+            });
+          } else if (d.action === 'savePosition') {
+            const key = `${d.email}___${d.sheetId}`;
+            posMap.set(key, {
+              user_email: d.email,
+              sheet_id: d.sheetId,
+              card_index: d.cardIndex,
+              modo: d.modo || 'sequencial',
+              updated_at: new Date().toISOString()
+            });
+          }
         });
 
-        const result = await response.json();
+        const srsRows = Array.from(srsMap.values());
+        const posRows = Array.from(posMap.values());
 
-        // SÓ apaga da mochila se o Google confirmar o sucesso!
-        if (result.result === "success") {
-          console.log(`🚀 Lote de ${lote.length} itens enviado e CONFIRMADO para ${targetSheetId}!`);
+        // 1. Grava em lote o progresso SRS no Supabase
+        if (srsRows.length > 0) {
+          const { error: srsError } = await supabaseClient
+            .from('srs_progress')
+            .upsert(srsRows, { onConflict: 'user_email,sheet_id,card_id' });
 
-          // Remove da fila apenas os itens que acabaram de ser confirmados
-          saveQueue = saveQueue.filter(item => !lote.includes(item));
-          localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
-        } else {
-          console.warn("⚠️ O servidor não confirmou a gravação. O lote será mantido para nova tentativa.");
+          if (srsError) throw srsError;
         }
 
-        isSyncing = false;
+        // 2. Grava em lote o marcador de posição ("Onde Parou") no Supabase
+        if (posRows.length > 0) {
+          const { error: posError } = await supabaseClient
+            .from('student_positions')
+            .upsert(posRows, { onConflict: 'user_email,sheet_id' });
+
+          if (posError) throw posError;
+        }
+
+        // Confirmação: apenas remove da fila os itens que foram gravados com sucesso
+        saveQueue = saveQueue.filter(item => !lote.includes(item));
+        localStorage.setItem('chicoSaveQueue_v2', JSON.stringify(saveQueue));
+        console.log(`🚀 [Supabase] Lote de ${lote.length} itens gravado e confirmado com sucesso!`);
 
       } catch (err) {
-        console.error("Erro na rede. O lote aguardará a próxima tentativa.", err);
+        console.error("⚠️ [Supabase] Erro ao gravar lote. O lote será mantido para nova tentativa:", err);
+      } finally {
         isSyncing = false;
       }
     }
@@ -8790,49 +8855,66 @@
       loadIntegratedNotes();
     }
 
-    // --- FUNÇÃO DE CARREGAMENTO INTELIGENTE (COM CACHE) ---
-    async function loadIntegratedNotes(forceRefresh = false) {
-      const listContainer = document.getElementById('notesListContainer');
-      document.getElementById('noteEditorContainer').style.display = 'none';
-      document.getElementById('notesListContainer').style.display = 'block';
+    // --- FUNÇÃO DE CARREGAMENTO VIA SUPABASE (COM CACHE RESILIENTE) ---
+async function loadIntegratedNotes(forceRefresh = false) {
+  const listContainer = document.getElementById('notesListContainer');
+  document.getElementById('noteEditorContainer').style.display = 'none';
+  document.getElementById('notesListContainer').style.display = 'block';
 
-      const cacheKey = `chicoNotesCache_${SHEET_ID}`;
+  const cacheKey = `chicoNotesCache_${SHEET_ID}`;
 
-      // 1. Tenta carregar da Memória Local (Se não for atualização forçada)
-      if (!forceRefresh) {
-        const cachedData = localStorage.getItem(cacheKey);
-        if (cachedData) {
-          try {
-            const notes = JSON.parse(cachedData);
-            console.log("Carregando anotações do cache...");
-            renderNotesList(notes); // Desenha instantaneamente
-            return; // Sai da função, economizando internet
-          } catch (e) {
-            console.log("Cache inválido, baixando...");
-          }
-        }
-      }
-
-      // 2. Se não tinha cache ou clicou em Sincronizar, baixa da internet
-      listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i> Atualizando lista...</p>';
-
+  // 1. Carregamento instantâneo da Memória Local (se não for atualização forçada)
+  if (!forceRefresh) {
+    const cachedData = localStorage.getItem(cacheKey);
+    if (cachedData) {
       try {
-        const url = `${NOTES_WEB_APP_URL}?action=read&userEmail=${encodeURIComponent(userEmail)}&pageId=${SHEET_ID}`;
-
-        const response = await fetch(url);
-        const data = await response.json();
-
-        // Salva no Cache para a próxima vez
-        localStorage.setItem(cacheKey, JSON.stringify(data));
-
-        // Desenha na tela
-        renderNotesList(data);
-
-      } catch (error) {
-        console.error(error);
-        listContainer.innerHTML = '<p style="text-align:center; color:#ff5555;">Erro ao carregar anotações.</p>';
+        const notes = JSON.parse(cachedData);
+        renderNotesList(notes);
+        return;
+      } catch (e) {
+        console.warn("Cache local corrompido, buscando na nuvem...");
       }
     }
+  }
+
+  listContainer.innerHTML = '<p style="text-align:center; padding:20px; color:#888;"><i class="fas fa-spinner fa-spin"></i> Carregando anotações...</p>';
+
+  if (!supabaseClient) {
+    listContainer.innerHTML = '<p style="text-align:center; color:#ff5555;">Banco de dados desconectado.</p>';
+    return;
+  }
+
+  try {
+    // Consulta direta à tabela student_notes com ordenação da mais recente para a mais antiga
+    const { data, error } = await supabaseClient
+      .from('student_notes')
+      .select('id, title, content, category, created_at')
+      .eq('user_email', userEmail)
+      .eq('page_id', SHEET_ID)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+
+    // Mapeia para os nomes esperados pela interface sem quebrar o layout
+    const formattedNotes = (data || []).map(note => ({
+      "ID": note.id,
+      "Título": note.title || "Sem título",
+      "Conteúdo": note.content || "",
+      "Data de Criação": note.created_at,
+      "Categoria": note.category || "Geral"
+    }));
+
+    // Salva no Cache para acesso offline futuro
+    localStorage.setItem(cacheKey, JSON.stringify(formattedNotes));
+
+    // Desenha na tela
+    renderNotesList(formattedNotes);
+
+  } catch (error) {
+    console.error("Erro ao carregar notas do Supabase:", error);
+    listContainer.innerHTML = '<p style="text-align:center; color:#ff5555;">Erro ao carregar anotações do servidor.</p>';
+  }
+}
 
     // Função Auxiliar: Desenha a lista na tela (Usada pelo Cache e pela Internet)
     function renderNotesList(data) {
@@ -8893,68 +8975,108 @@
       document.getElementById('editNoteContent').value = decodeURIComponent(contentEnc);
     };
 
-    async function saveIntegratedNote() {
-      const id = document.getElementById('editNoteId').value;
-      const title = document.getElementById('editNoteTitle').value;
-      const content = document.getElementById('editNoteContent').value;
+    // --- SALVAR/EDITAR ANOTAÇÃO DIRETO NO SUPABASE ---
+async function saveIntegratedNote() {
+  const id = document.getElementById('editNoteId').value;
+  const title = document.getElementById('editNoteTitle').value.trim();
+  const content = document.getElementById('editNoteContent').value.trim();
 
-      if (!title) { showToast("O título da anotação é obrigatório.", "warning"); return; }
+  if (!title) { 
+    showToast("O título da anotação é obrigatório.", "warning"); 
+    return; 
+  }
 
-      // Feedback visual simples
-      const btn = event.target;
-      const originalText = btn.innerText;
-      btn.innerText = "Salvando...";
-      btn.disabled = true;
+  if (!userEmail) {
+    showToast("Sessão não identificada. Faça login novamente.", "warning");
+    return;
+  }
 
-      try {
-        const params = new URLSearchParams();
-        params.append("action", id ? "update" : "create");
-        if (id) params.append("id", id);
-        params.append("title", title);
-        params.append("content", content);
-        params.append("category", "Geral"); // Categoria padrão
-        params.append("userEmail", userEmail);
-        params.append("pageId", SHEET_ID); // VÍNCULO CRUCIAL AQUI
+  if (!supabaseClient) {
+    showToast("Banco de dados desconectado.", "error");
+    return;
+  }
 
-        await fetch(NOTES_WEB_APP_URL, {
-          method: "POST",
-          body: params
-        });
+  // Proteção do botão durante gravação
+  const btn = (typeof event !== 'undefined' && event && event.target) 
+    ? event.target 
+    : document.querySelector('#noteEditorContainer button');
+  const originalText = btn ? btn.innerText : "Salvar";
+  if (btn) {
+    btn.innerText = "Salvando...";
+    btn.disabled = true;
+  }
 
-        cancelNoteEdit();
-        loadIntegratedNotes(true); // <--- ALTERADO: Adicionado (true) para forçar atualização
-        showFeedback("Anotação salva com sucesso!", "gold");
+  try {
+    if (id) {
+      // 1. EDIÇÃO: Atualiza a anotação existente pelo UUID
+      const { error } = await supabaseClient
+        .from('student_notes')
+        .update({
+          title: title,
+          content: content,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', id)
+        .eq('user_email', userEmail);
 
-      } catch (e) {
-        showToast("Não foi possível salvar a anotação: " + humanizeErrorMessage(e), "error");
-      } finally {
-        btn.innerText = originalText;
-        btn.disabled = false;
-      }
+      if (error) throw error;
+    } else {
+      // 2. CRIAÇÃO: Insere nova anotação vinculada ao aluno e à matéria
+      const { error } = await supabaseClient
+        .from('student_notes')
+        .insert([{
+          user_email: userEmail,
+          page_id: SHEET_ID,
+          title: title,
+          content: content,
+          category: "Geral"
+        }]);
+
+      if (error) throw error;
     }
 
-    window.deleteIntegratedNote = async function (e, id) {
-      e.stopPropagation(); // Não abrir editor
-      showCustomConfirm("Tem certeza que deseja excluir esta anotação?", async () => {
-        try {
-          const params = new URLSearchParams();
-          params.append("action", "delete");
-          params.append("id", id);
-          params.append("userEmail", userEmail);
-          params.append("pageId", SHEET_ID);
+    cancelNoteEdit();
+    loadIntegratedNotes(true); // Força atualização imediata da lista
+    showFeedback("Anotação salva com sucesso! 📝", "gold");
 
-          await fetch(NOTES_WEB_APP_URL, {
-            method: "POST",
-            body: params
-          });
+  } catch (e) {
+    console.error("Erro ao salvar nota no Supabase:", e);
+    showToast("Não foi possível salvar a anotação.", "error");
+  } finally {
+    if (btn) {
+      btn.innerText = originalText;
+      btn.disabled = false;
+    }
+  }
+}
 
-          loadIntegratedNotes(true); // Força atualização
-          showToast("Anotação excluída com sucesso.", "info");
-        } catch (err) {
-          showToast("Não foi possível excluir a anotação.", "error");
-        }
-      });
-    };
+// --- EXCLUIR ANOTAÇÃO DIRETO NO SUPABASE ---
+window.deleteIntegratedNote = async function (e, id) {
+  if (e && e.stopPropagation) e.stopPropagation();
+
+  showCustomConfirm("Tem certeza que deseja excluir esta anotação?", async () => {
+    if (!supabaseClient) {
+      showToast("Banco de dados desconectado.", "error");
+      return;
+    }
+
+    try {
+      const { error } = await supabaseClient
+        .from('student_notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_email', userEmail);
+
+      if (error) throw error;
+
+      loadIntegratedNotes(true); // Atualiza a lista na tela
+      showToast("Anotação excluída com sucesso.", "info");
+    } catch (err) {
+      console.error("Erro ao excluir nota no Supabase:", err);
+      showToast("Não foi possível excluir a anotação.", "error");
+    }
+  });
+};
     // --- LÓGICA DA BARRA DE BUSCA (NOVO) ---
     function toggleSearchBar() {
       const input = document.getElementById("topSearchBar");

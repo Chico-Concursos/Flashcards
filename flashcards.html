@@ -3260,9 +3260,14 @@
 
           <div id="pesoMinimoOptions"
             style="display: none; margin-top: 10px; padding: 10px; background: #333; border-radius: 5px;">
-            <label for="pesoMinimoValue">Peso mínimo exigido:</label>
-            <input type="number" id="pesoMinimoValue" class="quantity-input" min="1" value="1"
-              style="width: 60px; margin-left: 10px;">
+            <label for="pesoMinimoValue" style="display: block; color: gold; font-weight: bold; margin-bottom: 6px; font-size: 0.9em;">
+              <i class="fas fa-layer-group" style="margin-right: 4px;"></i> Peso Mínimo:
+            </label>
+            <select id="pesoMinimoValue" onchange="updateSettingsPesoSummary()"
+              style="width: 100%; padding: 8px; background: #222; color: white; border: 1px solid #555; border-radius: 5px; font-size: 0.95em;">
+              <option value="1">Todos os Pesos</option>
+            </select>
+            <div id="settingsPesoSummary" style="font-size: 0.82em; color: #00FFFF; margin-top: 6px; background: rgba(0,255,255,0.08); border-left: 3px solid #00FFFF; padding: 4px 8px; border-radius: 0 4px 4px 0; display: none;"></div>
           </div>
         </div>
 
@@ -3399,10 +3404,15 @@
           <option value="todos">Todos os Focos</option>
         </select>
 
-        <div id="modalPesoContainer" style="display: none; flex-direction: row; align-items: center; gap: 10px;">
-          <span style="color: white; font-size: 0.9em;">Peso Mínimo:</span>
-          <input type="number" id="modalPesoInput" min="1" value="1"
-            style="width: 60px; padding: 6px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 1em;">
+        <div id="modalPesoContainer" style="display: none; flex-direction: column; gap: 6px;">
+          <label for="modalPesoSelect" style="color: #00FFFF; font-size: 0.9em; font-weight: bold;">
+            <i class="fas fa-layer-group" style="margin-right: 4px;"></i> Peso Mínimo:
+          </label>
+          <select id="modalPesoSelect" onchange="updateModalPesoSummary()"
+            style="width: 100%; padding: 8px; background: #333; color: white; border: 1px solid #555; border-radius: 5px; font-size: 0.95em;">
+            <option value="1">Todos os Pesos</option>
+          </select>
+          <div id="modalPesoSummary" style="font-size: 0.82em; color: #FFD700; background: rgba(255,215,0,0.1); border-left: 3px solid #FFD700; padding: 4px 8px; border-radius: 0 4px 4px 0; display: none;"></div>
         </div>
       </div>
 
@@ -4020,6 +4030,8 @@
 
       const pesoInput = document.getElementById('pesoMinimoValue');
       if (pesoInput) pesoInput.value = 1;
+      const settingsPesoSum = document.getElementById('settingsPesoSummary');
+      if (settingsPesoSum) settingsPesoSum.style.display = 'none';
 
       // D. LIMPA TELAS DO SISTEMA
       const reviewBtn = document.getElementById('reviewErrorsButton');
@@ -7400,6 +7412,7 @@
       // Preenche as opções de disciplina e ano com base nos cards carregados
       populateDisciplineDropdowns(initialCards);
       populateAnoDropdowns(initialCards);
+      populateSettingsPesoDropdown();
 
       document.getElementById('settingsModal').style.display = 'flex';
     }
@@ -7408,10 +7421,67 @@
     function closeSettingsModal() {
       document.getElementById('settingsModal').style.display = 'none';
     }
-    // INÍCIO DA NOVA FUNÇÃO
+
     // Mostra ou oculta as opções de peso mínimo com base na seleção do rádio
     function switchWeightMode(mode) {
-      document.getElementById('pesoMinimoOptions').style.display = (mode === 'minimo') ? 'block' : 'none';
+      const optionsEl = document.getElementById('pesoMinimoOptions');
+      if (optionsEl) optionsEl.style.display = (mode === 'minimo') ? 'block' : 'none';
+      if (mode === 'minimo') {
+        populateSettingsPesoDropdown();
+      }
+    }
+
+    // Popula a lista suspensa de pesos no modal de configurações com porcentagens acumuladas
+    function populateSettingsPesoDropdown() {
+      const select = document.getElementById('pesoMinimoValue');
+      if (!select) return;
+      const pool = initialCards.filter(c => !c.tipo || !c.tipo.includes('prova'));
+      const total = pool.length;
+      const currentVal = parseInt(select.value) || 1;
+
+      if (total === 0) {
+        select.innerHTML = '<option value="1">Nenhum card disponível</option>';
+        updateSettingsPesoSummary();
+        return;
+      }
+
+      const uniqueWeights = [...new Set(pool.map(c => parseInt(c.peso) || 1))].sort((a, b) => b - a);
+
+      if (uniqueWeights.length <= 1) {
+        const singleW = uniqueWeights[0] || 1;
+        select.innerHTML = `<option value="${singleW}">Todos os cards têm Peso ${singleW} (${total} cards • 100%)</option>`;
+      } else {
+        let html = `<option value="1">Todos os Pesos (${total} cards • 100%)</option>`;
+        uniqueWeights.forEach(w => {
+          if (w > 1) {
+            const count = pool.filter(c => (parseInt(c.peso) || 1) >= w).length;
+            const pct = Math.round((count / total) * 100);
+            html += `<option value="${w}">≥ Peso ${w} (${count} cards • ${pct}%)</option>`;
+          }
+        });
+        select.innerHTML = html;
+      }
+
+      if (select.querySelector(`option[value="${currentVal}"]`)) {
+        select.value = currentVal;
+      }
+      updateSettingsPesoSummary();
+    }
+
+    function updateSettingsPesoSummary() {
+      const select = document.getElementById('pesoMinimoValue');
+      const summaryEl = document.getElementById('settingsPesoSummary');
+      if (!select || !summaryEl) return;
+      const pool = initialCards.filter(c => !c.tipo || !c.tipo.includes('prova'));
+      if (pool.length === 0) {
+        summaryEl.style.display = 'none';
+        return;
+      }
+      const val = parseInt(select.value) || 1;
+      const count = pool.filter(c => (parseInt(c.peso) || 1) >= val).length;
+      const pct = Math.round((count / pool.length) * 100);
+      summaryEl.innerHTML = `📊 <strong>Filtro ativo:</strong> ${count} de ${pool.length} cards (${pct}%)`;
+      summaryEl.style.display = 'block';
     }
     // FIM DA NOVA FUNÇÃO
     // Alterna a exibição das opções entre "Simulado" e "Provas"
@@ -7556,6 +7626,10 @@
           if (weightMode === 'sequencial') {
             // SE FOR SEQUENCIAL: Pega as primeiras X questões na ordem exata da planilha
             cards = fullPool.slice(0, qtdDesejada);
+          } else if (weightMode === 'minimo') {
+            const minWeight = parseInt(document.getElementById('pesoMinimoValue').value) || 1;
+            const poolMinimo = fullPool.filter(c => (parseInt(c.peso) || 1) >= minWeight);
+            cards = poolMinimo.slice(0, qtdDesejada);
           } else {
             // SE FOR ALEATÓRIO/PONDERADO: Faz o sorteio baseado nos pesos
             let weightedPool = [];
@@ -7583,7 +7657,6 @@
             }
             cards = Array.from(selectedSet);
           }
-          cards = Array.from(selectedSet);
           // --- NOVO MODO: SRS (Repetição Espaçada) ---
         } else if (studyMode === 'srs') {
           isSRSMode = true;
@@ -7872,10 +7945,12 @@
               toggleStep3FilterType('nenhum');
             }
           } else if (savedStep3Type === 'peso' && lastFilterSelections.pesoMin) {
-            const pesoInput = document.getElementById('modalPesoInput');
-            if (pesoInput) {
-              pesoInput.value = lastFilterSelections.pesoMin;
+            populateModalPesoDropdown();
+            const pesoSelect = document.getElementById('modalPesoSelect') || document.getElementById('modalPesoInput');
+            if (pesoSelect && pesoSelect.querySelector && pesoSelect.querySelector(`option[value="${lastFilterSelections.pesoMin}"]`)) {
+              pesoSelect.value = lastFilterSelections.pesoMin;
             }
+            updateModalPesoSummary();
           }
         }
       }
@@ -7919,10 +7994,77 @@
       modalHandleTopicChange('todos');
     }
 
+    // --- FUNÇÕES DE PESO DINÂMICO DO FILTRO ---
+    function getModalCardsPool() {
+      const disc = document.getElementById('modalDisciplineSelect')?.value;
+      if (!disc) return [];
+      let pool = initialCards.filter(c => c.disciplina === disc);
+      const topic = document.getElementById('modalTopicSelect')?.value;
+      if (topic && topic !== 'todos') {
+        pool = pool.filter(c => c.topico === topic);
+      }
+      return pool;
+    }
+
+    function populateModalPesoDropdown() {
+      const select = document.getElementById('modalPesoSelect');
+      if (!select) return;
+      const pool = getModalCardsPool();
+      const total = pool.length;
+      const currentVal = parseInt(select.value) || (lastFilterSelections.pesoMin || 1);
+
+      if (total === 0) {
+        select.innerHTML = '<option value="1">Nenhum card disponível</option>';
+        updateModalPesoSummary();
+        return;
+      }
+
+      const uniqueWeights = [...new Set(pool.map(c => parseInt(c.peso) || 1))].sort((a, b) => b - a);
+
+      if (uniqueWeights.length <= 1) {
+        const singleW = uniqueWeights[0] || 1;
+        select.innerHTML = `<option value="${singleW}">Todos os cards têm Peso ${singleW} (${total} cards • 100%)</option>`;
+      } else {
+        let html = `<option value="1">Todos os Pesos (${total} cards • 100%)</option>`;
+        uniqueWeights.forEach(w => {
+          if (w > 1) {
+            const count = pool.filter(c => (parseInt(c.peso) || 1) >= w).length;
+            const pct = Math.round((count / total) * 100);
+            html += `<option value="${w}">≥ Peso ${w} (${count} cards • ${pct}%)</option>`;
+          }
+        });
+        select.innerHTML = html;
+      }
+
+      if (select.querySelector(`option[value="${currentVal}"]`)) {
+        select.value = currentVal;
+      }
+      updateModalPesoSummary();
+    }
+
+    function updateModalPesoSummary() {
+      const select = document.getElementById('modalPesoSelect');
+      const summaryEl = document.getElementById('modalPesoSummary');
+      if (!select || !summaryEl) return;
+      const pool = getModalCardsPool();
+      if (pool.length === 0) {
+        summaryEl.style.display = 'none';
+        return;
+      }
+      const val = parseInt(select.value) || 1;
+      const count = pool.filter(c => (parseInt(c.peso) || 1) >= val).length;
+      const pct = Math.round((count / pool.length) * 100);
+      summaryEl.innerHTML = `📊 <strong>Filtro ativo:</strong> ${count} de ${pool.length} cards (${pct}%)`;
+      summaryEl.style.display = 'block';
+    }
+
     // --- NOVA FUNÇÃO DE TROCA DO PASSO 3 ---
     function toggleStep3FilterType(type) {
       document.getElementById('modalFocoSelect').style.display = (type === 'foco') ? 'block' : 'none';
       document.getElementById('modalPesoContainer').style.display = (type === 'peso') ? 'flex' : 'none';
+      if (type === 'peso') {
+        populateModalPesoDropdown();
+      }
     }
 
     // 4. Ao escolher Tópico -> Habilita Passo 3 (Refinar Busca)
@@ -7977,7 +8119,8 @@
 
       const step3Type = document.getElementById('modalStep3TypeSelect').value;
       const foco = document.getElementById('modalFocoSelect').value;
-      const pesoMin = parseInt(document.getElementById('modalPesoInput').value) || 1;
+      const pesoSelect = document.getElementById('modalPesoSelect') || document.getElementById('modalPesoInput');
+      const pesoMin = parseInt(pesoSelect ? pesoSelect.value : 1) || 1;
       const step3Visible = document.getElementById('modalStep3Container').style.display !== 'none';
 
       if (!disc) {
@@ -8039,6 +8182,10 @@
         document.getElementById('modalStep3Container').style.display = 'none';
         document.getElementById('modalStep3TypeSelect').value = 'nenhum';
         toggleStep3FilterType('nenhum');
+        const pesoSelect = document.getElementById('modalPesoSelect');
+        if (pesoSelect) pesoSelect.value = "1";
+        const pesoSum = document.getElementById('modalPesoSummary');
+        if (pesoSum) pesoSum.style.display = 'none';
       }
 
       // 3. Reseta o Filtro real (Mostra todos os cards no fundo)

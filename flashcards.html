@@ -4668,13 +4668,9 @@
               console.log(`📡 Vigia: Nova versão detectada (${jsonV.version}). Atualizando em segundo plano...`);
               const cardsAtualizados = await baixarDoServidor(jsonV.version);
               if (cardsAtualizados) {
-                // Se o aluno ainda não começou a navegar, atualiza a tela na hora
-                if (currentCard === 0 && showingFront) {
-                  processLoadedCards(cardsAtualizados, false);
-                  showFeedback("Matéria atualizada pelo professor! 🔄", "gold");
-                } else {
-                  showFeedback("Nova versão salva no dispositivo! 🔄", "gold");
-                }
+                // Atualiza imediatamente o estoque geral, os pesos e a tela (mantendo a posição do aluno)
+                processLoadedCards(cardsAtualizados, true);
+                showFeedback("Matéria atualizada pelo professor! 🔄", "gold");
               }
             }
           } catch(e) {

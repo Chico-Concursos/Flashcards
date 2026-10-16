@@ -4594,11 +4594,12 @@
           const topico = (row[4] || "").toString().trim();
           const peso = parseInt(row[5]) || 1;
           let tipoRaw = (row[6] || "").toString().trim().toLowerCase();
-          const tipo = tipoRaw === "" ? 'simulado' : tipoRaw;
+         const tipo = tipoRaw === "" ? 'simulado' : tipoRaw;
           const ano = (row[7] || "").toString().trim();
+          const customId = (row[8] || "").toString().trim();
 
           if (frontText && backText) {
-            loadedCards.push({ front: frontText, back: backText, tipo, categoria: topico, topico, foco, disciplina, peso, ano });
+            loadedCards.push({ front: frontText, back: backText, tipo, categoria: topico, topico, foco, disciplina, peso, ano, customId });
           }
         });
 
@@ -4682,9 +4683,13 @@
 
     // Função auxiliar para carregar cards na memória e preparar a tela
     function processLoadedCards(cardsData, isFromCache) {
+      window.customCardIdsByFront = {};
       // --- NOVO: ETIQUETA PERMANENTE (Garante que o número nunca se perca) ---
       cardsData.forEach((card, index) => {
         card._originalIndex = index;
+        if (card.customId) {
+          window.customCardIdsByFront[card.front] = card.customId;
+        }
       });
       // -----------------------------------------------------------------------
 
@@ -7497,13 +7502,26 @@
         document.getElementById('livreOptions').style.display = 'block';
       }
 
-      // LÓGICA AUTOMÁTICA PARA SRS
+      // LÓGICA AUTOMÁTICA PARA SRS + PLACAR DIÁRIO
       if (mode === 'srs') {
         // Marca automaticamente a opção "Sequencial" na etapa 3
         const seqBtn = document.querySelector('input[name="weightMode"][value="sequencial"]');
         if (seqBtn) {
           seqBtn.checked = true;
           switchWeightMode('sequencial'); // Garante que esconde opções de peso mínimo
+        }
+        // Calcula e exibe o Placar Diário de Revisões
+        if (typeof initialCards !== 'undefined' && initialCards.length > 0) {
+          const agora = new Date();
+          let novos = 0, atrasados = 0, emDia = 0;
+          initialCards.forEach(c => {
+            const id = generateCardId(c.front);
+            const prog = userSRSProgress[id];
+            if (!prog || !prog.nextReview) novos++;
+            else if (new Date(prog.nextReview) <= agora) atrasados++;
+            else emDia++;
+          });
+          showToast(`🧠 Hoje: ${atrasados} para revisar | ${novos} novos | ${emDia} em dia`, 'info', 5000);
         }
       }
     }
@@ -8251,6 +8269,9 @@
     // Agora ignora maiúsculas, acentos e espaços extras para evitar perda de progresso ao corrigir erros simples.
     function generateCardId(text) {
       if (!text || text.length === 0) return "ID_NULL";
+      if (window.customCardIdsByFront && window.customCardIdsByFront[text]) {
+        return "ID_" + window.customCardIdsByFront[text];
+      }
 
       // Normaliza: Remove acentos, espaços extras e coloca em minúsculo
       // Ex: "Constituição" vira "constituicao"
@@ -8329,9 +8350,9 @@
 
     // 3. Função dos Botões SRS (Errei, Difícil, Bom, Fácil)
     function rateCardSRS(rating, btnElement, colorHex) {
-      if (rating === 'again' || rating === 'hard') {
+      if (rating === 'again') {
         triggerVisualFeedback('error');
-      } else {
+      } else if (rating === 'good' || rating === 'easy') {
         triggerVisualFeedback('success');
       }
 

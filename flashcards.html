@@ -478,7 +478,7 @@
 
     .bottom-bar input[type="number"] {
       width: 55px;
-      padding: 1, 5px;
+      padding: 1.5px;
       font-size: 1em;
     }
 
@@ -3217,6 +3217,15 @@
         </select>
       </div>
 
+      <div id="srsOptions" class="settings-section" style="display: none;">
+        <h3>2. Fila do SRS (O que estudar agora?)</h3>
+        <select id="srsFilterType" style="width: 100%; padding: 8px; margin-top: 5px; background-color: #333; color: white; border: 1px solid #555; border-radius: 4px;">
+          <option value="padrao">🔄 Revisões Vencidas + Cards Novos (Recomendado)</option>
+          <option value="novos">✨ Apenas Cards Novos (Avançar sem revisar agora)</option>
+          <option value="vencidos">🎯 Apenas Revisões Vencidas (Limpar pendências)</option>
+        </select>
+      </div>
+
       <div class="settings-dashboard-grid">
 
         <div class="settings-column">
@@ -3634,8 +3643,8 @@
       : null;
 	// Suporte acesso aos Cards
     let SRS_BACKEND_URL = "https://script.google.com/macros/s/AKfycby2Scbe8l1x0gSC3tGemmDTu24MdBXtaryTeeOtmtOaFTB0dwGUPVxIruLqY5nTPxkYfA/exec";
-    // Professor IA
-    let AI_BACKEND_URL = "https://script.google.com/macros/s/AKfycbygSW2z33jnRiVq8S_PAcucOSXkKHsLSZ6DKXYSfP4O9XdziYuHo7yGBF4iCNUv5No6sA/exec";
+    // Professor IA (Supabase Edge Function)
+    let AI_BACKEND_URL = `${SUPABASE_URL}/functions/v1/professor-chico`;
 
     let isAuthenticated = false;
     let userEmail = '';
@@ -3776,6 +3785,17 @@
     // ============================================================
     // 🛡️ SISTEMA CENTRAL DE TRATAMENTO DE ERROS E TOASTS IN-DOM
     // ============================================================
+
+    // Sanitizador global contra injeção de HTML e XSS
+    function escapeHTML(str) {
+      if (str === null || str === undefined) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
 
     // Traduz erros técnicos em mensagens elegantes e humanas
     function humanizeErrorMessage(error) {
@@ -3973,16 +3993,9 @@
       closeConfirmModal(); // Fecha a janela de confirmação
 
       // A. RECUPERAÇÃO SEGURA DOS DADOS
-      const savedData = localStorage.getItem('flashcardsState');
-      if (savedData) {
-        try {
-          cards = JSON.parse(savedData);
-        } catch (e) {
-          cards = [...initialCards];
-        }
-      } else {
-        cards = [...initialCards];
-      }
+      cards = [...initialCards];
+      isTemporaryFilterActive = false;
+      savedMainProgressIndex = -1;
 
       // B. RESETA VARIÁVEIS GLOBAIS
       currentCard = 0;
@@ -4207,7 +4220,8 @@
     function checkAuthentication() {
       const savedAuth = localStorage.getItem('isAuthenticated');
       const savedEmail = localStorage.getItem('userEmail');
-      if (savedAuth === 'true' && savedEmail) {
+      const savedToken = localStorage.getItem('sessionToken');
+      if (savedAuth === 'true' && savedEmail && savedToken && savedToken.includes('.')) {
         if (isSessionExpired()) {
           expireSession();
           return;
@@ -4258,6 +4272,8 @@
             startSessionHeartbeat();
           });
       } else {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('sessionToken');
         document.getElementById('loginModal').style.display = 'flex';
       }
     }
@@ -4607,6 +4623,12 @@
           await saveToGalpao(cacheKey, JSON.stringify(loadedCards));
           if (versaoServidorParaSalvar) {
             localStorage.setItem(versionKey, versaoServidorParaSalvar);
+          } else {
+            // Se foi o 1º download, busca e registra o carimbo de versão em segundo plano
+            fetch(`${SRS_BACKEND_URL}?action=checkVersion&sheetId=${encodeURIComponent(sheetId)}`)
+              .then(r => r.json())
+              .then(d => { if (d && d.version) localStorage.setItem(versionKey, d.version); })
+              .catch(() => {});
           }
           return loadedCards;
         }
@@ -4689,6 +4711,8 @@
         card._originalIndex = index;
         if (card.customId) {
           window.customCardIdsByFront[card.front] = card.customId;
+          const normFront = card.front.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+          window.customCardIdsByFront[normFront] = card.customId;
         }
       });
       // -----------------------------------------------------------------------
@@ -5181,6 +5205,12 @@
       const realIndex = (card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
 
       if (realIndex !== -1) {
+        // Zera a contagem de erros seguidos (Sanguessuga) ao acertar
+        const cardId = generateCardId(card.front);
+        if (userSRSProgress[cardId]) {
+          userSRSProgress[cardId].lapses = 0;
+        }
+
         if (!cardAccuracy[realIndex]) {
           cardAccuracy[realIndex] = { correct: 0, incorrect: 0 };
         }
@@ -5188,14 +5218,13 @@
         cardAccuracy[realIndex].correct++;
 
         // --- CORREÇÃO: REDENÇÃO (Limpa o erro se acertar) ---
-        // Se este card tinha erros registrados, remove 1 erro.
-        // Assim, se você corrigir o erro na revisão, ele sai da lista.
         if (cardAccuracy[realIndex].incorrect > 0) {
           cardAccuracy[realIndex].incorrect--;
         }
         // -----------------------------------------------------
 
         updateAccuracyButtons();
+        saveStatsToStorage();
         nextCard();
         saveFlashcardState();
       }
@@ -5211,7 +5240,7 @@
 
       // Verifica Sanguessuga e contabiliza erro
       if (realIndex !== -1) {
-        checkLeech(realIndex); // Mantém a lógica de sanguessuga
+        const isLeechTriggered = checkLeech(realIndex);
 
         if (!cardAccuracy[realIndex]) {
           cardAccuracy[realIndex] = { correct: 0, incorrect: 0 };
@@ -5219,7 +5248,11 @@
 
         cardAccuracy[realIndex].incorrect++; // Soma o erro
         updateAccuracyButtons();
-        nextCard();
+        saveStatsToStorage();
+        // Só avança automaticamente se NÃO disparou o alerta de 5º erro seguido
+        if (!isLeechTriggered) {
+          nextCard();
+        }
         saveFlashcardState();
       }
     }
@@ -5275,6 +5308,7 @@
 
       if (currentEvalState === 'srs') {
         if (srsDiv) srsDiv.style.display = 'flex';
+        if (typeof updateSRSTooltips === 'function') updateSRSTooltips();
       } else {
         // Modo Normal (Certo/Errado)
         if (btnCorrect) btnCorrect.style.display = 'inline-block';
@@ -5312,7 +5346,7 @@
           isReviewErrorsMode = false;
           cards = [...initialCards];
           if (currentCategory !== "Todas") {
-            cards = initialCards.filter(card => card.category === currentCategory);
+            cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
           }
           document.getElementById('reviewErrorsButton').style.display = 'none';
           return;
@@ -5324,7 +5358,7 @@
         if (currentCategory === "Todas") {
           cards = [...initialCards];
         } else {
-          cards = initialCards.filter(card => card.category === currentCategory);
+          cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
         }
 
         document.getElementById('reviewErrorsButton').style.color = 'white';
@@ -5350,7 +5384,7 @@
       if (currentCategory === "Todas") {
         cards = [...initialCards];
       } else {
-        cards = initialCards.filter(card => card.category === currentCategory);
+        cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
       }
 
       cards = cards.filter((card, index) => {
@@ -5363,7 +5397,7 @@
         isReviewErrorsMode = false;
         cards = [...initialCards];
         if (currentCategory !== "Todas") {
-          cards = initialCards.filter(card => card.category === currentCategory);
+          cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
         }
         document.getElementById('reviewErrorsButton').style.display = 'none';
         return;
@@ -5396,7 +5430,7 @@
         if (currentCategory === "Todas") {
           cards = [...initialCards];
         } else {
-          cards = initialCards.filter(card => card.category === currentCategory);
+          cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
         }
         if (isReviewErrorsMode) {
           cards = cards.filter((card, index) => {
@@ -5687,6 +5721,12 @@
         const rawTime = (Date.now() - cardViewStartTime) / 1000;
         const timeSpent = Math.min(rawTime, 120);
 
+        const currentCardObj = cards[currentCard];
+        const realIndexForTime = (currentCardObj && currentCardObj._originalIndex !== undefined)
+          ? currentCardObj._originalIndex
+          : initialCards.indexOf(currentCardObj);
+        const targetTimeIndex = realIndexForTime !== -1 ? realIndexForTime : currentCard;
+
         // --- VERIFICA SE O MODO FOCO ESTÁ ATIVO NO HTML ---
         // Se o modal não existir (primeiro load) ou estiver marcado, consideramos true
         const focusCheckbox = document.getElementById('enableFocusMode');
@@ -5694,15 +5734,13 @@
 
         // Se o foco estiver DESLIGADO, a gente só grava o tempo e sai, sem mudar pesos.
         if (!isFocusEnabled) {
-          recordResponseTime(currentCard, Math.round(timeSpent));
+          recordResponseTime(targetTimeIndex, Math.round(timeSpent));
           saveStatsToStorage();
           return; // <--- SAI DA FUNÇÃO AQUI
         }
         // --------------------------------------------------
 
         // --- LÓGICA ADAPTATIVA (Só roda se não saiu acima) ---
-        const currentCardObj = cards[currentCard];
-
         if (currentCardObj) {
           const currentTopic = currentCardObj.topico;
           const charCount = (currentCardObj.front.length + currentCardObj.back.length) || 1;
@@ -5735,9 +5773,16 @@
               userLearningStats.topicWeights[currentTopic] += 0.5;
               showFeedback(`Focando em: ${currentTopic}`, "#ff5555");
 
-              const candidates = initialCards.filter(c =>
+              let candidates = initialCards.filter(c =>
                 c.topico === currentTopic && !cards.includes(c)
               );
+              // Se estiver estudando o baralho completo, busca um card do mesmo tópico que não esteja nas próximas 3 posições
+              if (candidates.length === 0) {
+                const nextThree = cards.slice(currentCard + 1, currentCard + 4);
+                candidates = initialCards.filter(c =>
+                  c.topico === currentTopic && c !== currentCardObj && !nextThree.includes(c)
+                );
+              }
               if (candidates.length > 0) {
                 const reinforcementCard = candidates[Math.floor(Math.random() * candidates.length)];
                 const insertIndex = Math.min(currentCard + 3, cards.length);
@@ -5754,7 +5799,7 @@
           }
         }
 
-        recordResponseTime(currentCard, Math.round(timeSpent));
+        recordResponseTime(targetTimeIndex, Math.round(timeSpent));
         saveStatsToStorage();
 
       } catch (error) {
@@ -5821,7 +5866,7 @@
           item.className = 'card-review-item';
           item.innerHTML = `
             <div class="card-review-content">
-              <strong>Card #${index + 1}:</strong> ${card.front.substring(0, 50)}${card.front.length > 50 ? '...' : ''}
+              <strong>Card #${index + 1}:</strong> ${escapeHTML(card.front.substring(0, 50))}${card.front.length > 50 ? '...' : ''}
             </div>
             <div class="card-review-time">${cardAccuracy[index].incorrect} ❌</div>
           `;
@@ -5880,7 +5925,7 @@
           item.className = 'card-review-item';
           item.innerHTML = `
             <div class="card-review-content">
-              <strong>Card #${parseInt(cardIndex) + 1}:</strong> ${card.front.substring(0, 50)}${card.front.length > 50 ? '...' : ''}
+              <strong>Card #${parseInt(cardIndex) + 1}:</strong> ${escapeHTML(card.front.substring(0, 50))}${card.front.length > 50 ? '...' : ''}
             </div>
             <div class="card-review-time">${data.avgTime}s</div>
           `;
@@ -5989,7 +6034,7 @@
       if (currentCategory === "Todas") {
         cards = [...initialCards];
       } else {
-        cards = initialCards.filter(card => card.category === currentCategory);
+        cards = initialCards.filter(card => card.categoria === currentCategory || card.disciplina === currentCategory);
       }
 
       // 4. Se o modo aleatório estava ligado, reembaralha tudo
@@ -6150,7 +6195,7 @@
     // --- FUNÇÃO ANTI-SANGUESSUGA (LEECH) ---
     function checkLeech(cardIndex) {
       // Segurança: verifica se o card existe
-      if (!initialCards || !initialCards[cardIndex]) return;
+      if (!initialCards || !initialCards[cardIndex]) return false;
 
       const cardId = generateCardId(initialCards[cardIndex].front);
 
@@ -6158,21 +6203,22 @@
       if (!userSRSProgress[cardId]) userSRSProgress[cardId] = {};
       if (!userSRSProgress[cardId].lapses) userSRSProgress[cardId].lapses = 0;
 
-      // Incrementa o contador de erros (lapses)
+      // Incrementa o contador de erros consecutivos (lapses)
       userSRSProgress[cardId].lapses++;
 
-      // LIMITE DE 5 ERROS
-      if (userSRSProgress[cardId].lapses >= 5) {
+      // Dispara a cada múltiplo de 5 erros seguidos (5, 10, 15...)
+      if (userSRSProgress[cardId].lapses >= 5 && userSRSProgress[cardId].lapses % 5 === 0) {
         // 1. Alerta na tela (Modal)
         showCustomAlert("Você errou este card 5 vezes seguidas.\n\nSugestão: Volte na teoria e revise o conceito com calma antes de memorizar.", "Atenção: Revisão Teórica");
 
-        // 2. Marca visual no card atual (Borda vermelha e aviso)
+        // 2. Marca visual autolimpante no card atual
         const content = document.getElementById("flashcard-content");
-        if (content) {
-          content.style.border = "3px solid #ff5555";
-          content.innerHTML += "<br><br><span style='color:#ff5555; font-size:0.9em; font-weight:bold; background:rgba(0,0,0,0.8); padding:5px; border-radius:5px;'>⚠️ [REVISAR TEORIA]</span>";
+        if (content && !content.innerHTML.includes("[REVISAR TEORIA]")) {
+          content.innerHTML += "<div style='margin-top:15px; border:2px solid #ff5555; color:#ff5555; font-size:0.9em; font-weight:bold; background:rgba(43,21,21,0.9); padding:8px 12px; border-radius:6px;'>⚠️ [REVISAR TEORIA]</div>";
         }
+        return true;
       }
+      return false;
     }
   </script>
 
@@ -6738,14 +6784,6 @@
 
     console.log("Intialized sistema de vozes melhorado");
 
-    // Garante que as vozes carreguem (Chrome precisa disso)
-    if (window.speechSynthesis.onvoiceschanged !== undefined) {
-      window.speechSynthesis.onvoiceschanged = populateVoiceList;
-    }
-
-    const settingsBtn = document.getElementById('settingsBtn');
-    if (settingsBtn) settingsBtn.addEventListener('click', populateVoiceList);
-
     // --- VARIÁVEIS E FUNÇÕES DO MODO MÃOS LIVRES (ATUALIZADO PARA GOOGLE SITES) ---
     let isHandsFree = false;
     let handsFreeDelay = 3;
@@ -7256,8 +7294,6 @@
 
     setInterval(updateTimer, 1000);
 
-    document.getElementById('loginForm').addEventListener('submit', login);
-
     document.addEventListener('DOMContentLoaded', checkAuthentication);
 
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
@@ -7492,6 +7528,7 @@
       document.getElementById('simuladoOptions').style.display = 'none';
       document.getElementById('provasOptions').style.display = 'none';
       document.getElementById('livreOptions').style.display = 'none';
+      if (document.getElementById('srsOptions')) document.getElementById('srsOptions').style.display = 'none';
 
       // 2. Mostra APENAS a opção selecionada
       if (mode === 'simulado') {
@@ -7500,6 +7537,8 @@
         document.getElementById('provasOptions').style.display = 'block';
       } else if (mode === 'livre') {
         document.getElementById('livreOptions').style.display = 'block';
+      } else if (mode === 'srs') {
+        if (document.getElementById('srsOptions')) document.getElementById('srsOptions').style.display = 'block';
       }
 
       // LÓGICA AUTOMÁTICA PARA SRS + PLACAR DIÁRIO
@@ -7674,30 +7713,51 @@
           // --- NOVO MODO: SRS (Repetição Espaçada) ---
         } else if (studyMode === 'srs') {
           isSRSMode = true;
-          const now = new Date();
+          currentEvalState = 'srs';
+          localStorage.setItem('chicoEvalMode', 'srs');
+          updateEvalButtonsUI();
 
-          // Filtra: Cards sem registro (Novos) OU Cards Vencidos (Data <= Hoje)
+          const now = new Date();
+          const srsFilter = document.getElementById('srsFilterType') ? document.getElementById('srsFilterType').value : 'padrao';
+
+          // Filtra conforme a escolha do aluno (Padrão, Apenas Novos ou Apenas Vencidos)
           cards = initialCards.filter(card => {
             const id = generateCardId(card.front);
             const progress = userSRSProgress[id];
+            const isNew = (!progress || !progress.nextReview);
+            const isDue = (!isNew && new Date(progress.nextReview) <= now);
 
-            if (!progress || !progress.nextReview) return true; // É novo
-            return new Date(progress.nextReview) <= now; // Venceu
+            if (srsFilter === 'novos') return isNew;
+            if (srsFilter === 'vencidos') return isDue;
+            return isNew || isDue; // 'padrao'
           });
 
           if (cards.length === 0) {
-            showCustomAlert("Parabéns! Você está em dia com as revisões. Nada para estudar agora.");
+            const msgVazio = srsFilter === 'novos'
+              ? "Parabéns! Não há cards inéditos restantes neste baralho."
+              : "Parabéns! Você está em dia com as revisões. Nada pendente para estudar agora.";
+            showCustomAlert(msgVazio);
             hideLoadingIndicator();
             return;
           }
 
-          // Ordena: Vencidos há mais tempo aparecem primeiro
+          // Ordenação Padrão Ouro:
+          // 1º Cards vencidos (do mais atrasado para o mais recente)
+          // 2º Cards inéditos (seguindo a ordem pedagógica da planilha)
           cards.sort((a, b) => {
             const idA = generateCardId(a.front);
             const idB = generateCardId(b.front);
-            const dateA = userSRSProgress[idA] ? new Date(userSRSProgress[idA].nextReview) : new Date(0);
-            const dateB = userSRSProgress[idB] ? new Date(userSRSProgress[idB].nextReview) : new Date(0);
-            return dateA - dateB;
+            const progA = userSRSProgress[idA];
+            const progB = userSRSProgress[idB];
+            const hasDateA = Boolean(progA && progA.nextReview);
+            const hasDateB = Boolean(progB && progB.nextReview);
+
+            if (hasDateA && !hasDateB) return -1; // Vencido vem ANTES do card novo
+            if (!hasDateA && hasDateB) return 1;  // Card novo vem DEPOIS do vencido
+            if (hasDateA && hasDateB) {
+              return new Date(progA.nextReview) - new Date(progB.nextReview);
+            }
+            return (a._originalIndex || 0) - (b._originalIndex || 0);
           });
           // --- MODO 3: PROVAS ---
         } else {
@@ -8267,8 +8327,14 @@
     let isInitialPositionResolved = false; // 🛡️ TRAVA MESTRA: Impede salvar na nuvem até definir a posição inicial
     // 1. Gerador de ID Único (Robustez Aumentada)
     // Agora ignora maiúsculas, acentos e espaços extras para evitar perda de progresso ao corrigir erros simples.
-    function generateCardId(text) {
-      if (!text || text.length === 0) return "ID_NULL";
+    function generateCardId(cardOrText) {
+      if (!cardOrText) return "ID_NULL";
+      if (typeof cardOrText === 'object') {
+        if (cardOrText.customId) return "ID_" + cardOrText.customId;
+        cardOrText = cardOrText.front || "";
+      }
+      const text = String(cardOrText);
+      if (text.length === 0) return "ID_NULL";
       if (window.customCardIdsByFront && window.customCardIdsByFront[text]) {
         return "ID_" + window.customCardIdsByFront[text];
       }
@@ -8276,6 +8342,9 @@
       // Normaliza: Remove acentos, espaços extras e coloca em minúsculo
       // Ex: "Constituição" vira "constituicao"
       const cleanText = text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      if (window.customCardIdsByFront && window.customCardIdsByFront[cleanText]) {
+        return "ID_" + window.customCardIdsByFront[cleanText];
+      }
 
       let hash = 0, i, chr;
       for (i = 0; i < cleanText.length; i++) {
@@ -8348,7 +8417,96 @@
       }
     }
 
-    // 3. Função dos Botões SRS (Errei, Difícil, Bom, Fácil)
+    // 3. Motor Moderno FSRS-4.5 (Free Spaced Repetition Scheduler — Retenção Alvo 90%)
+    // Extrai Estabilidade (S) e Dificuldade (D de 1 a 10) mantendo 100% de compatibilidade com SM-2 antigo
+    function extractFSRSState(state) {
+      let S = (state && state.interval) ? parseFloat(state.interval) : 0;
+      let rawEase = (state && state.easeFactor !== undefined) ? parseFloat(state.easeFactor) : 105.0;
+      let D = 5.0;
+      if (rawEase >= 100) {
+        D = Math.min(10.0, Math.max(1.0, rawEase - 100.0));
+      } else if (rawEase > 0) {
+        // Converte automaticamente cards antigos do SM-2 (ease 1.3 a 2.5) para a escala FSRS (1 a 10)
+        D = Math.min(10.0, Math.max(1.0, 11.0 - (rawEase * 2.4)));
+      }
+      let reps = (state && state.reps) ? parseInt(state.reps, 10) : 0;
+      return { S, D, reps };
+    }
+
+    function previewSRSInterval(state, rating) {
+      const { S, D, reps } = extractFSRSState(state);
+
+      if (rating === 'again') {
+        const nextD = Math.min(10.0, Number((0.15 * 5.0 + 0.85 * (D + 1.7)).toFixed(2)));
+        return { interval: 0, ease: Number((100 + nextD).toFixed(2)), reps: 0 };
+      }
+
+      const gMap = { hard: 2, good: 3, easy: 4 };
+      const G = gMap[rating] || 3;
+      const newReps = reps + 1;
+
+      // 1º Contato com o Card (Estabilidade Inicial S0 e Dificuldade Inicial D0 calibradas)
+      if (reps === 0 || S <= 0) {
+        let s0 = 3;
+        let d0 = 5.0;
+        if (rating === 'hard') { s0 = 1; d0 = 6.2; }
+        else if (rating === 'good') { s0 = 3; d0 = 5.0; }
+        else if (rating === 'easy') { s0 = 6; d0 = 3.5; }
+        return { interval: s0, ease: Number((100 + d0).toFixed(2)), reps: newReps };
+      }
+
+      // Cálculo de dias decorridos reais (t) e Recuperabilidade atual R(t, S) pela curva FSRS-4.5
+      let overdueDays = 0;
+      if (state && state.nextReview) {
+        const diffMs = new Date() - new Date(state.nextReview);
+        overdueDays = Math.max(0, diffMs / (1000 * 60 * 60 * 24));
+      }
+      const elapsedDays = Math.max(1, S + overdueDays);
+      const retrievability = Math.pow(1 + (19 / 81) * (elapsedDays / S), -0.5);
+
+      // Atualização da Dificuldade D' com Reversão à Média (evita o "Ease Hell" do SM-2)
+      const deltaD = -0.85 * (G - 3);
+      const nextD = Math.min(10.0, Math.max(1.0, Number((0.15 * 5.0 + 0.85 * (D + deltaD)).toFixed(2))));
+
+      // Atualização da Estabilidade S' (Fórmula FSRS de ganho de memória)
+      const hardPenalty = (G === 2) ? 0.45 : 1.0;
+      const easyBonus = (G === 4) ? 1.35 : 1.0;
+      const growthFactor = 1 + Math.exp(1.55) * (11 - nextD) * Math.pow(S, -0.18) * (Math.exp(0.95 * (1 - retrievability)) - 1) * hardPenalty * easyBonus;
+
+      let nextS = Math.round(S * growthFactor);
+      if (rating === 'hard') {
+        nextS = Math.max(Math.round(S * 1.2), S + 1);
+      } else if (rating === 'good') {
+        nextS = Math.max(nextS, S + 2);
+      } else if (rating === 'easy') {
+        const goodRef = previewSRSInterval(state, 'good').interval;
+        nextS = Math.max(nextS, goodRef + 2);
+      }
+
+      return { interval: nextS, ease: Number((100 + nextD).toFixed(2)), reps: newReps };
+    }
+
+    // Atualiza dinamicamente os Tooltips dos botões SRS para o card atual da tela
+    function updateSRSTooltips() {
+      if (!cards || cards.length === 0 || !cards[currentCard]) return;
+      const card = cards[currentCard];
+      const cardId = generateCardId(card);
+      const state = userSRSProgress[cardId] || { interval: 0, easeFactor: 105.0, reps: 0, nextReview: null };
+
+      const pHard = previewSRSInterval(state, 'hard').interval;
+      const pGood = previewSRSInterval(state, 'good').interval;
+      const pEasy = previewSRSInterval(state, 'easy').interval;
+
+      const btnHard = document.getElementById('btnHard');
+      const btnGood = document.getElementById('btnGood');
+      const btnEasy = document.getElementById('btnEasy');
+
+      if (btnHard) btnHard.setAttribute('data-tooltip', `Revisar em ${pHard} ${pHard === 1 ? 'dia' : 'dias'}`);
+      if (btnGood) btnGood.setAttribute('data-tooltip', `Revisar em ${pGood} ${pGood === 1 ? 'dia' : 'dias'}`);
+      if (btnEasy) btnEasy.setAttribute('data-tooltip', `Revisar em ${pEasy} ${pEasy === 1 ? 'dia' : 'dias'}`);
+    }
+
+    // Função dos Botões SRS com Motor FSRS (Errei, Difícil, Bom, Fácil)
     function rateCardSRS(rating, btnElement, colorHex) {
       if (rating === 'again') {
         triggerVisualFeedback('error');
@@ -8367,7 +8525,7 @@
       }
 
       const card = cards[currentCard];
-      const cardId = generateCardId(card.front);
+      const cardId = generateCardId(card);
       const realIndex = (card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
 
       if (realIndex !== -1) {
@@ -8377,21 +8535,17 @@
           cardAccuracy[realIndex].incorrect++;
         } else {
           cardAccuracy[realIndex].correct++;
-
-          // --- CORREÇÃO: REDENÇÃO NO SRS ---
-          // Se marcou Difícil/Bom/Fácil, abate um erro antigo
           if (cardAccuracy[realIndex].incorrect > 0) {
             cardAccuracy[realIndex].incorrect--;
           }
-          // ---------------------------------
         }
       }
 
-      let state = userSRSProgress[cardId] || { interval: 0, easeFactor: 2.5, reps: 0, nextReview: null };
-      let newInterval = 0;
-      let newEase = state.easeFactor;
-      if (newEase === undefined) newEase = 2.5;
-      let newReps = state.reps || 0;
+      let state = userSRSProgress[cardId] || { interval: 0, easeFactor: 105.0, reps: 0, nextReview: null };
+      const calc = previewSRSInterval(state, rating);
+      let newInterval = calc.interval;
+      let newEase = calc.ease;
+      let newReps = calc.reps;
       let nextReviewDate = new Date();
 
       const applyFuzz = (val) => {
@@ -8401,30 +8555,10 @@
         return val + shift;
       };
 
-      // ALGORITMO SM-2 REAL
-      // 1. Mapear o botão clicado para 'quality' (q) de 1 a 5
-      let q = 4; // Padrão: Good
-      if (rating === 'again') q = 1;
-      else if (rating === 'hard') q = 3;
-      else if (rating === 'good') q = 4;
-      else if (rating === 'easy') q = 5;
-
-      // 2. Atualizar Easiness Factor (EF)
-      newEase = newEase + (0.1 - (5 - q) * (0.08 + (5 - q) * 0.02));
-      newEase = Math.max(1.3, newEase); // floor em 1.3 (Evita "ease hell")
-
-      // 3. Atualizar Repetições Bem Sucedidas (n)
-      if (q < 3) {
-        newReps = 0;
-      } else {
-        newReps++;
-      }
-
+      let isLeechTriggered = false;
       if (rating === 'again') {
-        const realIndexRef = initialCards.indexOf(cards[currentCard]);
-        if (realIndexRef !== -1) checkLeech(realIndexRef);
+        if (realIndex !== -1) isLeechTriggered = checkLeech(realIndex);
 
-        newInterval = 0;
         nextReviewDate.setMinutes(nextReviewDate.getMinutes() + 10);
 
         const cardToRepeat = cards[currentCard];
@@ -8439,41 +8573,29 @@
           showFeedback("↺ Reagendado para o FINAL da fila", colorHex);
         }
       } else {
-        // SM-2: Calcular Novo Intervalo
-        if (newReps === 1) {
-          newInterval = 1;
-          if (rating === 'easy') newInterval = 4; // Bônus de primeiro acerto
-        } else if (newReps === 2) {
-          newInterval = 6;
-          if (rating === 'easy' && state.interval > 0) newInterval = Math.round(state.interval * newEase * 1.3);
-        } else {
-          let prevInterval = state.interval === 0 ? 1 : state.interval;
-          let intervalMultiplier = newEase;
-          if (rating === 'easy') intervalMultiplier += 0.15; // Leve bônus extra no SM-2 modificado
-          if (rating === 'hard') intervalMultiplier = 1.2; // Penalidade do botão 'Hard' (mantém o card mais próximo)
-          newInterval = Math.round(prevInterval * intervalMultiplier);
-        }
-
         newInterval = applyFuzz(newInterval);
         nextReviewDate.setDate(nextReviewDate.getDate() + Math.max(1, newInterval));
-
-        // Exibe o intervalo futuro sutilmente (1 dia, 6 dias, etc)
-        // Isso ajuda o usuário a confiar no algoritmo
-        // showFeedback(`📅 Agendado para daqui a ${newInterval} dia(s)`, colorHex);
       }
+
+      const currentLapses = (rating === 'again')
+        ? ((userSRSProgress[cardId] && userSRSProgress[cardId].lapses) ? userSRSProgress[cardId].lapses : 1)
+        : 0;
 
       userSRSProgress[cardId] = {
         interval: newInterval,
         easeFactor: newEase,
         reps: newReps,
+        lapses: currentLapses,
         nextReview: nextReviewDate.toISOString()
       };
 
-      saveSRSToBackend(cardId, nextReviewDate.toISOString(), newInterval, newEase, newReps);
+      saveSRSToBackend(cardId, nextReviewDate.toISOString(), newInterval, newEase, newReps, currentLapses);
 
-      setTimeout(() => {
-        nextCard();
-      }, 200);
+      if (!isLeechTriggered) {
+        setTimeout(() => {
+          nextCard();
+        }, 200);
+      }
     }
     // --- NOVO SISTEMA DE FILA DE SALVAMENTO (OFFLINE SYNC) ---
     // 1. Carrega fila pendente da memória do navegador
@@ -8499,6 +8621,10 @@
     async function processSaveQueue() {
       // 🛡️ Não dispara sincronização enquanto o download inicial de cards estiver em curso
       if (window.isDownloadingFirstTime) return;
+
+      // 🧹 Remove da fila qualquer ação residual que não seja SRS ou Posição
+      saveQueue = saveQueue.filter(item => item.data && (item.data.action === 'saveProgress' || item.data.action === 'savePosition'));
+
       if (isSyncing || saveQueue.length === 0 || !navigator.onLine) return;
 
       // Se o cliente Supabase não estiver inicializado, aguarda a próxima tentativa
@@ -8531,6 +8657,7 @@
               interval: d.interval,
               ease_factor: d.easeFactor,
               reps: d.reps || 0,
+              lapses: d.lapses || 0,
               updated_at: new Date().toISOString()
             });
           } else if (d.action === 'savePosition') {
@@ -8616,7 +8743,7 @@
     });
 
     // 4. Salvar no Backend (Atualizado para usar a Fila)
-    function saveSRSToBackend(cardId, nextReview, interval, ease, reps = 0) {
+    function saveSRSToBackend(cardId, nextReview, interval, ease, reps = 0, lapses = 0) {
       if (!userEmail) return;
 
       // Cria um objeto simples com os dados
@@ -8628,7 +8755,8 @@
         nextReview: nextReview,
         interval: interval,
         easeFactor: ease,
-        reps: reps
+        reps: reps,
+        lapses: lapses
       };
 
       // Manda para a fila (seguro) em vez de fetch direto
@@ -8736,7 +8864,8 @@
         return;
       }
 
-      let cardText = (card.front || "").length > 50 ? card.front.substring(0, 50) + "..." : (card.front || "Card sem texto");
+      let rawCardText = (card.front || "").length > 50 ? card.front.substring(0, 50) + "..." : (card.front || "Card sem texto");
+      let cardText = escapeHTML(rawCardText);
 
       const msgElement = document.getElementById('resumeMessage');
       if (msgElement) {
@@ -8766,7 +8895,11 @@
       showingFront = true;
 
       if (window.savedPosition.modo === 'srs') {
-        console.log("Retomando modo SRS");
+        isSRSMode = true;
+        currentEvalState = 'srs';
+        const srsRadio = document.querySelector('input[name="studyMode"][value="srs"]');
+        if (srsRadio) srsRadio.checked = true;
+        updateEvalButtonsUI();
       }
 
       window.savedPosition = null; // 🛡️ Desarma a posição para o modal nunca mais reabrir
@@ -8807,9 +8940,10 @@
           savePositionTimer = null;
         }
 
-        // 2. Força o salvamento imediato
+        // 2. Força o salvamento imediato na fila e despacha para o Supabase na hora
         console.log("Saída detectada: Forçando salvamento imediato...");
         savePositionToBackend();
+        processSaveQueue();
       }
     });
   </script>
@@ -8930,7 +9064,9 @@
       const STORAGE_KEY_STREAK = 'chicoStreakCount';
       const STORAGE_KEY_DATE = 'chicoLastStudyDate';
 
-      const today = new Date().toISOString().split('T')[0]; // Data de hoje (YYYY-MM-DD)
+      // Data local do dispositivo (evita virada prematura às 21h pelo horário UTC de Londres)
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
       const lastDate = localStorage.getItem(STORAGE_KEY_DATE);
       let currentStreak = parseInt(localStorage.getItem(STORAGE_KEY_STREAK) || 0);
 
@@ -8943,11 +9079,10 @@
         localStorage.setItem(STORAGE_KEY_STREAK, currentStreak);
       }
       else if (lastDate !== today) {
-        // Calcula a diferença de dias
-        const d1 = new Date(today);
-        const d2 = new Date(lastDate);
-        const diffTime = Math.abs(d1 - d2);
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        // Calcula a diferença real de dias no calendário local (meia-noite a meia-noite)
+        const d1 = new Date(today + "T00:00:00");
+        const d2 = new Date(lastDate + "T00:00:00");
+        const diffDays = Math.round((d1 - d2) / (1000 * 60 * 60 * 24));
 
         if (diffDays === 1) {
           // Estudou ontem -> Aumenta a ofensiva!
@@ -8955,13 +9090,14 @@
           // Efeito visual de celebração
           streakDisplay.style.transform = "scale(1.5)";
           setTimeout(() => streakDisplay.style.transform = "scale(1)", 500);
-        } else {
-          // Quebrou a corrente -> Recomeça
+          localStorage.setItem(STORAGE_KEY_DATE, today);
+          localStorage.setItem(STORAGE_KEY_STREAK, currentStreak);
+        } else if (diffDays > 1) {
+          // Ficou mais de 1 dia sem estudar -> Recomeça
           currentStreak = 1;
+          localStorage.setItem(STORAGE_KEY_DATE, today);
+          localStorage.setItem(STORAGE_KEY_STREAK, currentStreak);
         }
-        // Salva o progresso de hoje
-        localStorage.setItem(STORAGE_KEY_DATE, today);
-        localStorage.setItem(STORAGE_KEY_STREAK, currentStreak);
       }
 
       // Atualiza a tela
@@ -9093,20 +9229,23 @@ async function loadIntegratedNotes(forceRefresh = false) {
       data.forEach(note => {
         const div = document.createElement('div');
         div.className = 'integrated-note-item';
+        const safeTitle = encodeURIComponent(note["Título"] || "").replace(/'/g, "%27");
+        const safeContent = encodeURIComponent(note["Conteúdo"] || "").replace(/'/g, "%27");
+        const safeId = escapeHTML(note["ID"] || "");
         div.innerHTML = `
                 <div>
-                    <div class="integrated-note-title">${note["Título"] || "Sem título"}</div>
+                    <div class="integrated-note-title">${escapeHTML(note["Título"] || "Sem título")}</div>
                     <div class="integrated-note-date">${new Date(note["Data de Criação"]).toLocaleDateString()}</div>
                 </div>
                 <div>
-                    <button onclick="editIntegratedNote('${note["ID"]}', '${encodeURIComponent(note["Título"])}', '${encodeURIComponent(note["Conteúdo"])}')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-right:10px;"><i class="fas fa-edit"></i></button>
-                    <button onclick="deleteIntegratedNote(event, '${note["ID"]}')" style="background:none; border:none; color:#ff5555; cursor:pointer;"><i class="fas fa-trash"></i></button>
+                    <button onclick="editIntegratedNote('${safeId}', '${safeTitle}', '${safeContent}')" style="background:none; border:none; color:#aaa; cursor:pointer; margin-right:10px;"><i class="fas fa-edit"></i></button>
+                    <button onclick="deleteIntegratedNote(event, '${safeId}')" style="background:none; border:none; color:#ff5555; cursor:pointer;"><i class="fas fa-trash"></i></button>
                 </div>
             `;
         // Clique no item abre edição
         div.onclick = (e) => {
           if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'I') {
-            editIntegratedNote(note["ID"], encodeURIComponent(note["Título"]), encodeURIComponent(note["Conteúdo"]));
+            editIntegratedNote(note["ID"], safeTitle, safeContent);
           }
         };
         listContainer.appendChild(div);
@@ -9274,7 +9413,7 @@ window.deleteIntegratedNote = async function (e, id) {
       }
       // Se não achar nada, avisa
       if (cards.length === 0) {
-        document.getElementById("flashcard-content").innerHTML = "<br><br>🔍 Nenhum card encontrado com: <br><strong style='color:gold'>" + text + "</strong>";
+        document.getElementById("flashcard-content").innerHTML = "<br><br>🔍 Nenhum card encontrado com: <br><strong style='color:gold'>" + escapeHTML(text) + "</strong>";
         document.getElementById("cardCounter").innerHTML = "0/0";
         return;
       }
@@ -9299,7 +9438,7 @@ window.deleteIntegratedNote = async function (e, id) {
     // 1. Função Formatadora de Texto (Melhora a Legibilidade)
     function formatMarkdown(text) {
       if (!text) return "";
-      return text
+      return escapeHTML(text)
         .replace(/\*\*(.*?)\*\*/g, '<strong style="color: #FFD700;">$1</strong>')
         .replace(/\*(.*?)\*/g, '<em>$1</em>')
         .replace(/### (.*?)\n/g, '<h3 style="margin: 10px 0 5px 0; color: white;">$1</h3>')
@@ -9358,7 +9497,7 @@ window.deleteIntegratedNote = async function (e, id) {
       if (sender === 'user') {
         messageDiv.style.background = '#252525';
         messageDiv.style.borderLeft = '4px solid #555';
-        messageDiv.innerHTML = `<strong style="color: #bbb;">👤 Sua Dúvida:</strong><br><span style="color: #ddd;">${message}</span>`;
+        messageDiv.innerHTML = `<strong style="color: #bbb;">👤 Sua Dúvida:</strong><br><span style="color: #ddd;">${escapeHTML(message)}</span>`;
       } else {
         messageDiv.style.background = '#1a1a1a';
         messageDiv.style.borderLeft = '4px solid #FFD700';
@@ -9385,63 +9524,63 @@ window.deleteIntegratedNote = async function (e, id) {
       return messageDiv;
     }
 
-    // 4. API Groq
-    // --- FUNÇÃO SEGURA: Comunicação com Backend de IA Isolado ---
-    async function callGroqAPI(messagesContext) {
+    // 4. API Groq via Supabase Edge Function + Cache Compartilhado no PostgreSQL
+    async function callGroqAPI(messagesContext, isInitial = false, cardIdKey = '') {
       try {
-        // Prepara payload seguro (não expõe chave API)
-        const cardData = cards[currentCard];
-        const cardContext = cardData ?
-          (showingFront ? cardData.front : cardData.back).substring(0, 100) : '';
+        const currentSheet = SHEET_ID || 'default';
+
+        // CAMADA 1: Consulta direta ao Cache Compartilhado do Banco (0 Edge Functions / 0 Tokens Groq)
+        if (isInitial && supabaseClient && cardIdKey) {
+          try {
+            const { data: cachedRow } = await supabaseClient
+              .from('ai_cache')
+              .select('explanation')
+              .eq('sheet_id', currentSheet)
+              .eq('card_id', String(cardIdKey))
+              .maybeSingle();
+
+            if (cachedRow && cachedRow.explanation) {
+              console.log("⚡ [Professor Chico] Explicação entregue instantaneamente pelo banco Supabase (0 tokens gastos)!");
+              return cachedRow.explanation;
+            }
+          } catch (cacheErr) {
+            console.warn("Aviso ao consultar cache local da IA:", cacheErr);
+          }
+        }
 
         // --- OTIMIZAÇÃO: JANELA DESLIZANTE (LÓGICA SENIOR) ---
-        // Objetivo: Enviar apenas o essencial para não travar a memória da IA.
-
         let messagesToSend = messagesContext;
-        const LIMIT = 6; // Mantém a 1ª (Contexto) + as 5 últimas (Conversa Recente)
-
+        const LIMIT = 6;
         if (messagesContext.length > LIMIT) {
-          console.log("Otimizando histórico do chat...");
-
-          // 1. A Regra de Ouro: Nunca perca a primeira mensagem (index 0),
-          // pois ela contém o comando "Aja como um Professor" e os dados do Card.
           const firstMsg = messagesContext[0];
-
-          // 2. Pega apenas as últimas mensagens recentes (LIMIT - 1)
-          // O slice(-(LIMIT-1)) pega do fim para o começo.
           const recentMsgs = messagesContext.slice(-(LIMIT - 1));
-
-          // 3. Reconstrói o histórico limpo
           messagesToSend = [firstMsg, ...recentMsgs];
         }
-        // -----------------------------------------------------
 
         const payload = {
-          action: 'askAI',
           email: userEmail || 'anonymous',
           sessionToken: localStorage.getItem('sessionToken') || '',
-          messages: JSON.stringify(messagesToSend), // <--- AGORA USAMOS A LISTA OTIMIZADA
-          cardContext: cardContext,
-          timestamp: Date.now(),
-          originUrl: window.location.href
+          sheetId: currentSheet,
+          cardId: String(cardIdKey),
+          isInitial: Boolean(isInitial),
+          messages: messagesToSend
         };
-        const formData = new URLSearchParams();
-        for (const key in payload) {
-          formData.append(key, payload[key]);
-        }
 
-        // Chama backend seguro (isolated) - chave API fica apenas no servidor
+        // CAMADA 2: Chama a Supabase Edge Function (valida token, chama Groq e salva no banco)
         const response = await fetch(AI_BACKEND_URL, {
           method: "POST",
           headers: {
-            "Content-Type": "application/x-www-form-urlencoded"
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${SUPABASE_ANON_KEY}`,
+            "apikey": SUPABASE_ANON_KEY
           },
-          body: formData,
-          signal: AbortSignal.timeout(30000) // 30s timeout
+          body: JSON.stringify(payload),
+          signal: AbortSignal.timeout(30000)
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+          const errJson = await response.json().catch(() => ({}));
+          throw new Error(errJson.error || `HTTP ${response.status}`);
         }
 
         const result = await response.json();
@@ -9463,43 +9602,39 @@ window.deleteIntegratedNote = async function (e, id) {
           return "🌐 Erro de conexão. Verifique sua internet ou tente recarregar a página.";
         }
 
-        return "❌ Serviço de IA temporariamente indisponível. Tente novamente em alguns instantes.";
+        return `❌ ${error.message || "Serviço de IA temporariamente indisponível. Tente novamente em alguns instantes."}`;
       }
     }
 
-    // 5. Botão Explicar (COM CACHE INTELIGENTE)
+    // 5. Botão Explicar (COM CACHE EM MEMÓRIA + CACHE COMPARTILHADO SUPABASE)
     window.explainWithAI = async function () {
       const modal = document.getElementById('aiModal');
       const chatHistory = document.getElementById('aiChatHistory');
 
       if (modal) modal.style.display = 'flex';
 
-      // --- LÓGICA DE CACHE ---
-      // Se o card atual é o mesmo da última vez E temos histórico salvo...
-      if (currentCard === lastExplainedCardIndex && chatHistoryContext.length > 0) {
-        console.log("Usando resposta em cache (Economia de Tokens)");
+      // Identifica o card pelo seu ID único de conteúdo (compatível com customId e hash)
+      const currentCardKey = (cards[currentCard] && typeof generateCardId === 'function')
+        ? generateCardId(cards[currentCard])
+        : String(currentCard);
 
-        // Limpa a tela para redesenhar limpo
+      // --- LÓGICA DE CACHE EM RAM (MESMO ALUNO CLICANDO 2 VEZES) ---
+      if (currentCardKey === lastExplainedCardIndex && chatHistoryContext.length > 0) {
+        console.log("Usando resposta em cache de RAM (Economia de Tokens)");
         chatHistory.innerHTML = "";
-
-        // Redesenha o histórico salvo na memória
         chatHistoryContext.forEach(msg => {
-          // Ignora a mensagem inicial do sistema (prompt oculto)
           if (msg.role === 'user' && !msg.content.includes("Aja como um Professor")) {
             addMessageToChat('user', msg.content);
           }
           if (msg.role === 'assistant') {
-            // Reaplica a formatação visual bonita
             const formatted = formatMarkdown(msg.content);
             addMessageToChat('system', formatted);
           }
         });
-        return; // <--- PARA AQUI! Não chama a IA de novo.
+        return;
       }
-      // -----------------------
 
-      // Se chegou aqui, é um card novo. Atualiza o índice e limpa o chat.
-      lastExplainedCardIndex = currentCard;
+      lastExplainedCardIndex = currentCardKey;
       chatHistoryContext = [];
       chatHistory.innerHTML = `<div class="ai-message"><strong style="color: #f7ef8a;">Professor Chico:</strong><br><i class="fas fa-spinner fa-spin" style="color: #f7ef8a;"></i> <span style="color: #f7ef8a;">Analisando...</span></div>`;
 
@@ -9507,8 +9642,13 @@ window.deleteIntegratedNote = async function (e, id) {
         const promptInicial = generatePromptFromCard();
         chatHistoryContext.push({ role: "user", content: promptInicial });
 
-        const respostaIA = await callGroqAPI(chatHistoryContext);
+        // Passa isInitial = true e currentCardKey para acionar o cache compartilhado entre alunos
+        const respostaIA = await callGroqAPI(chatHistoryContext, true, currentCardKey);
         chatHistoryContext.push({ role: "assistant", content: respostaIA });
+
+        if (/^[❌⏱️🌐]/.test(respostaIA.trim())) {
+          lastExplainedCardIndex = -1;
+        }
 
         const respostaFormatada = formatMarkdown(respostaIA);
 

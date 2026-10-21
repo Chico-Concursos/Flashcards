@@ -3238,7 +3238,7 @@
             <option value="gold">Dourado</option>
           </select>
         </div>
-        <div class="menu-item-row" onclick="openSettingsModal(); toggleHamburgerMenu()">
+        <div id="settingsBtn" class="menu-item-row" onclick="openSettingsModal(); toggleHamburgerMenu()">
           <i class="fas fa-cog" style="width:25px;"></i> <span class="menu-item-label">Configurações</span>
         </div>
 
@@ -4429,7 +4429,7 @@
       else if (type === 'warning') iconClass = 'fa-exclamation-triangle';
       else if (type === 'error') iconClass = 'fa-times-circle';
 
-      toast.innerHTML = `<i class="fas ${iconClass}"></i><span>${message}</span>`;
+      toast.innerHTML = `<i class="fas ${iconClass}"></i><span>${escapeHTML(message)}</span>`;
       container.appendChild(toast);
 
       requestAnimationFrame(() => {
@@ -4448,7 +4448,7 @@
     function showLoginError(message) {
       const errorElement = document.getElementById('loginError');
       const cleanMsg = humanizeErrorMessage(message);
-      errorElement.innerHTML = `<i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i> ${cleanMsg}`;
+      errorElement.innerHTML = `<i class="fas fa-exclamation-circle" style="margin-right: 6px;"></i> ${escapeHTML(cleanMsg)}`;
       errorElement.style.display = 'block';
     }
 
@@ -5232,8 +5232,8 @@
                 <i class="fas fa-cloud-download-alt"></i>
               </div>
               <h3 class="chico-card-error-title">Não foi possível carregar o baralho</h3>
-              <p class="chico-card-error-desc">${msgAviso}</p>
-              <button onclick="loadFlashcardsFromGoogleSheet('${sheetId}', '${gid}')" class="chico-card-error-btn">
+              <p class="chico-card-error-desc">${escapeHTML(msgAviso)}</p>
+              <button onclick="loadFlashcardsFromGoogleSheet(SHEET_ID, GID)" class="chico-card-error-btn">
                 <i class="fas fa-redo-alt"></i> Tentar Novamente
               </button>
             </div>`;
@@ -5775,7 +5775,7 @@
 
       if (realIndex !== -1) {
         // Zera a contagem de erros seguidos (Sanguessuga) ao acertar
-        const cardId = generateCardId(card.front);
+        const cardId = generateCardId(card);
         if (userSRSProgress[cardId]) {
           userSRSProgress[cardId].lapses = 0;
         }
@@ -6766,7 +6766,7 @@
       // Segurança: verifica se o card existe
       if (!initialCards || !initialCards[cardIndex]) return false;
 
-      const cardId = generateCardId(initialCards[cardIndex].front);
+      const cardId = generateCardId(initialCards[cardIndex]);
 
       // Garante que o objeto de progresso existe
       if (!userSRSProgress[cardId]) userSRSProgress[cardId] = {};
@@ -7558,8 +7558,6 @@
       "LINDB": "Lei de Introdução às normas do Direito Brasileiro",
       "LEP": "Lei de Execução Penal",
       "Leman": "Lei do Mandado de Segurança",
-      "CPP": "C-P-P",
-      "CP": "C-P",
 
       // === 3. TRIBUNAIS E ÓRGÃOS ===
       "TJMG": "Tribunal de Justiça de Minas Gerais",
@@ -7675,7 +7673,6 @@
       "Federal": "Federau",
       "Inicial": "Iniciau",
       "Social": "Sociau",
-      "Federal": "Federau",
       "Penal": "Penau",
       "45º": "45 graus",
       "Perimetral": "Perimetrau",
@@ -7838,6 +7835,70 @@
       if (window.getComputedStyle(loginModal).display === 'flex') {
         return;
       }
+
+      // --- ACESSIBILIDADE WCAG 2.1 AA: TECLA ESCAPE FECHA MODAIS E MENUS ---
+      if (e.key === "Escape") {
+        // 1. Fecha alertas, confirmações, zoom de imagem e ajuste de timer (Camada Superior)
+        const alertModal = document.getElementById('customAlertModal');
+        if (alertModal && alertModal.style.display === 'flex') { e.preventDefault(); closeCustomAlert(); return; }
+
+        const confirmModal = document.getElementById('customConfirmModal');
+        if (confirmModal && confirmModal.style.display === 'flex') { e.preventDefault(); closeConfirmModal(); return; }
+
+        const lightbox = document.getElementById('lightboxModal');
+        if (lightbox && lightbox.style.display === 'flex') { e.preventDefault(); closeLightbox(); return; }
+
+        const autoAdvSetup = document.getElementById('autoAdvanceSetup');
+        if (autoAdvSetup && autoAdvSetup.style.display === 'flex') { e.preventDefault(); cancelAutoAdvanceDelay(); return; }
+
+        // 2. Fecha modais de conteúdo (Configurações, Filtro, Notas, Reporte, Voz, Avaliação, Stats, Manual, Ajuda, IA)
+        const closableModals = [
+          { id: 'reportModal', closeFn: closeReportModal },
+          { id: 'handsFreeModal', closeFn: closeHandsFreeModal },
+          { id: 'evalModal', closeFn: closeEvalModal },
+          { id: 'filterModal', closeFn: closeFilterModal },
+          { id: 'settingsModal', closeFn: closeSettingsModal },
+          { id: 'notesModal', closeFn: () => { document.getElementById('notesModal').style.display = 'none'; } },
+          { id: 'statsModal', closeFn: () => { document.getElementById('statsModal').style.display = 'none'; } },
+          { id: 'manualModal', closeFn: () => { document.getElementById('manualModal').style.display = 'none'; } },
+          { id: 'helpModal', closeFn: () => { document.getElementById('helpModal').style.display = 'none'; } }
+        ];
+
+        for (const item of closableModals) {
+          const el = document.getElementById(item.id);
+          if (el && el.style.display && el.style.display !== 'none') {
+            e.preventDefault();
+            item.closeFn();
+            return;
+          }
+        }
+
+        const aiModals = document.querySelectorAll('.ai-modal-overlay');
+        for (const aiEl of aiModals) {
+          if (aiEl.style.display && aiEl.style.display !== 'none') {
+            e.preventDefault();
+            aiEl.style.display = 'none';
+            return;
+          }
+        }
+
+        // 3. Fecha menus suspensos (Hambúrguer e Conta do Utilizador)
+        const mainMenu = document.getElementById('mainMenuDropdown');
+        if (mainMenu && mainMenu.classList.contains('show-menu')) { e.preventDefault(); mainMenu.classList.remove('show-menu'); return; }
+
+        const userMenu = document.getElementById('userDropdownMenu');
+        if (userMenu && userMenu.classList.contains('active')) { e.preventDefault(); userMenu.classList.remove('active'); return; }
+
+        // 4. Fecha e limpa a barra de busca se estiver aberta
+        const searchBar = document.getElementById('topSearchBar');
+        if (searchBar && searchBar.style.display && searchBar.style.display !== 'none') {
+          e.preventDefault();
+          toggleSearchBar();
+          return;
+        }
+        return;
+      }
+
       const activeElement = document.activeElement;
       const isInputFocused = activeElement.tagName === 'INPUT' || activeElement.tagName === 'TEXTAREA' || activeElement.tagName === 'SELECT';
       if (isInputFocused) {
@@ -8231,7 +8292,7 @@
           const agora = new Date();
           let novos = 0, atrasados = 0, emDia = 0;
           initialCards.forEach(c => {
-            const id = generateCardId(c.front);
+            const id = generateCardId(c);
             const prog = userSRSProgress[id];
             if (!prog || !prog.nextReview) novos++;
             else if (new Date(prog.nextReview) <= agora) atrasados++;
@@ -8399,7 +8460,7 @@
 
           // Filtra conforme a escolha do aluno (Padrão, Apenas Novos ou Apenas Vencidos)
           cards = initialCards.filter(card => {
-            const id = generateCardId(card.front);
+            const id = generateCardId(card);
             const progress = userSRSProgress[id];
             const isNew = (!progress || !progress.nextReview);
             const isDue = (!isNew && new Date(progress.nextReview) <= now);
@@ -8422,8 +8483,8 @@
           // 1º Cards vencidos (do mais atrasado para o mais recente)
           // 2º Cards inéditos (seguindo a ordem pedagógica da planilha)
           cards.sort((a, b) => {
-            const idA = generateCardId(a.front);
-            const idB = generateCardId(b.front);
+            const idA = generateCardId(a);
+            const idB = generateCardId(b);
             const progA = userSRSProgress[idA];
             const progB = userSRSProgress[idB];
             const hasDateA = Boolean(progA && progA.nextReview);
@@ -9290,6 +9351,7 @@
 
       // Feedback visual discreto no console
       console.log("Dado adicionado ao lote. Pendentes:", saveQueue.length);
+      updateSyncUI();
 
       // O envio imediato foi REMOVIDO aqui. O relógio de 15s é quem vai enviar.
     }
@@ -9379,11 +9441,11 @@
         console.error("⚠️ [Supabase] Erro ao gravar lote. O lote será mantido para nova tentativa:", err);
       } finally {
         isSyncing = false;
+        updateSyncUI();
       }
     }
 
-    // Tenta sincronizar a cada 10 segundos automaticamente
-    // --- ATUALIZAÇÃO VISUAL DA NUVEM ---
+    // --- ATUALIZAÇÃO VISUAL DA NUVEM (ACIONADA POR EVENTO) ---
     function updateSyncUI() {
       const icon = document.getElementById('syncIndicator');
       if (!icon) return;
@@ -9400,11 +9462,6 @@
         icon.setAttribute('data-tooltip', 'Tudo salvo na nuvem com segurança');
       }
     }
-
-    // Loop Visual: Atualiza a nuvenzinha na tela a cada 2 segundos
-    setInterval(() => {
-      updateSyncUI();
-    }, 2000);
 
     // Loop de Atacado: O caminhão de entregas só passa a cada 15 segundos
     setInterval(() => {
@@ -9653,18 +9710,19 @@
     function submitReport() {
       const comment = document.getElementById('reportComment').value.trim();
       const card = cards[currentCard];
-      const realIndex = initialCards.indexOf(card);
+      const realIndex = (card && card._originalIndex !== undefined) ? card._originalIndex : initialCards.indexOf(card);
 
       // Fecha o modal visualmente
       closeReportModal();
 
-      // Envia para o backend
+      // Envia para o backend (autenticado com sessionToken)
       const formData = new URLSearchParams();
       formData.append('action', 'reportError');
       formData.append('sheetId', SHEET_ID);
       formData.append('cardIndex', realIndex + 2);
       formData.append('cardFront', card.front ? card.front.substring(0, 30) : "Sem texto");
       formData.append('email', userEmail);
+      formData.append('sessionToken', localStorage.getItem('sessionToken') || '');
       formData.append('comment', comment); // <--- AQUI VAI O COMENTÁRIO DO USUÁRIO
 
       fetch(SRS_BACKEND_URL, {

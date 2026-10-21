@@ -174,24 +174,111 @@
       overflow-x: hidden;
     }
 
+    /* ============================================================ */
+    /* --- BARRA SUPERIOR ULTRACOMPACTA (COLADA NO CONTEÚDO) --- */
+    /* ============================================================ */
     .top-bar {
       display: flex;
       justify-content: center;
-      /* ← CENTRALIZADO */
       align-items: center;
       background-color: #1e1e1e;
-      padding: 0px 10px;
-      /* ← Aumentei levemente o padding vertical */
+      min-height: unset !important; /* Remove altura mínima para não estufar a barra */
+      padding: 1px 44px 1px 40px !important; /* 1px no topo/fundo cola os botões na barra de progresso */
       flex-wrap: wrap;
-      /* ← ALTERADO: Agora quebra linha igual a base */
       overflow: visible;
-      /* ← ALTERADO: Permite que o tooltip saia da caixa */
-      gap: 10px;
+      gap: 8px; /* Reduzido levemente de 10px para 8px para otimizar espaço */
       white-space: nowrap;
       position: relative;
-      /* ← NOVO: Necessário para o z-index funcionar */
       z-index: 100;
-      /* ← NOVO: Garante que fique ACIMA do cartão */
+      transition: all 0.25s ease !important;
+    }
+
+    /* ============================================================ */
+    /* --- ÍCONE OCULTAR/MOSTRAR (PURO, SEM CAIXA OU BORDA) --- */
+    /* ============================================================ */
+    .menu-toggle-wrapper {
+      position: absolute !important;
+      top: 50% !important;
+      left: 12px !important;
+      transform: translateY(-50%) !important;
+      z-index: 10007;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .menu-toggle-btn {
+      background: none !important; /* Remove a caixa/fundo */
+      border: none !important; /* Remove a borda */
+      box-shadow: none !important; /* Remove sombras */
+      color: #FFD700 !important;
+      font-size: 1.1em !important;
+      cursor: pointer;
+      padding: 0 !important; /* Sem enchimento */
+      margin: 0 !important;
+      line-height: 1 !important;
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease !important;
+    }
+
+    .menu-toggle-btn:hover {
+      color: #F7EF8A !important;
+      transform: scale(1.2);
+      text-shadow: 0 0 8px rgba(255, 215, 0, 0.6);
+    }
+
+    /* Tooltip alinhada para não vazar da tela à esquerda */
+    .menu-toggle-wrapper .tooltip.show-tooltip::after {
+      left: 0 !important;
+      transform: none !important;
+    }
+
+    /* ============================================================ */
+    /* --- ESTADO RECOLHIDO ULTRAFINO (APENAS 22px DE ALTURA) --- */
+    /* ============================================================ */
+    .top-bar.collapsed {
+      min-height: unset !important;
+      height: 22px !important; /* Altura mínima necessária apenas para segurar a setinha */
+      padding: 0 12px !important;
+      justify-content: flex-start !important;
+    }
+
+    .top-bar.collapsed > *:not(.menu-toggle-wrapper) {
+      display: none !important;
+    }
+
+    .top-bar.collapsed .menu-toggle-wrapper {
+      position: relative !important;
+      top: auto !important;
+      left: auto !important;
+      transform: none !important;
+    }
+
+    /* Força a caneta a sumir quando a barra estiver recolhida */
+    .top-bar.collapsed #desktopHighlightBtn {
+      display: none !important;
+    }
+
+    /* Oculta o botão no celular para não competir espaço */
+    @media (max-width: 768px) {
+      .menu-toggle-wrapper {
+        display: none !important;
+      }
+    }
+
+    /* ============================================================ */
+    /* --- BARRA DE PROGRESSO COLADA (SEM RESPIRO MORTO) --- */
+    /* ============================================================ */
+    #progressBarContainer {
+      width: 100%;
+      height: 5px; /* Levemente mais fina para ganhar altura útil */
+      background-color: #222;
+      position: relative;
+      z-index: 5;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     .top-bar button,
@@ -1511,6 +1598,11 @@
       }
 
       /* === 3. LIMPEZA DA BARRA SUPERIOR === */
+      /* Oculta o ícone de usuário no celular para poupar espaço */
+      .header-user-wrapper {
+        display: none !important;
+      }
+
       .top-bar {
         justify-content: space-between !important;
         padding: 2px 15px !important;
@@ -1924,12 +2016,13 @@
     /* --- BARRA DE PROGRESSO --- */
     #progressBarContainer {
       width: 100%;
-      height: 6px;
-      /* Altura da barra */
+      height: 5px; /* Levemente mais fina para ganhar altura útil */
       background-color: #222;
       /* Cor de fundo escura */
       position: relative;
       z-index: 5;
+      margin: 0 !important;
+      padding: 0 !important;
     }
 
     #progressBarFill {
@@ -2709,6 +2802,400 @@
       transform: scale(1.03);
       box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
     }
+
+    /* ============================================================ */
+    /* --- WRAPPER E ÍCONE DO USUÁRIO (ALINHAMENTO EXATO V-155) --- */
+    /* ============================================================ */
+    .header-user-wrapper {
+      position: absolute !important;
+      top: 50% !important;
+      right: 18px !important;
+      transform: translateY(-50%) !important; /* Alinhamento vertical milimétrico ao centro da barra */
+      z-index: 10006;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .header-user-icon {
+      background: none !important;
+      border: none !important;
+      color: #FFD700 !important;
+      font-size: 1.2em !important; /* Tamanho proporcional idêntico ao V-155 */
+      cursor: pointer;
+      padding: 4px !important;
+      margin: 0 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1 !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .header-user-icon:hover {
+      color: #F7EF8A !important;
+      text-shadow: 0 0 10px rgba(255, 215, 0, 0.6) !important;
+      transform: scale(1.1) !important;
+    }
+
+    /* Caixa suspensa com e-mail e botão Sair */
+    .user-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: calc(100% + 6px); /* Abre exatamente colado abaixo do ícone */
+      right: 0; /* Alinha a borda direita perfeitamente com o ícone */
+      background: #111;
+      border: 1.5px solid #FFD700;
+      border-radius: 8px;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.9);
+      padding: 14px 16px;
+      z-index: 20000;
+      min-width: 220px;
+      text-align: center;
+      animation: slideDownSimple 0.2s ease;
+    }
+
+    .user-dropdown-menu.active {
+      display: block;
+    }
+
+    .user-dropdown-email {
+      color: #F7EF8A;
+      font-size: 0.88rem;
+      margin-bottom: 12px;
+      font-weight: bold;
+      word-break: break-all;
+      display: block;
+      border-bottom: 1px solid #333;
+      padding-bottom: 8px;
+    }
+
+    .btn-logout-dropdown {
+      background: linear-gradient(135deg, #7A0000, #A10000);
+      color: white;
+      border: 1px solid #ff4d4d;
+      padding: 8px 15px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 0.9em;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+      box-shadow: 0 2px 8px rgba(255, 77, 77, 0.3);
+    }
+
+    .btn-logout-dropdown:hover {
+      background: #ff4d4d;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 77, 77, 0.6);
+    }
+
+    /* ============================================================ */
+    /* --- PADRONIZAÇÃO DO DOURADO METÁLICO (PADRÃO V-155) --- */
+    /* ============================================================ */
+
+    /* 1. Botão Principal dos Modais (Ex: "APLICAR FILTRO", "SIM", etc.) */
+    .chico-modal-btn-primary {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none !important;
+      font-weight: 800 !important;
+      letter-spacing: 0.5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1.05em;
+      box-shadow: 0 4px 12px rgba(210, 172, 71, 0.25);
+      transition: all 0.25s ease !important;
+    }
+
+    .chico-modal-btn-primary:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 18px rgba(210, 172, 71, 0.45) !important;
+    }
+
+    /* 2. Botão "INICIAR ESTUDO" (Modal de Configurações) */
+    #startStudyBtn {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none !important;
+      font-weight: 900 !important;
+      box-shadow: 0 4px 15px rgba(210, 172, 71, 0.3) !important;
+      transition: all 0.25s ease !important;
+    }
+
+    #startStudyBtn:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(210, 172, 71, 0.5) !important;
+    }
+
+    /* 3. Botão "RECOMEÇAR" (Tela Final) */
+    #restart-button {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none;
+      padding: 15px 32px;
+      font-size: 1.2em;
+      border-radius: 50px;
+      cursor: pointer;
+      font-weight: 900;
+      box-shadow: 0 4px 15px rgba(210, 172, 71, 0.35);
+      transition: all 0.3s ease;
+    }
+
+    #restart-button:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: scale(1.04);
+      box-shadow: 0 6px 22px rgba(210, 172, 71, 0.55);
+    }
+
+    /* 4. Botões de Alertas e Confirmações (Ex: "OK", "CONTINUAR") */
+    .custom-alert-btn {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none;
+      padding: 10px 25px;
+      font-size: 1.05em;
+      font-weight: 800;
+      border-radius: 6px;
+      cursor: pointer;
+      box-shadow: 0 3px 10px rgba(210, 172, 71, 0.25);
+      transition: all 0.25s ease;
+    }
+
+    .custom-alert-btn:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 15px rgba(210, 172, 71, 0.45);
+    }
+
+    /* 5. Botões de Revisão e Voz Neural */
+    .review-button,
+    #activatePiperBtn,
+    .chico-card-error-btn {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      font-weight: 800 !important;
+      box-shadow: 0 3px 10px rgba(210, 172, 71, 0.25);
+    }
+
+    .review-button:hover,
+    #activatePiperBtn:hover,
+    .chico-card-error-btn:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      box-shadow: 0 5px 15px rgba(210, 172, 71, 0.45);
+    }
+
+    /* 6. Botões de Fechar dourados (Modal de Ajuda e Manual) */
+    #helpModalContent .close-button,
+    #manualModalContent button {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      font-weight: 800 !important;
+      border: none;
+      transition: all 0.25s ease;
+    }
+
+    #helpModalContent .close-button:hover,
+    #manualModalContent button:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      box-shadow: 0 4px 12px rgba(210, 172, 71, 0.4);
+    }
+
+    /* ============================================================ */
+    /* --- PADRONIZAÇÃO PRETO DARK ELEGANTE (SUBSTITUI CINZA #333) --- */
+    /* ============================================================ */
+
+    /* Caixas neutras e botões secundários (ex: "NÃO (Apenas Ler)", "INÍCIO") */
+    .chico-modal-btn,
+    #resumeModal .close-button,
+    .session-expired-container,
+    #autoAdvanceSetup,
+    .clean-option-row {
+      background: #151515 !important;
+      color: #EDEDED !important;
+      border: 1px solid #2a2a2a !important;
+      transition: all 0.2s ease !important;
+    }
+
+    .chico-modal-btn:hover,
+    #resumeModal .close-button:hover,
+    .clean-option-row:hover {
+      background: #1f1f1f !important;
+      border-color: #444 !important;
+      color: #FFFFFF !important;
+    }
+
+    /* Modais de Conteúdo (Preto Dark profundo) */
+    .chico-modal-box,
+    #settingsModalContent,
+    #reportModalContent {
+      background: #111111 !important;
+      border: 1px solid #2a2a2a !important;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), 0 0 15px rgba(210, 172, 71, 0.15) !important;
+    }
+
+    /* Campos de seleção e inputs com fundo preto dark */
+    .discipline-select,
+    .quantity-input,
+    #provasOptions select,
+    #srsFilterType,
+    #voiceSelectQuestion,
+    #voiceSelectAnswer,
+    #hfVoiceSelectQuestion,
+    #hfVoiceSelectAnswer,
+    #categoryFilter,
+    #topSearchBar {
+      background-color: #141414 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #333 !important;
+    }
+
+    /* ============================================================ */
+    /* --- MODAL DE ANOTAÇÕES: PRETO DARK + BOTÃO OURO PREMIUM --- */
+    /* ============================================================ */
+    #notesModalContent {
+      background: #111111 !important;
+      border: 1px solid #2a2a2a !important;
+      box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), 0 0 15px rgba(210, 172, 71, 0.2) !important;
+    }
+
+    /* Botão "+ Nova Nota" com o mesmo Ouro Metálico do V-155 */
+    #btnNovaNota {
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none !important;
+      padding: 10px 18px !important;
+      border-radius: 6px !important;
+      font-weight: 800 !important;
+      font-size: 0.95em !important;
+      cursor: pointer !important;
+      flex-grow: 1 !important;
+      box-shadow: 0 3px 12px rgba(210, 172, 71, 0.3) !important;
+      transition: all 0.25s ease !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    #btnNovaNota:hover {
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: translateY(-1px);
+      box-shadow: 0 5px 18px rgba(210, 172, 71, 0.5) !important;
+    }
+
+    /* Botão de sincronizar anotações */
+    #btnSyncNotas {
+      background: #181818 !important;
+      color: #DDD !important;
+      border: 1px solid #333 !important;
+      padding: 8px 14px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #btnSyncNotas:hover {
+      background: #222 !important;
+      color: #FFD700 !important;
+      border-color: #555 !important;
+    }
+
+    /* Lista interna de notas (fundo preto confortável com borda sutil) */
+    #notesListContainer {
+      background: #141414 !important;
+      border: 1px solid #242424 !important;
+      border-radius: 8px !important;
+    }
+
+    .integrated-note-item {
+      background: #161616 !important;
+      border-bottom: 1px solid #252525 !important;
+    }
+
+    .integrated-note-item:hover {
+      background: #1e1e1e !important;
+      border-left: 3px solid #D2AC47 !important;
+    }
+
+    /* Botão "Fechar" e campos do editor de notas */
+    #notesModalContent .close-button {
+      background: #181818 !important;
+      color: #DDD !important;
+      border: 1px solid #333 !important;
+      padding: 8px 14px !important;
+      border-radius: 6px !important;
+      cursor: pointer !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #notesModalContent .close-button:hover {
+      background: #222 !important;
+      color: #FFD700 !important;
+      border-color: #555 !important;
+    }
+
+    #notesModalContent input[type="text"],
+    #notesModalContent textarea {
+      background-color: #141414 !important;
+      color: #FFFFFF !important;
+      border: 1px solid #333 !important;
+    }
+
+    /* ============================================================ */
+    /* --- BOTÃO DE DESTAQUE NA BARRA SUPERIOR (LIMPO / SEM LUZ) --- */
+    /* ============================================================ */
+    #desktopHighlightBtn {
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      position: relative;
+      font-size: 1.12em !important; /* Mesma escala ótica dos botões vizinhos */
+      color: #FFD700 !important;
+      cursor: pointer;
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      margin: 0 2px !important;
+      line-height: 1 !important;
+      transition: all 0.2s ease !important;
+    }
+
+    #desktopHighlightBtn:hover {
+      color: #F7EF8A !important;
+      transform: scale(1.12);
+    }
+
+    /* Remove completamente qualquer estilo de fundo/aura */
+    .highlight-hint-active {
+      background: none !important;
+      border: none !important;
+      box-shadow: none !important;
+      animation: none !important;
+    }
+
+    /* Estado Ativado: Apenas o ícone muda para verde com brilho sutil */
+    #desktopHighlightBtn.is-active i {
+      color: #00FF00 !important;
+      text-shadow: 0 0 6px rgba(0, 255, 0, 0.6);
+    }
+
+    /* Oculta no celular para poupar espaço */
+    @media (max-width: 768px) {
+      #desktopHighlightBtn {
+        display: none !important;
+      }
+    }
   </style>
 </head>
 
@@ -2720,6 +3207,15 @@
     <button onclick="reviewAndAdvance()">▶</button>
   </div>
   <div class="top-bar" role="toolbar" aria-label="Barra de ferramentas principal">
+    
+    <!-- NOVO: BOTÃO OCULTAR / MOSTRAR MENUS (ESTILO GOOGLE PLANILHAS) -->
+    <div class="menu-toggle-wrapper">
+      <button id="toggleMenuBtn" class="menu-toggle-btn tooltip" data-tooltip="Ocultar os menus" aria-label="Ocultar os menus"
+        onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleTopBarMenu()">
+        <i class="fas fa-chevron-up" id="toggleMenuIcon"></i>
+      </button>
+    </div>
+
     <!-- 1. BOTÃO MENU (HAMBÚRGUER) -->
     <div style="position: relative;">
       <button class="hamburger-btn tooltip" data-tooltip="Menu Principal" aria-label="Menu Principal"
@@ -2840,9 +3336,29 @@
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleSpeech()"><i
         class="fas fa-volume-up" aria-hidden="true"></i></button>
 
+    <!-- NOVO BOTÃO: DESTAQUE DE PALAVRAS (DESKTOP) -->
+    <button id="desktopHighlightBtn" class="tooltip" data-tooltip="Destacar Palavras (Atalho: *)" aria-label="Destacar Palavras"
+      onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleHighlightAsterisks()">
+      <i class="fas fa-highlighter" aria-hidden="true"></i>
+    </button>
+
     <button id="reviewErrorsButton" class="tooltip" data-tooltip="Revisar Erros" aria-label="Revisar Erros"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="toggleReviewErrors()"
       style="display:none;"><i class="fas fa-search" aria-hidden="true"></i></button>
+
+    <!-- WRAPPER UNIFICADO: ÍCONE NO MESMO CENTRO VERTICAL + MENU ALINHADO -->
+    <div class="header-user-wrapper">
+      <button class="header-user-icon" onclick="toggleUserMenu(event)" title="Minha Conta" aria-label="Minha Conta">
+        <i class="fas fa-user-circle"></i>
+      </button>
+
+      <div id="userDropdownMenu" class="user-dropdown-menu">
+        <span id="headerUserEmail" class="user-dropdown-email">Carregando...</span>
+        <button class="btn-logout-dropdown" onclick="logout()">
+          <i class="fas fa-sign-out-alt"></i> Sair do Sistema
+        </button>
+      </div>
+    </div>
   </div>
   <div id="progressBarContainer" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"
     aria-label="Progresso dos cards">
@@ -3551,6 +4067,12 @@
         <button onclick="startManualTTS()" class="chico-modal-btn">
           NÃO (Apenas Ler)
         </button>
+
+        <!-- NOVO BOTÃO DE CONFIGURAÇÃO DIRETA -->
+        <button onclick="showHfVoiceStep()" class="chico-modal-btn" style="background: #222; border-color: #555; color: #ddd; margin-top: 4px;">
+          <i class="fas fa-cog" style="margin-right: 6px; color: gold;"></i> Configurar Voz
+        </button>
+
         <div class="chico-modal-btn-close" onclick="closeHandsFreeModal()">Cancelar</div>
       </div>
 
@@ -3568,6 +4090,48 @@
           Voltar</div>
       </div>
 
+      <!-- SUB-ECRÃ DE CONFIGURAÇÃO DE VOZ COM SUPORTE A PIPER -->
+      <div id="hfStepVoice" style="display:none; text-align: left;">
+        <h3 class="chico-modal-title" style="text-align: center; margin-bottom: 12px;">⚙️ Ajustes de Voz</h3>
+
+        <!-- BOTÕES DINÂMICOS DO PIPER (COMPACTOS) -->
+        <button id="hfActivatePiperBtn" onclick="initPiperReal()"
+          style="display:none; width:100%; padding:7px 10px; margin-bottom:10px; background:linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625); color:#0D0D09; border:none; border-radius:6px; cursor:pointer; font-weight:800; font-size:0.85em; box-shadow: 0 2px 8px rgba(210,172,71,0.25);">
+          🎙️ Ativar Voz Neural Piper (~62MB)
+        </button>
+        <button id="hfDisablePiperBtn" onclick="disablePiper()"
+          style="display:none; width:100%; padding:6px 10px; margin-bottom:10px; background:#222; color:#ccc; border:1px solid #555; border-radius:6px; cursor:pointer; font-size:0.8em;">
+          Desativar Piper (Voltar ao nativo)
+        </button>
+
+        <label style="display:block; color:#ccc; font-size:0.82em; margin-bottom:2px;">🗣️ Voz da Pergunta:</label>
+        <select id="hfVoiceSelectQuestion" onchange="syncHfVoiceChange('Q', this.value)"
+          style="width:100%; padding:5px 8px; background:#111; color:white; border:1px solid #555; border-radius:4px; margin-bottom:8px; font-size:0.88em;">
+          <option value="">A carregar...</option>
+        </select>
+
+        <label style="display:block; color:#ccc; font-size:0.82em; margin-bottom:2px;">🗣️ Voz da Resposta:</label>
+        <select id="hfVoiceSelectAnswer" onchange="syncHfVoiceChange('A', this.value)"
+          style="width:100%; padding:5px 8px; background:#111; color:white; border:1px solid #555; border-radius:4px; margin-bottom:10px; font-size:0.88em;">
+          <option value="">A carregar...</option>
+        </select>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+          <label style="color:gold; font-size:0.85em; margin: 0;">Velocidade:</label>
+          <span id="hfRateValue" style="color: gold; font-weight: bold; font-size:0.85em;">1.1x</span>
+        </div>
+        <input type="range" id="hfRateRange" min="0.5" max="3" step="0.1" value="1.1"
+          style="width:100%; accent-color:gold; margin-bottom: 14px;"
+          oninput="syncHfRateChange(this.value)">
+
+        <button onclick="resetHfModal()" class="chico-modal-btn-primary" style="margin-bottom: 4px; padding: 10px;">
+          CONCLUÍDO
+        </button>
+        <div style="text-align: center; margin-top:6px; cursor:pointer; color:#888; text-decoration:underline; font-size: 0.85em;" onclick="resetHfModal()">
+          Voltar
+        </div>
+      </div>
+
     </div>
   </div>
   <div id="notesModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Minhas anotações">
@@ -3577,12 +4141,10 @@
       </h2>
 
       <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-        <button onclick="openNoteEditor()"
-          style="background: linear-gradient(to bottom, #FFD700, #D4AF37); color: black; border: none; padding: 8px 15px; border-radius: 5px; font-weight: bold; cursor: pointer; flex-grow: 1;">
+        <button id="btnNovaNota" onclick="openNoteEditor()">
           <i class="fas fa-plus"></i> Nova Nota
         </button>
-        <button onclick="loadIntegratedNotes()"
-          style="background: #333; color: white; border: 1px solid #555; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+        <button id="btnSyncNotas" onclick="loadIntegratedNotes()" title="Sincronizar">
           <i class="fas fa-sync-alt"></i>
         </button>
       </div>
@@ -3780,6 +4342,10 @@
         filterBtn.style.color = 'white';
         filterBtn.style.textShadow = 'none';
       }
+
+      const userMenu = document.getElementById('userDropdownMenu');
+      if (userMenu) userMenu.classList.remove('active');
+      updateUserEmailDisplay('Carregando...');
     }
 
     // ============================================================
@@ -4166,6 +4732,7 @@
         isForceRefreshLogin = false; // Reset da flag de atualização forçada
         if (result.success) {
           userEmail = email;
+          updateUserEmailDisplay(userEmail);
           userAllowedCourses = result.allowedCourses || [];
 
           // --- TRAVA DE SEGURANÇA: VALIDAÇÃO DE CURSO PERMITIDO ---
@@ -4228,6 +4795,7 @@
         }
         isAuthenticated = true;
         userEmail = savedEmail;
+        updateUserEmailDisplay(userEmail);
 
        // Carrega cursos permitidos salvos no navegador
         const savedAllowedCourses = localStorage.getItem('userAllowedCourses');
@@ -4756,6 +5324,7 @@
     function updateCard(skipAutoSave = false) {
       if (typeof handsFreeTimer !== 'undefined') clearTimeout(handsFreeTimer);
       stopSpeech();
+      updateHighlightButtonHint();
       if (!requireAuth() || cards.length === 0 || isFinished) return;
       const card = cards[currentCard];
       const contentElement = document.getElementById("flashcard-content");
@@ -6506,24 +7075,36 @@
       }
     }
 
-    // --- INDICADOR DO MOTOR DE VOZ (Settings Modal) ---
+    // --- ATUALIZADO: GESTÃO VISUAL UNIFICADA DO MOTOR PIPER ---
     function updateVoiceEngineUI(status) {
+      // Elementos do menu de configurações principal
       const indicator = document.getElementById('voiceEngineIndicator');
       const piperBtn = document.getElementById('activatePiperBtn');
       const disableBtn = document.getElementById('disablePiperBtn');
-      if (!indicator) return;
+
+      // Elementos espelhados no modal de leitura
+      const hfPiperBtn = document.getElementById('hfActivatePiperBtn');
+      const hfDisableBtn = document.getElementById('hfDisablePiperBtn');
 
       const cfgs = {
-        neural: { text: "🟢 Vozes neurais detectadas (Piper disponível ↓)", color: "#4CAF50", act: true, dis: false },
+        neural: { text: "🟢 Vozes neurais detetadas (Piper disponível ↓)", color: "#4CAF50", act: true, dis: false },
         basic: { text: "🟡 Vozes básicas — ative o Piper ↓", color: "#FFC107", act: true, dis: false },
         piper: { text: "🟢 Motor Piper Neural ativo", color: "#00ff00", act: false, dis: true },
-        loading: { text: "⏳ Carregando Piper...", color: "gold", act: false, dis: false }
+        loading: { text: "⏳ A carregar Piper...", color: "gold", act: false, dis: false }
       };
       const c = cfgs[status] || cfgs.basic;
-      indicator.textContent = c.text;
-      indicator.style.color = c.color;
+
+      // Atualiza o menu principal
+      if (indicator) {
+        indicator.textContent = c.text;
+        indicator.style.color = c.color;
+      }
       if (piperBtn) piperBtn.style.display = c.act ? 'block' : 'none';
       if (disableBtn) disableBtn.style.display = c.dis ? 'block' : 'none';
+
+      // Atualiza o modal de leitura rápido
+      if (hfPiperBtn) hfPiperBtn.style.display = c.act ? 'block' : 'none';
+      if (hfDisableBtn) hfDisableBtn.style.display = c.dis ? 'block' : 'none';
     }
 
 
@@ -6819,14 +7400,92 @@
 
     function resetHfModal() {
       document.getElementById('hfStep1').style.display = 'block';
-      document.getElementById('hfStep2').style.display = 'none';
+      if (document.getElementById('hfStep2')) document.getElementById('hfStep2').style.display = 'none';
+      if (document.getElementById('hfStepVoice')) document.getElementById('hfStepVoice').style.display = 'none';
     }
 
     function showHfStep2() {
       document.getElementById('hfStep1').style.display = 'none';
+      if (document.getElementById('hfStepVoice')) document.getElementById('hfStepVoice').style.display = 'none';
       document.getElementById('hfStep2').style.display = 'block';
       // Foca no campo de número para facilitar digitação
       setTimeout(() => document.getElementById('hfDelayInput').focus(), 100);
+    }
+
+    // --- TRANSIÇÃO E SINCRONIZAÇÃO DA SUB-TELA DE VOZ NO MODAL DE LEITURA ---
+    function showHfVoiceStep() {
+      document.getElementById('hfStep1').style.display = 'none';
+      if (document.getElementById('hfStep2')) document.getElementById('hfStep2').style.display = 'none';
+      document.getElementById('hfStepVoice').style.display = 'block';
+
+      // Espelha as opções dos selects principais para os selects deste modal
+      mirrorVoiceSettingsToHf();
+    }
+
+    // Atualiza a função resetHfModal para garantir que fecha o hfStepVoice também
+    const originalResetHfModal = window.resetHfModal;
+    window.resetHfModal = function() {
+      document.getElementById('hfStep1').style.display = 'block';
+      if (document.getElementById('hfStep2')) document.getElementById('hfStep2').style.display = 'none';
+      if (document.getElementById('hfStepVoice')) document.getElementById('hfStepVoice').style.display = 'none';
+    };
+
+    function mirrorVoiceSettingsToHf() {
+      const mainQ = document.getElementById('voiceSelectQuestion');
+      const mainA = document.getElementById('voiceSelectAnswer');
+      const mainRate = document.getElementById('rateRange');
+
+      const hfQ = document.getElementById('hfVoiceSelectQuestion');
+      const hfA = document.getElementById('hfVoiceSelectAnswer');
+      const hfRate = document.getElementById('hfRateRange');
+      const hfRateText = document.getElementById('hfRateValue');
+
+      if (mainQ && hfQ) {
+        hfQ.innerHTML = mainQ.innerHTML;
+        hfQ.value = mainQ.value;
+      }
+      if (mainA && hfA) {
+        hfA.innerHTML = mainA.innerHTML;
+        hfA.value = mainA.value;
+      }
+      if (mainRate && hfRate) {
+        hfRate.value = mainRate.value;
+        if (hfRateText) hfRateText.textContent = mainRate.value + 'x';
+      }
+
+      // Sincroniza a visibilidade do botão Piper com base no estado do motor
+      if (typeof usePiperEngine !== 'undefined' && usePiperEngine && piperReady) {
+        updateVoiceEngineUI('piper');
+      } else if (typeof hasNeuralVoices === 'function' && hasNeuralVoices()) {
+        updateVoiceEngineUI('neural');
+      } else {
+        updateVoiceEngineUI('basic');
+      }
+    }
+
+    // Quando o aluno altera a voz no modal de leitura, replica para o sistema geral
+    function syncHfVoiceChange(type, value) {
+      if (type === 'Q') {
+        localStorage.setItem('chicoVoiceQ', value);
+        const mainQ = document.getElementById('voiceSelectQuestion');
+        if (mainQ) mainQ.value = value;
+      } else {
+        localStorage.setItem('chicoVoiceA', value);
+        const mainA = document.getElementById('voiceSelectAnswer');
+        if (mainA) mainA.value = value;
+      }
+      showFeedback("Voz atualizada! 🗣️", "gold");
+    }
+
+    // Quando o aluno ajusta a velocidade no modal de leitura, replica para o slider principal
+    function syncHfRateChange(val) {
+      const text = document.getElementById('hfRateValue');
+      if (text) text.textContent = val + 'x';
+
+      const mainRate = document.getElementById('rateRange');
+      const mainRateText = document.getElementById('rateValue');
+      if (mainRate) mainRate.value = val;
+      if (mainRateText) mainRateText.textContent = val + 'x';
     }
 
     // 3. Opção: Apenas Ler (Manual)
@@ -7299,12 +7958,30 @@
     document.getElementById('restart-button').addEventListener('click', restartFlashcards);
 
     document.getElementById('review-errors-button').addEventListener('click', reviewErrorsFromEndScreen);
+
+    // --- ATUALIZAÇÃO VISUAL DO BOTÃO DE DESTAQUE (DOURADO / VERDE) ---
+    function updateHighlightButtonHint() {
+      const btn = document.getElementById("desktopHighlightBtn");
+      if (!btn) return;
+
+      if (isHighlightModeActive) {
+        btn.classList.add("is-active");
+        btn.setAttribute("data-tooltip", "Destaque Ativo (Atalho: *)");
+      } else {
+        btn.classList.remove("is-active");
+        btn.setAttribute("data-tooltip", "Destacar Palavras (Atalho: *)");
+      }
+    }
+
     function toggleHighlightAsterisks() {
       isHighlightModeActive = !isHighlightModeActive;
       const feedback = document.getElementById("highlightFeedback");
 
       // Atualiza o card de forma segura (preserva botões MCQ e gabarito)
       updateCard(true);
+
+      // Atualiza visualmente o botão desktop
+      updateHighlightButtonHint();
 
       if (isHighlightModeActive) {
         feedback.textContent = "Destaque ATIVADO";
@@ -9103,20 +9780,76 @@
       // Atualiza a tela
       streakDisplay.innerHTML = `🔥 ${currentStreak}`;
     }
+    // --- CONTROLE DE OCULTAR / MOSTRAR MENUS (ESTILO GOOGLE PLANILHAS) ---
+    function toggleTopBarMenu() {
+      const topBar = document.querySelector('.top-bar');
+      const icon = document.getElementById('toggleMenuIcon');
+      const btn = document.getElementById('toggleMenuBtn');
+      if (!topBar || !icon || !btn) return;
+
+      // Fecha menus suspensos caso estejam abertos antes de recolher
+      const mainMenu = document.getElementById('mainMenuDropdown');
+      if (mainMenu) mainMenu.classList.remove('show-menu');
+      const userMenu = document.getElementById('userDropdownMenu');
+      if (userMenu) userMenu.classList.remove('active');
+
+      const isCollapsed = topBar.classList.toggle('collapsed');
+
+      if (isCollapsed) {
+        icon.className = 'fas fa-chevron-down';
+        btn.setAttribute('data-tooltip', 'Mostrar os menus');
+        btn.setAttribute('aria-label', 'Mostrar os menus');
+        localStorage.setItem('chicoTopBarCollapsed', 'true');
+      } else {
+        icon.className = 'fas fa-chevron-up';
+        btn.setAttribute('data-tooltip', 'Ocultar os menus');
+        btn.setAttribute('aria-label', 'Ocultar os menus');
+        localStorage.setItem('chicoTopBarCollapsed', 'false');
+      }
+    }
+
+    // Lembra da preferência do aluno ao recarregar (somente no PC)
+    document.addEventListener('DOMContentLoaded', () => {
+      if (localStorage.getItem('chicoTopBarCollapsed') === 'true' && window.innerWidth > 768) {
+        toggleTopBarMenu();
+      }
+    });
+
     // --- FUNÇÕES DO MENU HAMBÚRGUER ---
     function toggleHamburgerMenu() {
       const menu = document.getElementById('mainMenuDropdown');
       menu.classList.toggle('show-menu');
     }
 
-    // Fecha o menu se clicar fora dele
+    // --- CONTROLE DO MENU DE USUÁRIO NO CANTO DIREITO ---
+    function toggleUserMenu(event) {
+      if (event) event.stopPropagation();
+      const menu = document.getElementById('userDropdownMenu');
+      if (menu) {
+        menu.classList.toggle('active');
+      }
+    }
+
+    function updateUserEmailDisplay(email) {
+      const emailEl = document.getElementById('headerUserEmail');
+      if (emailEl) {
+        emailEl.textContent = email || 'Aluno';
+      }
+    }
+
     window.addEventListener('click', function (e) {
+      // Fecha o menu hambúrguer se clicar fora
       const menu = document.getElementById('mainMenuDropdown');
       const btn = document.querySelector('.hamburger-btn');
-
-      // Se o menu está aberto E o clique NÃO foi no menu E NEM no botão
-      if (menu.classList.contains('show-menu') && !menu.contains(e.target) && !btn.contains(e.target)) {
+      if (menu && menu.classList.contains('show-menu') && !menu.contains(e.target) && !btn.contains(e.target)) {
         menu.classList.remove('show-menu');
+      }
+
+      // Fecha o menu do usuário se clicar fora do wrapper
+      const userMenu = document.getElementById('userDropdownMenu');
+      const userWrapper = document.querySelector('.header-user-wrapper');
+      if (userMenu && userMenu.classList.contains('active') && userWrapper && !userWrapper.contains(e.target)) {
+        userMenu.classList.remove('active');
       }
     });
     // --- MÓDULO DE INTEGRAÇÃO DE ANOTAÇÕES ---
@@ -9131,18 +9864,18 @@
         padding-top: 60px; backdrop-filter: blur(5px);
       }
       #notesModalContent {
-        background: #1a1a1a; color: white; padding: 20px;
+        background: #111111; color: white; padding: 20px;
         border-radius: 10px; max-width: 600px; width: 90%;
-        box-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
-        border: 1px solid #333;
+        box-shadow: 0 0 35px rgba(0, 0, 0, 0.95), 0 0 15px rgba(210, 172, 71, 0.2);
+        border: 1px solid #2a2a2a;
         display: flex; flex-direction: column;
       }
       .integrated-note-item {
-        background: #2a2a2a; border-bottom: 1px solid #444;
+        background: #161616; border-bottom: 1px solid #252525;
         padding: 10px; cursor: pointer; transition: all 0.2s;
         display: flex; justify-content: space-between; align-items: center;
       }
-      .integrated-note-item:hover { background: #333; border-left: 3px solid gold; }
+      .integrated-note-item:hover { background: #1e1e1e; border-left: 3px solid #D2AC47; }
       .integrated-note-title { font-weight: bold; color: #FFD700; }
       .integrated-note-date { font-size: 0.8em; color: #888; }
     `;
@@ -9557,9 +10290,21 @@ window.deleteIntegratedNote = async function (e, id) {
           messagesToSend = [firstMsg, ...recentMsgs];
         }
 
+        // Recuperação resiliente de credenciais (evita envio de 'anonymous' para a Edge Function)
+        const activeEmail = (userEmail || localStorage.getItem('userEmail') || '').toString().trim().toLowerCase();
+        const activeToken = (localStorage.getItem('sessionToken') || '').toString().trim();
+
+        // Renova o tempo de sessão para não expirar enquanto estuda com a IA
+        localStorage.setItem('loginTime', Date.now().toString());
+
+        if (!activeEmail || !activeToken || !activeToken.includes('.')) {
+          return "⚠️ Sessão não identificada. Por favor, feche e confirme seu login para conversar com o Professor Chico.";
+        }
+        userEmail = activeEmail; // Sincroniza a variável global
+
         const payload = {
-          email: userEmail || 'anonymous',
-          sessionToken: localStorage.getItem('sessionToken') || '',
+          email: activeEmail,
+          sessionToken: activeToken,
           sheetId: currentSheet,
           cardId: String(cardIdKey),
           isInitial: Boolean(isInitial),
@@ -9676,15 +10421,22 @@ window.deleteIntegratedNote = async function (e, id) {
 
       try {
         const respostaIA = await callGroqAPI(chatHistoryContext);
-        chatHistoryContext.push({ role: "assistant", content: respostaIA });
-
+        
         loadingDiv.remove(); // Remove o loading
+
+        // Se a resposta retornou aviso de erro, remove a pergunta do histórico para não corromper o chat
+        if (/^[❌⚠️]/.test(respostaIA.trim())) {
+          chatHistoryContext.pop();
+        } else {
+          chatHistoryContext.push({ role: "assistant", content: respostaIA });
+        }
 
         // Aplica a formatação visual
         const respostaFormatada = formatMarkdown(respostaIA);
         addMessageToChat('system', respostaFormatada);
 
       } catch (error) {
+        chatHistoryContext.pop();
         loadingDiv.remove();
         addMessageToChat('system', '❌ Erro ao responder.');
       }

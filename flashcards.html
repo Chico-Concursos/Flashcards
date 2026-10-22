@@ -2744,63 +2744,134 @@
       color: #2ecc71;
     }
 
-    /* --- ESTILO PROFISSIONAL DO EMPTY/ERROR STATE DO FLASHCARD --- */
+    /* --- ESTILO PROFISSIONAL DO EMPTY/ERROR STATE DO FLASHCARD (DARK & GOLD COMPACTO) --- */
     .chico-card-error-state {
-      padding: 35px 20px;
+      padding: 20px 22px 22px 22px !important;
       text-align: center;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      background: rgba(22, 22, 22, 0.85);
+      justify-content: flex-start !important;
+      white-space: normal !important; /* ANULA O PRE-WRAP: Elimina linhas e espaços fantasmas */
+      background: #111111 !important;
       border-radius: 12px;
-      border: 1px solid rgba(255, 215, 0, 0.25);
-      margin: 15px auto;
-      max-width: 480px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+      border: 1.5px solid #D2AC47 !important;
+      margin: 4px auto 0 auto !important; /* Fixa o topo sem empurrar o container */
+      max-width: 450px;
+      width: 92%;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.95), 0 0 20px rgba(210, 172, 71, 0.15) !important;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Linha de brilho metálico no teto da caixa */
+    .chico-card-error-state::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, transparent, #FFD700, transparent);
     }
 
     .chico-card-error-icon {
-      font-size: 2.6em;
+      font-size: 2.2em !important;
       color: #FFD700;
-      margin-bottom: 14px;
-      filter: drop-shadow(0 0 10px rgba(255, 215, 0, 0.4));
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.45));
+      line-height: 1 !important;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
     .chico-card-error-title {
-      font-size: 1.25em;
-      color: #fff;
-      margin-bottom: 10px;
-      font-weight: 700;
+      font-size: 1.25em !important;
+      color: #FFFFFF;
+      margin-top: 0 !important;
+      margin-bottom: 8px !important;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      line-height: 1.2 !important;
     }
 
     .chico-card-error-desc {
-      color: #bbb;
-      font-size: 0.98em;
-      line-height: 1.5;
-      margin-bottom: 22px;
-      max-width: 390px;
+      color: #BFBFBF;
+      font-size: 0.92em !important;
+      line-height: 1.4 !important;
+      margin-top: 0 !important;
+      margin-bottom: 15px !important;
+      max-width: 370px;
+    }
+
+    /* Badge clicável do e-mail de suporte */
+    .chico-card-error-contact-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: #181818;
+      border: 1px solid #444;
+      color: #FFD700;
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 20px;
+      font-size: 0.88em;
+      font-weight: bold;
+      margin-bottom: 16px !important;
+      transition: all 0.25s ease;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      line-height: 1 !important;
+      white-space: nowrap !important;
+    }
+
+    .chico-card-error-contact-badge:hover {
+      background: #222222;
+      border-color: #FFD700;
+      color: #FFFFFF;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.25);
+    }
+
+    /* Alinhamento milimétrico do ícone de envelope */
+    .chico-card-error-contact-badge i {
+      font-size: 0.95em;
+      line-height: 1;
+      transform: translateY(-1.5px); /* Eleva o ícone para alinhar ao centro da fonte */
     }
 
     .chico-card-error-btn {
-      background: linear-gradient(to bottom, #FFD700, #D4AF37);
-      color: #000;
-      border: none;
-      padding: 11px 26px;
-      font-weight: bold;
-      font-size: 1.02em;
-      border-radius: 6px;
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625) !important;
+      color: #0D0D09 !important;
+      border: none !important;
+      padding: 10px 26px !important;
+      font-weight: 900;
+      font-size: 0.98em !important;
+      border-radius: 8px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      transition: transform 0.2s, box-shadow 0.2s;
-      box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+      transition: all 0.25s ease !important;
+      box-shadow: 0 4px 15px rgba(210, 172, 71, 0.35);
+      line-height: 1 !important;
+      white-space: nowrap !important;
     }
 
     .chico-card-error-btn:hover {
-      transform: scale(1.03);
-      box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
+      background: linear-gradient(135deg, #F4E883, #D2AC47, #AE8625) !important;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(210, 172, 71, 0.55);
+    }
+
+    /* Alinhamento milimétrico do ícone de tentar novamente */
+    .chico-card-error-btn i {
+      font-size: 0.92em;
+      line-height: 1;
+      transform: translateY(-1px); /* Eleva o ícone para alinhar ao centro da fonte */
     }
 
     /* ============================================================ */
@@ -4389,7 +4460,7 @@
       if (raw.includes('servidor ocupado') || raw.includes('lock')) {
         return "O servidor está sincronizando dados. Aguarde alguns segundos.";
       }
-      if (raw.includes('senha incorreta') || raw.includes('credenciais inválidas')) {
+      if (raw.includes('senha incorreta') || raw.includes('credenciais inválidas') || raw.includes('credenciais invalidas') || raw.includes('método get') || raw.includes('metodo get') || raw.includes('use post')) {
         return "E-mail ou senha incorretos. Verifique seus dados de acesso.";
       }
       if (raw.includes('email não encontrado') || raw.includes('email nao encontrado')) {
@@ -4399,12 +4470,15 @@
         return "Sua conta está inativa. Entre em contato com o suporte.";
       }
 
-      // Se a mensagem for curta e não contiver termos técnicos de código
-      if (!raw.includes('exception') && !raw.includes('error') && !raw.includes('http') && !raw.includes('token') && !raw.includes('undefined') && raw.length < 100) {
+      // Trava de segurança: impede que qualquer jargão técnico (em inglês ou português) vaze para o aluno
+      const technicalTerms = ['exception', 'error', 'http', 'token', 'undefined', 'post', 'get', 'script', 'null', 'syntax', 'stack', 'método', 'metodo'];
+      const hasTechnicalTerm = technicalTerms.some(term => raw.includes(term));
+
+      if (!hasTechnicalTerm && raw.length < 100) {
         return typeof error === 'string' ? error : error.message;
       }
 
-      return "Não foi possível carregar as informações no momento. Tente novamente em instantes.";
+      return "E-mail ou senha incorretos. Verifique seus dados de acesso.";
     }
 
     // Gerenciador do container de Toasts In-DOM (100% compatível com iframes do Google Sites)
@@ -5226,16 +5300,19 @@
         } catch (error) {
           console.error("Erro no primeiro download:", error);
           const msgAviso = humanizeErrorMessage(error);
-          document.getElementById("flashcard-content").innerHTML = `
-            <div class="chico-card-error-state">
-              <div class="chico-card-error-icon">
-                <i class="fas fa-cloud-download-alt"></i>
-              </div>
+
+          // Escurece o container dos cards para não vazar tela branca atrás do aviso
+          if (cardContainer) {
+            cardContainer.style.backgroundColor = "#121212";
+            cardContainer.style.boxShadow = "none";
+          }
+
+          document.getElementById("flashcard-content").innerHTML = `<div class="chico-card-error-state">
+              <div class="chico-card-error-icon"><i class="fas fa-cloud-download-alt"></i></div>
               <h3 class="chico-card-error-title">Não foi possível carregar o baralho</h3>
               <p class="chico-card-error-desc">${escapeHTML(msgAviso)}</p>
-              <button onclick="loadFlashcardsFromGoogleSheet(SHEET_ID, GID)" class="chico-card-error-btn">
-                <i class="fas fa-redo-alt"></i> Tentar Novamente
-              </button>
+              <a href="mailto:chicoconcursos10@gmail.com?subject=Suporte%20Flashcards%20Chico%20Concursos" class="chico-card-error-contact-badge"><i class="fas fa-envelope"></i><span>chicoconcursos10@gmail.com</span></a>
+              <button onclick="loadFlashcardsFromGoogleSheet(SHEET_ID, GID)" class="chico-card-error-btn"><i class="fas fa-redo-alt"></i><span>Tentar Novamente</span></button>
             </div>`;
         } finally {
           window.isDownloadingFirstTime = false;
@@ -5308,6 +5385,10 @@
           btn.classList.add("settings-highlight");
           setTimeout(() => btn.classList.remove("settings-highlight"), 10000);
         }
+        // Restaura o visual normal do card após uma eventual tela de erro de download
+        cardContainer.style.backgroundColor = currentCardColor;
+        cardContainer.style.boxShadow = "";
+
         // ALTERAÇÃO: Passamos 'true' para NÃO disparar o salvamento automático logo ao abrir
         updateCard(true);
       }
@@ -8394,7 +8475,15 @@
 
         // --- MODO 1: SIMULADO (Por disciplina específica) ---
         if (studyMode === 'simulado') {
-          const simuladoPool = initialCards.filter(card => !card.tipo.includes('prova'));
+          let simuladoPool = initialCards.filter(card => !card.tipo.includes('prova'));
+
+          // Se escolheu Peso Mínimo, filtra os cards ANTES de sortear a quantidade pedida
+          const currentWeightMode = document.querySelector('input[name="weightMode"]:checked')?.value;
+          if (currentWeightMode === 'minimo') {
+            const minWeight = parseInt(document.getElementById('pesoMinimoValue').value) || 1;
+            simuladoPool = simuladoPool.filter(card => (parseInt(card.peso) || 1) >= minWeight);
+          }
+
           const config = [];
           const rows = document.querySelectorAll('#simuladoDisciplineInputs .discipline-row');
           rows.forEach(row => {

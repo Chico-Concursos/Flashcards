@@ -2075,6 +2075,13 @@
       animation: flash-red 0.4s ease-out;
     }
 
+    /* --- RESPIRO ENTRE BLOCOS DO CAPUT (<BR>) --- */
+    .caput-respiro {
+      display: block;
+      margin-top: 8px; /* Altura do respiro entre itens */
+      content: "";
+    }
+
     /* --- BOTÕES DE MÚLTIPLA ESCOLHA (MCQ) — PADRÃO INTERNACIONAL HARMONIZADO --- */
 .mcq-btn {
   display: flex;
@@ -5461,6 +5468,9 @@
           textToShow = textToShow.replace(/(<\/button>)\s+(<button class="mcq-btn")/g, "$1$2");
         }
         // --------------------------------------------------
+
+        // Aplica o respiro universal em todas as quebras do caput
+        textToShow = textToShow.trim().replace(/\r?\n+/g, '<span class="caput-respiro"></span>');
       } else {
         // No VERSO: Mostra o texto, destacando a resposta em verde
         // Remove as chaves e pinta o recheio
@@ -5480,24 +5490,26 @@
 
           textToShow = textToShow.replace(regexAlternativasVerso, function (match, espacosInicio, letra, divisor, resto) {
             const letraUp = letra.toUpperCase();
-            // Ampliamos a margem vertical (margin: 10px 0) para dar aquele "respiro" na visão
-            // Isso permite que o usuário use apenas 1 <br> no Google Sheets, sem ficar nem super grudado, nem com buracos gigantes.
-            // line-height travado em 1.15
-            let style = 'padding: 4px 8px; border-radius: 4px; display: inline-block; box-sizing: border-box; margin: 10px 0; word-wrap: break-word; max-width: 100%; line-height: 1.15;';
+            let style = 'display: block; box-sizing: border-box; word-wrap: break-word; max-width: 100%; line-height: 1.22; text-align: left;';
 
-            // Fundo verde para a correta
+            // 1. Alternativa CORRETA (Caixa verde destacada com respiro inferior)
             if (letraUp === gabaritoLetra) {
-              style += ' background: #152b15; border: 1px solid #00ff00; color: #00ff00; font-weight: bold;';
+              style += ' padding: 6px 10px; border-radius: 6px; margin: 6px 0 8px 0; background: #152b15; border: 1px solid #00ff00; color: #00ff00; font-weight: bold;';
             }
-            // Fundo vermelho para a alternativa que o usuário escolheu e errou
-            else if (typeof window.lastMCQClickedOption !== 'undefined' && window.lastMCQClickedOption === letraUp) {
-              style += ' background: #2b1515; border: 1px solid #ff5555; color: #ff5555; opacity: 0.9;';
-            } else {
-              return match; // Devolve puro, sem marcações
+            // 2. Alternativa INCORRETA clicada (Caixa vermelha - somente se o aluno respondeu ESTA questão)
+            else if (typeof isMCQAnswered !== 'undefined' && isMCQAnswered && window.lastMCQClickedOption === letraUp) {
+              style += ' padding: 6px 10px; border-radius: 6px; margin: 6px 0; background: #2b1515; border: 1px solid #ff5555; color: #ff5555; opacity: 0.9;';
+            }
+            // 3. Demais alternativas INCORRETAS (Respiro fino e elegante de 4px)
+            else {
+              style += ' padding: 1px 4px; margin-top: 4px; margin-bottom: 1px;';
             }
 
             return `${espacosInicio}<span style="${style}"><strong>${letraUp}${divisor}</strong>${resto}</span>`;
           });
+
+          // Elimina a linha em branco fantasma do pre-wrap entre as alternativas do verso
+          textToShow = textToShow.replace(/(<\/span>)\s+(<span style="display:\s*block)/g, "$1$2");
         }
       }
 
@@ -5551,11 +5563,16 @@
         mcqFlipTimeout = null;
       }
       // >>> ADICIONE ESTE BLOCO NO FINAL DA FUNÇÃO updateCard <<<
+      if (window.ttsStartTimer) {
+        clearTimeout(window.ttsStartTimer);
+        window.ttsStartTimer = null;
+      }
       if (typeof isAutoTTS !== 'undefined' && isAutoTTS) {
-        // Pequeno delay para dar tempo do cérebro processar a troca visual
-        setTimeout(() => {
+        // Aguarda a conclusão do giro 3D e inicia a leitura em segundo plano
+        window.ttsStartTimer = setTimeout(() => {
+          window.ttsStartTimer = null;
           speakCard();
-        }, 500);
+        }, 250);
       }
       // >>> FIM DO BLOCO <<<
       // --- ATUALIZAÇÃO DOS BOTÕES (SRS vs Normal) ---
@@ -5740,6 +5757,7 @@
 
     function nextCard() {
       if (!requireAuth() || isFinished) return;
+      ensurePiperAudioCtx(); // Destrava o hardware de áudio no clique
 
       if (currentCard === cards.length - 1) {
         showEndScreen();
@@ -5750,6 +5768,7 @@
       currentCard = (currentCard + 1) % cards.length;
       showingFront = true;
       if (typeof isMCQAnswered !== 'undefined') isMCQAnswered = false; // Reset flag ao mudar de card
+      window.lastMCQClickedOption = null; // Limpa a alternativa clicada anterior
       updateCard();
       saveFlashcardState();
     }
@@ -5767,6 +5786,7 @@
 
     function flipCard() {
       if (!requireAuth() || isFinished) return;
+      ensurePiperAudioCtx(); // Destrava o hardware de áudio no clique
 
       // Trava de segurança: impede duplo-clique enquanto a carta ainda está girando
       if (isFlipping) return;
@@ -5822,6 +5842,7 @@
 
     function reviewAndAdvance() {
       if (!requireAuth() || isFinished) return;
+      ensurePiperAudioCtx(); // Destrava o áudio
 
       // CASO 1: Está na Frente (Pergunta) -> Vira para o Verso (Resposta) COM ANIMAÇÃO NO TEXTO
       if (showingFront) {
@@ -6889,6 +6910,7 @@
     let piperAudioCtx = null;
     let piperSourceNode = null;
     let piperCheckDone = false;
+    let currentSpeechToken = 0; // Marcador de cancelamento instantâneo
 
     // Cria/desbloqueia o AudioContext (chamado dentro de handlers de clique)
     function ensurePiperAudioCtx() {
@@ -7089,60 +7111,269 @@
       return paddedBuffer;
     }
 
-    // --- SINTETIZAR COM PIPER (AudioContext + parser otimizado) ---
+    // --- WORKER EM SEGUNDO PLANO (EVITA CONGELAR A TELA E O RELÓGIO) ---
+    let piperWorker = null;
+    let piperWorkerCallbacks = {};
+    let piperWorkerMsgId = 0;
+    let piperWorkerFailed = false;
+
+    function failPiperWorker(error) {
+      piperWorkerFailed = true;
+      const pending = piperWorkerCallbacks;
+      piperWorkerCallbacks = {};
+      if (piperWorker) {
+        try { piperWorker.terminate(); } catch (ignore) { }
+        piperWorker = null;
+      }
+      Object.keys(pending).forEach((id) => {
+        try { pending[id].reject(error); } catch (ignore) { }
+      });
+    }
+
+    function getOrCreatePiperWorker() {
+      if (piperWorkerFailed) return null;
+      if (piperWorker) return piperWorker;
+      try {
+        const workerCode = `
+          let piperMod = null;
+          let piperQueue = Promise.resolve();
+          self.onmessage = function(e) {
+            const { id, text, voiceId } = e.data || {};
+            piperQueue = piperQueue.then(async function() {
+              try {
+                if (!piperMod) {
+                  piperMod = await import("https://cdn.jsdelivr.net/npm/@mintplex-labs/piper-tts-web@1.0.3/+esm");
+                }
+                const wav = await piperMod.predict({ text: text, voiceId: voiceId });
+                let arrayBuf;
+                if (wav instanceof Blob) {
+                  arrayBuf = await wav.arrayBuffer();
+                } else if (wav instanceof ArrayBuffer) {
+                  arrayBuf = wav;
+                } else if (ArrayBuffer.isView(wav)) {
+                  arrayBuf = wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength);
+                } else {
+                  throw new Error("Formato de áudio Piper não suportado");
+                }
+                self.postMessage({ id: id, ok: true, audioData: arrayBuf }, [arrayBuf]);
+              } catch (err) {
+                self.postMessage({ id: id, ok: false, error: err ? (err.message || String(err)) : "Worker synth error" });
+              }
+            }).catch(function() {});
+          };
+        `;
+        const blob = new Blob([workerCode], { type: 'application/javascript' });
+        piperWorker = new Worker(URL.createObjectURL(blob), { type: 'module' });
+        piperWorker.onmessage = function(e) {
+          const { id, ok, audioData, error } = e.data || {};
+          const cb = piperWorkerCallbacks[id];
+          if (!cb) return;
+          delete piperWorkerCallbacks[id];
+          if (ok) cb.resolve(audioData);
+          else cb.reject(new Error(error || "Piper worker synth error"));
+        };
+        piperWorker.onerror = function(event) {
+          const message = event && event.message ? event.message : "Piper worker error";
+          console.error("Erro no Piper Worker:", message);
+          failPiperWorker(new Error(message));
+        };
+        piperWorker.onmessageerror = function() {
+          failPiperWorker(new Error("Piper worker message error"));
+        };
+      } catch (err) {
+        piperWorkerFailed = true;
+        piperWorker = null;
+      }
+      return piperWorker;
+    }
+
+    async function synthesizePiperChunk(chunkText, voiceId) {
+      const worker = getOrCreatePiperWorker();
+      if (worker) {
+        try {
+          return await new Promise((resolve, reject) => {
+            const id = ++piperWorkerMsgId;
+            piperWorkerCallbacks[id] = { resolve, reject };
+            try {
+              worker.postMessage({ id: id, text: chunkText, voiceId: voiceId });
+            } catch (err) {
+              delete piperWorkerCallbacks[id];
+              reject(err);
+            }
+          });
+        } catch (err) {
+          console.warn("Fallback para thread principal no Piper:", err);
+          failPiperWorker(err instanceof Error ? err : new Error(String(err)));
+        }
+      }
+      // Fallback caso o navegador bloqueie Worker: dá 30ms para a tela atualizar antes de sintetizar a frase curta
+      await new Promise(r => setTimeout(r, 30));
+      const wav = await piperModule.predict({ text: chunkText, voiceId: voiceId });
+      if (wav instanceof Blob) return await wav.arrayBuffer();
+      if (wav instanceof ArrayBuffer) return wav;
+      if (ArrayBuffer.isView(wav)) return wav.buffer.slice(wav.byteOffset, wav.byteOffset + wav.byteLength);
+      throw new Error("Formato de áudio Piper não suportado");
+    }
+
+    // --- FATIAMENTO INTELIGENTE DE TEXTO EM FRASES CURTAS (STREAMING) ---
+    function splitTextIntoChunks(text) {
+      if (!text) return [];
+      const clean = text.replace(/\s+/g, ' ').trim();
+      const MAX_CHARS = 120;
+      if (!clean) return [];
+      if (clean.length <= MAX_CHARS) return [clean];
+
+      // Protege abreviações jurídicas para não criar pausas em "Art. 4º", "nº 5", etc.
+      const protectedText = clean.replace(
+        /(^|[\s(])((?:art|arts|inc|inciso|al|alínea|par|parágrafo|§|nº|no|p|pp|etc|cf|stf|stj))\./gi,
+        (match, prefix, abbr) => prefix + abbr + '\u0000'
+      );
+
+      const sentences = protectedText
+        .split(/(?<=[.!?;:])\s+/)
+        .map(s => s.replace(/\u0000/g, '.').trim())
+        .filter(Boolean);
+
+      const chunks = [];
+      let current = '';
+      const pushCurrent = () => {
+        if (current) {
+          chunks.push(current);
+          current = '';
+        }
+      };
+
+      const appendSegment = (segment) => {
+        if (!segment) return;
+        const candidate = current ? current + ' ' + segment : segment;
+        if (candidate.length <= MAX_CHARS) {
+          current = candidate;
+          return;
+        }
+        pushCurrent();
+        if (segment.length <= MAX_CHARS) {
+          current = segment;
+          return;
+        }
+
+        // Segmento muito longo: divide em vírgulas; se necessário, em palavras.
+        const commaParts = segment.split(/(?<=,)\s+/);
+        for (const commaPart of commaParts) {
+          const commaCandidate = current ? current + ' ' + commaPart : commaPart;
+          if (commaCandidate.length <= MAX_CHARS) {
+            current = commaCandidate;
+            continue;
+          }
+          pushCurrent();
+          if (commaPart.length <= MAX_CHARS) {
+            current = commaPart;
+            continue;
+          }
+
+          let wordChunk = '';
+          for (const word of commaPart.split(/\s+/)) {
+            const wordCandidate = wordChunk ? wordChunk + ' ' + word : word;
+            if (wordCandidate.length <= MAX_CHARS) {
+              wordChunk = wordCandidate;
+              continue;
+            }
+            if (wordChunk) chunks.push(wordChunk);
+            if (word.length > MAX_CHARS) {
+              for (let i = 0; i < word.length; i += MAX_CHARS) {
+                chunks.push(word.slice(i, i + MAX_CHARS));
+              }
+              wordChunk = '';
+            } else {
+              wordChunk = word;
+            }
+          }
+          if (wordChunk) current = wordChunk;
+        }
+      };
+
+      sentences.forEach(appendSegment);
+      pushCurrent();
+      return chunks.length ? chunks : [clean];
+    }
+
+    // --- SINTETIZAR COM PIPER (STREAMING EM SEGUNDO PLANO SEM TRAVAR A TELA) ---
     async function speakWithPiper(text) {
       if (!piperModule || !piperReady) return;
+      const speechToken = ++currentSpeechToken;
+
       try {
         const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
         const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
 
-        // Texto limpo (sem padding de texto que causava vírgula audível)
-        const wav = await piperModule.predict({ text: text, voiceId: voiceId });
-
-        if (!isAutoTTS) return;
-
         window.speechSynthesis.cancel();
         ensurePiperAudioCtx();
 
-        let rawData;
-        if (wav instanceof Blob) {
-          rawData = await wav.arrayBuffer();
-        } else {
-          rawData = wav;
-        }
-        const audioBuffer = await parseWavToAudioBuffer(rawData, piperAudioCtx);
+        const chunks = splitTextIntoChunks(text);
+        if (chunks.length === 0) return;
 
-        // Protege primeira sílaba com 30ms de silêncio digital (sem artefatos)
-        const finalBuffer = prependSilence(audioBuffer, piperAudioCtx, 0.03);
-
-        if (!isAutoTTS) return;
-
-        if (piperSourceNode) {
-          try { piperSourceNode.stop(); } catch (ignore) { }
-          piperSourceNode = null;
-        }
-
-        piperSourceNode = piperAudioCtx.createBufferSource();
-        piperSourceNode.buffer = finalBuffer;
-
-        const rateRange = document.getElementById('rateRange');
-        piperSourceNode.playbackRate.value = rateRange ? parseFloat(rateRange.value) : 1.1;
-
-        piperSourceNode.connect(piperAudioCtx.destination);
-
-        piperSourceNode.onended = function () {
-          piperErrorCount = 0;
-          piperSourceNode = null;
-          if (isHandsFree && isAutoTTS) {
-            handsFreeTimer = setTimeout(() => {
-              if (isHandsFree && isAutoTTS) reviewAndAdvance();
-            }, handsFreeDelay * 1000);
-          }
+        // Gera e decodifica um bloco de frase individualmente
+        const prepareChunkBuffer = async (chunkText, isFirst) => {
+          const rawData = await synthesizePiperChunk(chunkText, voiceId);
+          if (!isAutoTTS || speechToken !== currentSpeechToken) return null;
+          const audioBuffer = await parseWavToAudioBuffer(rawData, piperAudioCtx);
+          if (!isAutoTTS || speechToken !== currentSpeechToken) return null;
+          // 50ms no 1º bloco para proteger a 1ª letra; 40ms nos seguintes para respiração natural
+          return prependSilence(audioBuffer, piperAudioCtx, isFirst ? 0.05 : 0.04);
         };
 
-        piperSourceNode.start(0);
+        // Inicia a preparação da 1ª frase
+        let nextBufferPromise = prepareChunkBuffer(chunks[0], true);
+
+        for (let i = 0; i < chunks.length; i++) {
+          const currentBuffer = await nextBufferPromise;
+          if (!currentBuffer || !isAutoTTS || speechToken !== currentSpeechToken) return;
+
+          // Enquanto a frase atual vai tocar, já encomenda a PRÓXIMA frase em segundo plano!
+          if (i + 1 < chunks.length) {
+            nextBufferPromise = prepareChunkBuffer(chunks[i + 1], false);
+          }
+
+          // Toca a frase atual e aguarda ela terminar antes de emendar a próxima
+          await new Promise((resolve) => {
+            if (!isAutoTTS || speechToken !== currentSpeechToken) {
+              resolve();
+              return;
+            }
+            if (piperSourceNode) {
+              try { piperSourceNode.stop(); } catch (ignore) { }
+              piperSourceNode = null;
+            }
+
+            const source = piperAudioCtx.createBufferSource();
+            piperSourceNode = source;
+            source.buffer = currentBuffer;
+
+            const rateRange = document.getElementById('rateRange');
+            source.playbackRate.value = rateRange ? parseFloat(rateRange.value) : 1.1;
+
+            source.connect(piperAudioCtx.destination);
+
+            source.onended = function () {
+              if (piperSourceNode === source) piperSourceNode = null;
+              resolve();
+            };
+
+            source.start(0);
+          });
+
+          if (!isAutoTTS || speechToken !== currentSpeechToken) return;
+        }
+
+        // Terminou de ler todos os blocos do card com sucesso
+        piperErrorCount = 0;
+        if (isHandsFree && isAutoTTS && speechToken === currentSpeechToken) {
+          handsFreeTimer = setTimeout(() => {
+            if (isHandsFree && isAutoTTS && speechToken === currentSpeechToken) reviewAndAdvance();
+          }, handsFreeDelay * 1000);
+        }
 
       } catch (e) {
+        if (speechToken !== currentSpeechToken) return;
         console.error("Erro Piper synth:", e);
         piperErrorCount++;
         if (piperErrorCount >= PIPER_MAX_ERRORS) {
@@ -7602,8 +7833,13 @@
     }
 
     function stopSpeech() {
+      currentSpeechToken++; // Invalida qualquer cálculo ou fila do Piper em andamento
+      if (window.ttsStartTimer) {
+        clearTimeout(window.ttsStartTimer);
+        window.ttsStartTimer = null;
+      }
       window.speechSynthesis.cancel();
-      // Para o Piper AudioContext
+      // Para o Piper AudioContext imediatamente
       if (piperSourceNode) {
         try { piperSourceNode.stop(); } catch (ignore) { }
         piperSourceNode = null;
@@ -7821,14 +8057,9 @@
       // Tratamento de setas → substitui por ponto final (pausa natural de enumeração)
       cleanText = cleanText.replace(/\s*[→⇒⇨➔➜➡►▶⟶⟹↦⮕➤➞➟➠]\s*/g, '. ');
 
-      // NOVO: Remove referências em parênteses APÓS um ponto final, ex: "xxxxx. (pág. 10)"
-      // Exceção: Mantém se for artigo de lei, ex: (Art. 10, I) ou (Lei 8112)
-      cleanText = cleanText.replace(/(\.)\s*\(([^)]+)\)/gi, (match, p1, p2) => {
-        if (/art\.|artigo|lei|§|inciso|inc\.|par\.|alínea/i.test(p2)) {
-          return match; // Mantém
-        }
-        return p1; // Remove parênteses, devolve só o ponto
-      });
+      // Remove apenas fontes/artigos entre parênteses no final do card (com ou sem ponto prévio)
+      // Preserva intactas quaisquer explicações ou advertências pedagógicas
+      cleanText = cleanText.replace(/\.?\s*\(\s*(?:art\.|artigo|arts\.|lei\b|decreto|cf\b|cf\/88|cf88|crfb|código|cp\b|cpc\b|cpp\b|cc\b|clt\b|súmula|sumula|stf|stj|tst|pág\.|pg\.|fonte:|banca:)[^)]*\)\.?\s*$/gi, '.');
 
       // APLICA A CORREÇÃO FONÉTICA (Dicionário)
       let textToRead = applyPhoneticCorrections(cleanText);
@@ -7838,6 +8069,7 @@
         speakWithPiper(textToRead);
         return;
       }
+
 
       // --- ROTA NATIVA (SpeechSynthesis) ---
       const utterance = new SpeechSynthesisUtterance(textToRead);

@@ -520,53 +520,140 @@
   padding: 4px 6px; /* Respiro mínimo para o texto respirar sem perder altura */
   box-sizing: border-box;
   word-wrap: break-word;
-  line-height: 1.15; /* Controle o espaço entre as linhas do caput e textos soltos aqui */
+  line-height: 1.24; /* Entrelinha equilibrada para leitura limpa */
 }
 
     .bottom-bar {
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 0px 0;
+      margin: 4px 0 0 0;
+      padding: 2px 10px;
       flex-wrap: wrap;
-      gap: 10px;
+      gap: 6px;
     }
 
     .bottom-bar button {
-      background: none;
-      border: none;
+      background: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 6px;
       cursor: pointer;
-      font-size: 1.4em;
-      color: white;
+      font-size: 1.05em;
+      color: #d4d4d4;
       position: relative;
+      height: 28px;
+      min-width: 32px;
+      padding: 0 8px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .bottom-bar button:hover {
+      background: #282828;
+      border-color: #D4AF37;
+      color: #FFD700;
+    }
+
+    /* Destaque Dourado nos botões principais de giro e avanço */
+    .bottom-bar button.btn-nav-gold {
+      color: #FFD700;
+      border-color: rgba(212, 175, 55, 0.45);
+      background: rgba(212, 175, 55, 0.08);
+    }
+
+    .bottom-bar button.btn-nav-gold:hover {
+      background: rgba(212, 175, 55, 0.2);
+      border-color: #FFD700;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+    }
+
+    /* Botões Certo e Errado no Padrão Dark & Gold / Semântico */
+    #correctButton {
+      font-size: 1.05em !important;
+      color: #2ecc71 !important;
+      border-color: rgba(46, 204, 113, 0.4) !important;
+      background: rgba(46, 204, 113, 0.1) !important;
+    }
+
+    #correctButton:hover,
+    #correctButton.correct {
+      background: rgba(46, 204, 113, 0.25) !important;
+      border-color: #2ecc71 !important;
+      color: #00ff66 !important;
+      box-shadow: 0 0 10px rgba(46, 204, 113, 0.45);
+    }
+
+    #incorrectButton {
+      font-size: 1.05em !important;
+      color: #ff5555 !important;
+      border-color: rgba(255, 85, 85, 0.4) !important;
+      background: rgba(255, 85, 85, 0.1) !important;
+    }
+
+    #incorrectButton:hover,
+    #incorrectButton.incorrect {
+      background: rgba(255, 85, 85, 0.25) !important;
+      border-color: #ff5555 !important;
+      color: #ff3333 !important;
+      box-shadow: 0 0 10px rgba(244, 67, 54, 0.45);
     }
 
     .bottom-bar button::after {
       content: attr(data-tooltip);
       position: absolute;
-      bottom: 120%;
+      bottom: 125%;
       left: 50%;
       transform: translateX(-50%);
-      background: #333;
+      background: #181818;
       color: #fff;
-      padding: 4px 6px;
+      border: 1px solid #D4AF37;
+      padding: 4px 8px;
       border-radius: 4px;
       font-size: 0.75em;
       white-space: nowrap;
       z-index: 10;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.3s ease;
+      transition: opacity 0.25s ease;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.8);
     }
 
     .bottom-bar button.show-tooltip::after {
       opacity: 1;
     }
 
+    /* Caixa "#" (Ir para o Card) integrada ao Modo Dark & Gold */
     .bottom-bar input[type="number"] {
-      width: 55px;
-      padding: 1.5px;
-      font-size: 1em;
+      width: 52px;
+      height: 28px;
+      padding: 2px 6px;
+      font-size: 0.95em;
+      font-weight: bold;
+      text-align: center;
+      background-color: #141414 !important;
+      color: #FFD700 !important;
+      border: 1px solid #3a3a3a !important;
+      border-radius: 6px;
+      outline: none;
+      -moz-appearance: textfield;
+      transition: all 0.2s ease;
+    }
+
+    .bottom-bar input[type="number"]::-webkit-outer-spin-button,
+    .bottom-bar input[type="number"]::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
+    .bottom-bar input[type="number"]:focus {
+      border-color: #FFD700 !important;
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.35);
+    }
+
+    .bottom-bar input[type="number"]::placeholder {
+      color: #777;
+      font-weight: normal;
     }
 
     #timer {
@@ -3394,16 +3481,22 @@
 
     <span id="streakDisplay" class="tooltip" data-tooltip="Ofensiva (Dias seguidos)"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
-      style="color: #ff4500; font-weight: bold; cursor:default;">🔥 0</span>
+      style="color: #ff6b00; font-weight: bold; cursor:default; display: inline-flex; align-items: center; gap: 4px;"><i class="fas fa-fire" aria-hidden="true"></i> 0</span>
     <button id="aiBtn" class="tooltip" data-tooltip="Professor Chico" aria-label="Professor Chico"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="explainWithAI()"
       style="background: none; border: none; color: #a78bfa; font-size: 1.2em; cursor: pointer; margin-left: 5px;">
       <i class="fas fa-robot" aria-hidden="true"></i>
     </button>
+    <!-- NOVO BOTÃO: CHICO ASSISTENTE (COPILOTO DA PLATAFORMA) -->
+    <button id="chicoAssistantBtn" class="tooltip" data-tooltip="Chico Assistente (Comandos e Ajuda)" aria-label="Chico Assistente"
+      onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="openChicoAssistant()"
+      style="background: none; border: none; color: #FFD700; font-size: 1.2em; cursor: pointer; margin-left: 5px;">
+      <i class="fas fa-headset" aria-hidden="true"></i>
+    </button>
     <span id="mobileCardCounter" aria-live="polite" aria-atomic="true"
       style="display:none; font-size: 0.9em; margin: 0 8px; color: gold; font-weight: bold;">0/0</span>
     <span id="desktopTimer" class="tooltip" data-tooltip="Zerar Tempo" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer;">⏱️ <span
+      onmouseleave="hideTooltipOnLeave(this)" onclick="resetTimer()" style="cursor:pointer; display: inline-flex; align-items: center; gap: 5px;"><i class="fas fa-stopwatch" style="color: #FFD700;" aria-hidden="true"></i> <span
         id="timer">00:00</span></span>
 
     <button id="notesBtn" class="tooltip" data-tooltip="Anotações (Atalho: A)" aria-label="Anotações"
@@ -3464,30 +3557,29 @@
     </div>
   </div>
   <div class="bottom-bar">
-    <div id="autoAdvanceControls" style="display: flex; align-items: center; gap: 8px;">
+    <div id="autoAdvanceControls" style="display: flex; align-items: center; gap: 6px;">
       <button id="autoAdvanceStartBtn" class="tooltip" data-tooltip="Iniciar temporizador"
-        onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" style="font-size: 1.2em;"
-        onclick="startAutoAdvanceSmart()">⏳</button>
-      <div id="autoAdvanceActiveGroup" style="display: none; gap: 8px; align-items: center;">
+        onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
+        style="color: #FFD700;" onclick="startAutoAdvanceSmart()"><i class="fas fa-hourglass-half" aria-hidden="true"></i></button>
+      <div id="autoAdvanceActiveGroup" style="display: none; gap: 6px; align-items: center;">
         <button class="tooltip" data-tooltip="Pausar/Continuar" onmouseover="showTooltipOnHover(this)"
-          onmouseleave="hideTooltipOnLeave(this)" onclick="pauseOrResumeAutoAdvance()" style="font-size: 1.2em;"
-          id="pauseResumeBtn">⏸️</button>
+          onmouseleave="hideTooltipOnLeave(this)" onclick="pauseOrResumeAutoAdvance()"
+          id="pauseResumeBtn"><i class="fas fa-pause" aria-hidden="true"></i></button>
         <button class="tooltip" data-tooltip="Parar temporizador" onmouseover="showTooltipOnHover(this)"
-          onmouseleave="hideTooltipOnLeave(this)" onclick="stopAutoAdvance()" style="font-size: 1.2em;">⏹️</button>
+          onmouseleave="hideTooltipOnLeave(this)" onclick="stopAutoAdvance()" style="color: #ff5555;"><i class="fas fa-stop" aria-hidden="true"></i></button>
         <button class="tooltip" data-tooltip="Resetar contagem" onmouseover="showTooltipOnHover(this)"
-          onmouseleave="hideTooltipOnLeave(this)" onclick="resetAutoAdvanceTimer()" style="font-size: 1.2em;">↻</button>
+          onmouseleave="hideTooltipOnLeave(this)" onclick="resetAutoAdvanceTimer()"><i class="fas fa-redo-alt" aria-hidden="true"></i></button>
         <button class="tooltip" data-tooltip="Alterar tempo" onmouseover="showTooltipOnHover(this)"
-          onmouseleave="hideTooltipOnLeave(this)" onclick="openAutoAdvanceSettings()"
-          style="font-size: 1.2em;">⚙️</button>
-        <span id="autoAdvanceTimerDisplay" style="font-size: 1.0em; min-width: 50px; color: white;">0s</span>
+          onmouseleave="hideTooltipOnLeave(this)" onclick="openAutoAdvanceSettings()"><i class="fas fa-cog" aria-hidden="true"></i></button>
+        <span id="autoAdvanceTimerDisplay" style="font-size: 0.95em; font-weight: bold; min-width: 38px; color: #FFD700;">0s</span>
       </div>
     </div>
-    <input type="number" id="goToCard" placeholder="#" onchange="goToSpecificCard()" style="margin: 0 5px;" />
+    <input type="number" id="goToCard" placeholder="#" onchange="goToSpecificCard()" style="margin: 0 2px;" />
     <span id="cardCounter" aria-live="polite" aria-atomic="true">0/0</span>
     <button id="evalMenuBtn" data-tooltip="Menu de Avaliação" onmouseover="showTooltipOnHover(this)"
       onmouseleave="hideTooltipOnLeave(this)" onclick="openEvalModal()"
-      style="color: gold; border: 1px solid #444; border-radius: 5px; padding: 0 10px; margin-right: 5px;"><i
-        class="fas fa-bars"></i></button>
+      style="color: #FFD700; margin-right: 2px;"><i
+        class="fas fa-sliders-h" aria-hidden="true"></i></button>
     <div id="srsButtons" style="display: none; gap: 8px; justify-content: center; align-items: center;">
 
       <button id="btnDontKnow" class="accuracy-button" data-tooltip="Revisar em 10 min"
@@ -3517,24 +3609,24 @@
     </div>
     <button class="accuracy-button" data-tooltip="Acertei (Tecla 1)" aria-label="Acertei"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="markAsCorrect()"
-      id="correctButton">✅</button>
+      id="correctButton"><i class="fas fa-check" aria-hidden="true"></i></button>
     <button class="accuracy-button" data-tooltip="Errei (Tecla 2)" aria-label="Errei"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)" onclick="markAsIncorrect()"
-      id="incorrectButton">❌</button>
+      id="incorrectButton"><i class="fas fa-times" aria-hidden="true"></i></button>
     <button id="shuffleButton" data-tooltip="Embaralhar cartas" aria-label="Embaralhar cartas"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
-      onclick="toggleShuffleMode()">🔀</button>
+      onclick="toggleShuffleMode()"><i class="fas fa-random" aria-hidden="true"></i></button>
     <button data-tooltip="Virar Card / Anterior (Alt)" aria-label="Virar Card ou Anterior"
       onmouseover="showTooltipOnHover(this)" onmouseleave="hideTooltipOnLeave(this)"
-      onclick="reviewAndRetreat()">↩️</button>
+      onclick="reviewAndRetreat()"><i class="fas fa-undo-alt" aria-hidden="true"></i></button>
     <button data-tooltip="Voltar" aria-label="Card anterior" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()">⏪</button>
-    <button data-tooltip="Resposta/Perg." aria-label="Virar card" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="flipCard()">⬇️</button>
+      onmouseleave="hideTooltipOnLeave(this)" onclick="prevCard()"><i class="fas fa-step-backward" aria-hidden="true"></i></button>
+    <button class="btn-nav-gold" data-tooltip="Resposta/Perg." aria-label="Virar card" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="flipCard()"><i class="fas fa-sync-alt" aria-hidden="true"></i></button>
     <button data-tooltip="Avançar" aria-label="Próximo card" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="nextCard()">⏩</button>
-    <button id="nextAndShow" data-tooltip="Virar Card / Próximo" onmouseover="showTooltipOnHover(this)"
-      onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()">↪️</button>
+      onmouseleave="hideTooltipOnLeave(this)" onclick="nextCard()"><i class="fas fa-step-forward" aria-hidden="true"></i></button>
+    <button id="nextAndShow" class="btn-nav-gold" data-tooltip="Virar Card / Próximo (Enter)" onmouseover="showTooltipOnHover(this)"
+      onmouseleave="hideTooltipOnLeave(this)" onclick="reviewAndAdvance()"><i class="fas fa-redo-alt" aria-hidden="true"></i></button>
   </div>
   <div id="helpModal" class="chico-modal-overlay" style="display:none;" role="dialog" aria-modal="true"
     aria-label="Atalhos do teclado">
@@ -4268,10 +4360,392 @@
     </div>
   </div>
 
+  <!-- ════════════════════════════════════════════════════════════════ -->
+  <!-- MODAL E MOTOR DO CHICO ASSISTENTE (VOZ PIPER + MICROFONE LOCAL) -->
   <!-- ═══════════════════════════════════════════════════════════════ -->
-  <!-- MÓDULO 1: CONFIGURAÇÃO INICIAL E VARIÁVEIS GLOBAIS            -->
+  <style>
+    .chico-assistant-overlay {
+      display: none;
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 95%;
+      max-width: 800px;
+      max-height: 85vh;
+      height: auto;
+      background: #121212;
+      border: 1px solid #D2AC47;
+      border-radius: 12px;
+      z-index: 100005 !important;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.95);
+      flex-direction: column;
+      font-family: 'Roboto', sans-serif;
+      overflow: hidden;
+    }
+    .chico-assistant-chips {
+      display: flex;
+      gap: 8px;
+      padding: 10px 15px;
+      background: #141414;
+      overflow-x: auto;
+      white-space: nowrap;
+      border-bottom: 1px solid #252525;
+      flex-shrink: 0 !important;
+      min-height: 48px;
+      align-items: center;
+    }
+    .chico-assistant-chips button {
+      flex-shrink: 0 !important;
+      padding: 6px 12px;
+      border-radius: 16px;
+      font-size: 0.82em;
+      cursor: pointer;
+      line-height: 1.2;
+    }
+    @keyframes pulseMicRed {
+      0% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0.7); }
+      70% { box-shadow: 0 0 0 12px rgba(255, 77, 77, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 77, 77, 0); }
+    }
+    .mic-recording-active {
+      background: #ff4d4d !important;
+      border-color: #ff9999 !important;
+      animation: pulseMicRed 1.2s infinite !important;
+    }
+    /* Indicador verde no topo e no botão quando a Escuta Contínua ("Chico") está ativa */
+    #chicoAssistantBtn.wake-word-active i {
+      color: #00FF00 !important;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8) !important;
+    }
+    .wake-word-btn-active {
+      background: rgba(0, 255, 0, 0.15) !important;
+      border-color: #00FF00 !important;
+      color: #00FF00 !important;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3) !important;
+    }
+  </style>
+
+  <div id="chicoAssistantModal" class="chico-assistant-overlay" role="dialog" aria-modal="true" aria-label="Chico Assistente">
+    <div class="ai-modal-header" style="background: #161616; border-bottom: 1px solid #D2AC47;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <i class="fas fa-headset" style="color: #FFD700; font-size: 1.4em;"></i>
+        <div style="text-align: left;">
+          <strong style="color: #FFD700; font-size: 1.1em; display: block;">Chico Assistente</strong>
+          <span id="assistantVoiceBadge" style="font-size: 0.75em; color: #aaa;">Voz Neural Piper pronta</span>
+        </div>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <button id="assistantWakeWordBtn" onclick="toggleWakeWordMode()" title="Ativar/Desativar Escuta Contínua (Fale: 'Chico, ...')"
+          style="background: #222; border: 1px solid #444; color: #FFD700; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.82em; font-weight: bold; display: inline-flex; align-items: center; gap: 6px;">
+          <i class="fas fa-assistive-listening-systems" id="assistantWakeWordIcon"></i>
+          <span id="assistantWakeWordLabel">Ouvir "Chico": OFF</span>
+        </button>
+        <button id="assistantMuteBtn" onclick="toggleAssistantVoice()" title="Ativar/Desativar resposta por voz"
+          style="background: #222; border: 1px solid #444; color: #FFD700; padding: 6px 10px; border-radius: 6px; cursor: pointer; font-size: 0.9em;">
+          <i class="fas fa-volume-up" id="assistantMuteIcon"></i>
+        </button>
+        <button onclick="closeChicoAssistant(false)"
+          style="background: none; border: none; color: #ccc; font-size: 1.4em; cursor: pointer;">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Barra de Atalhos Rápidos (Fixa, sem amassar os botões) -->
+    <div class="chico-assistant-chips">
+      <button onclick="sendQuickAssistantCmd('Explica este card')" style="background:#261c38; color:#c4b5fd; border:1px solid #7c3aed; font-weight:bold;">🤖 Explicar este Card</button>
+      <button onclick="sendQuickAssistantCmd('Qual meu resumo de hoje?')" style="background:#222; color:#FFD700; border:1px solid #444;">📊 Meu Resumo</button>
+      <button onclick="sendQuickAssistantCmd('Ativar modo escuro')" style="background:#222; color:#FFD700; border:1px solid #444;">🌙 Modo Escuro</button>
+      <button onclick="sendQuickAssistantCmd('Ativar modo SRS')" style="background:#222; color:#FFD700; border:1px solid #444;">🧠 Ativar SRS</button>
+      <button onclick="sendQuickAssistantCmd('Como funciona o SRS?')" style="background:#222; color:#ddd; border:1px solid #444;">❓ Dúvida SRS</button>
+      <button onclick="sendQuickAssistantCmd('Quais são os atalhos?')" style="background:#222; color:#ddd; border:1px solid #444;">⌨️ Atalhos</button>
+    </div>
+
+    <div id="chicoAssistantHistory" class="ai-chat-history"></div>
+
+    <div class="ai-modal-footer" style="flex-shrink: 0;">
+      <button id="assistantMicBtn" onclick="toggleAssistantMic()" title="Falar comando pelo microfone"
+        style="background: #222; color: #FFD700; border: 1px solid #555; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;">
+        <i class="fas fa-microphone" id="assistantMicIcon"></i>
+      </button>
+      <input type="text" id="chicoAssistantInput" class="ai-input-field"
+        placeholder="Ex: 'explica este card', 'ir para card 25', 'modo escuro', 'buscar pena'..."
+        onkeydown="if(event.key==='Enter'){ event.stopPropagation(); sendChicoAssistantMessage(); }">
+      <button class="ai-send-btn" onclick="sendChicoAssistantMessage()" title="Enviar">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
   <!-- ═══════════════════════════════════════════════════════════════ -->
   <script>
+    let isAssistantVoiceEnabled = true;
+    let assistantSpeechToken = 0;
+    let assistantRecognition = null;
+    let isAssistantListening = false;
+
+    // Variáveis do Gravador Neural Local (Fallback para Firefox, Brave, Opera, etc.)
+    let localWhisperTranscriber = null;
+    let localWhisperLoading = false;
+    let mediaRecorderInstance = null;
+    let recordedAudioChunks = [];
+    let recordingAutoStopTimer = null;
+
+    // 🚀 PRÉ-AQUECIMENTO SILENCIOSO DO PIPER NO BOOT DA PÁGINA
+    async function autoWarmupPiperFromCache() {
+      try {
+        if (typeof piperReady !== 'undefined' && piperReady) {
+          if (typeof getOrCreatePiperWorker === 'function') getOrCreatePiperWorker();
+          updateAssistantVoiceBadge();
+          return true;
+        }
+
+        let hasCachedModel = (localStorage.getItem('chicoUsePiper') === 'true');
+        if (!hasCachedModel && 'caches' in window) {
+          const cache = await caches.open('piper-voices');
+          const keys = await cache.keys();
+          if (keys && keys.length > 0) hasCachedModel = true;
+        }
+
+        if (hasCachedModel && typeof initPiperReal === 'function') {
+          if (!piperLoading) {
+            await initPiperReal();
+          } else {
+            for (let i = 0; i < 40; i++) {
+              if (piperReady || !piperLoading) break;
+              await new Promise(r => setTimeout(r, 100));
+            }
+          }
+          if (piperReady && typeof getOrCreatePiperWorker === 'function') {
+            getOrCreatePiperWorker();
+          }
+          updateAssistantVoiceBadge();
+          return piperReady;
+        }
+      } catch (e) {
+        console.warn("Aviso no pré-aquecimento do Piper:", e);
+      }
+      return false;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(autoWarmupPiperFromCache, 1000);
+    });
+
+    async function openChicoAssistant() {
+      if (!requireAuth()) return;
+      ensurePiperAudioCtx();
+
+      const modal = document.getElementById('chicoAssistantModal');
+      const history = document.getElementById('chicoAssistantHistory');
+      modal.style.display = 'flex';
+
+      const input = document.getElementById('chicoAssistantInput');
+      if (input) setTimeout(() => input.focus(), 100);
+
+      if (typeof piperReady !== 'undefined' && !piperReady) {
+        await autoWarmupPiperFromCache();
+        if (!piperReady && !piperLoading && typeof initPiperReal === 'function') {
+          initPiperReal().then(() => {
+            if (typeof getOrCreatePiperWorker === 'function') getOrCreatePiperWorker();
+            updateAssistantVoiceBadge();
+          });
+        }
+      }
+
+      updateAssistantVoiceBadge();
+
+      if (history.innerHTML.trim() === '') {
+        const welcome = "Olá! Eu sou o Chico Assistente. Posso configurar sua tela, filtrar matérias, pular para qualquer card, ler seu resumo de desempenho ou chamar o Professor Chico se você tiver dúvida na matéria deste card. O que vamos fazer agora?";
+        appendAssistantMessage('assistant', welcome);
+        speakAssistantText(welcome);
+      }
+    }
+
+    function closeChicoAssistant(keepVoice = false) {
+      if (!keepVoice) {
+        stopAssistantSpeech();
+      }
+      stopAssistantMicRecording();
+      document.getElementById('chicoAssistantModal').style.display = 'none';
+    }
+
+    function updateAssistantVoiceBadge(customText = null, customColor = null) {
+      const badge = document.getElementById('assistantVoiceBadge');
+      if (!badge) return;
+      if (customText) {
+        badge.textContent = customText;
+        badge.style.color = customColor || "#FFD700";
+        return;
+      }
+      if (!isAssistantVoiceEnabled) {
+        badge.textContent = "🔇 Voz do assistente silenciada";
+        badge.style.color = "#888";
+      } else if (typeof piperReady !== 'undefined' && piperReady) {
+        badge.textContent = "🟢 Voz Neural Piper Ativa";
+        badge.style.color = "#4CAF50";
+      } else if (typeof piperLoading !== 'undefined' && piperLoading) {
+        badge.textContent = "⏳ Baixando Voz Piper (usando voz nativa)...";
+        badge.style.color = "#FFD700";
+      } else {
+        badge.textContent = "🗣️ Voz Inteligente Ativa";
+        badge.style.color = "#FFD700";
+      }
+    }
+
+    function toggleAssistantVoice() {
+      isAssistantVoiceEnabled = !isAssistantVoiceEnabled;
+      const icon = document.getElementById('assistantMuteIcon');
+      if (!isAssistantVoiceEnabled) {
+        stopAssistantSpeech();
+        if (icon) icon.className = 'fas fa-volume-mute';
+      } else {
+        if (icon) icon.className = 'fas fa-volume-up';
+      }
+      updateAssistantVoiceBadge();
+    }
+
+    function stopAssistantSpeech() {
+      assistantSpeechToken++;
+      window.speechSynthesis.cancel();
+      if (typeof piperSourceNode !== 'undefined' && piperSourceNode) {
+        try { piperSourceNode.stop(); } catch (e) {}
+        piperSourceNode = null;
+      }
+      // Garante que a escuta contínua seja destravada imediatamente ao parar a voz
+      if (typeof resumeWakeWordAfterSpeech === 'function') {
+        resumeWakeWordAfterSpeech();
+      }
+    }
+
+    async function speakAssistantText(rawText) {
+      if (!isAssistantVoiceEnabled || !rawText) return;
+      stopAssistantSpeech();
+      const myToken = ++assistantSpeechToken;
+
+      // 🛡️ BLINDAGEM ANTI-ECO: Pausa a escuta contínua enquanto o Chico fala
+      if (typeof pauseWakeWordForSpeech === 'function') pauseWakeWordForSpeech();
+
+      let clean = rawText
+        .replace(/<[^>]*>/g, ' ')
+        .replace(/[\u{1F300}-\u{1F9FF}]|[\u{2700}-\u{27BF}]|[\u{2600}-\u{26FF}]/gu, '')
+        .replace(/[•\*]/g, '')
+        .trim();
+
+      if (typeof applyPhoneticCorrections === 'function') {
+        clean = applyPhoneticCorrections(clean);
+      }
+
+      updateAssistantVoiceBadge();
+
+      if (typeof piperReady !== 'undefined' && piperReady && typeof synthesizePiperChunk === 'function') {
+        try {
+          ensurePiperAudioCtx();
+          const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+          const voiceId = isMobile ? PIPER_MODELS.mobile : PIPER_MODELS.desktop;
+          const chunks = splitTextIntoChunks(clean);
+
+          const prepareBuf = async (txt, isFirst) => {
+            const rawData = await synthesizePiperChunk(txt, voiceId);
+            if (myToken !== assistantSpeechToken) return null;
+            const audioBuf = await parseWavToAudioBuffer(rawData, piperAudioCtx);
+            if (myToken !== assistantSpeechToken) return null;
+            return prependSilence(audioBuf, piperAudioCtx, isFirst ? 0.05 : 0.04);
+          };
+
+          let nextPromise = prepareBuf(chunks[0], true);
+          for (let i = 0; i < chunks.length; i++) {
+            const buf = await nextPromise;
+            if (!buf || myToken !== assistantSpeechToken) {
+              if (typeof resumeWakeWordAfterSpeech === 'function') resumeWakeWordAfterSpeech();
+              return;
+            }
+            if (i + 1 < chunks.length) {
+              nextPromise = prepareBuf(chunks[i + 1], false);
+            }
+            await new Promise((resolve) => {
+              if (myToken !== assistantSpeechToken) { resolve(); return; }
+              const source = piperAudioCtx.createBufferSource();
+              piperSourceNode = source;
+              source.buffer = buf;
+              const rateEl = document.getElementById('rateRange');
+              source.playbackRate.value = rateEl ? parseFloat(rateEl.value) : 1.1;
+              source.connect(piperAudioCtx.destination);
+              source.onended = () => {
+                if (piperSourceNode === source) piperSourceNode = null;
+                resolve();
+              };
+              source.start(0);
+            });
+          }
+          if (myToken === assistantSpeechToken && typeof resumeWakeWordAfterSpeech === 'function') {
+            resumeWakeWordAfterSpeech();
+          }
+          return;
+        } catch (err) {
+          console.warn("Fallback do Piper no Assistente para voz nativa:", err);
+        }
+      }
+
+      const utter = new SpeechSynthesisUtterance(clean);
+      const voices = window.speechSynthesis.getVoices() || [];
+      const savedQ = localStorage.getItem('chicoVoiceQ');
+      const chosen = voices.find(v => v.name === savedQ) || voices.find(v => v.lang && v.lang.includes('pt'));
+      if (chosen) utter.voice = chosen;
+      const rateEl = document.getElementById('rateRange');
+      utter.rate = rateEl ? parseFloat(rateEl.value) : 1.1;
+      utter.onend = () => {
+        if (myToken === assistantSpeechToken && typeof resumeWakeWordAfterSpeech === 'function') {
+          resumeWakeWordAfterSpeech();
+        }
+      };
+      utter.onerror = () => {
+        if (typeof resumeWakeWordAfterSpeech === 'function') resumeWakeWordAfterSpeech();
+      };
+      window.speechSynthesis.speak(utter);
+    }
+
+    function appendAssistantMessage(sender, text) {
+      const history = document.getElementById('chicoAssistantHistory');
+      if (!history) return;
+      const msgDiv = document.createElement('div');
+      if (sender === 'user') {
+        msgDiv.style.cssText = 'align-self: flex-end; background: #2a2a2a; color: #FFD700; padding: 10px 15px; border-radius: 15px 15px 2px 15px; max-width: 80%; text-align: right; border: 1px solid #444;';
+      } else {
+        msgDiv.style.cssText = 'align-self: flex-start; background: #181818; color: #eaeaea; padding: 12px 16px; border-radius: 15px 15px 15px 2px; max-width: 88%; text-align: left; border-left: 3px solid #FFD700;';
+      }
+      msgDiv.innerHTML = escapeHTML(text).replace(/\n/g, '<br>');
+      history.appendChild(msgDiv);
+      history.scrollTop = history.scrollHeight;
+    }
+
+    function sendQuickAssistantCmd(cmdText) {
+      const input = document.getElementById('chicoAssistantInput');
+      if (input) input.value = cmdText;
+      sendChicoAssistantMessage();
+    }
+
+    function sendChicoAssistantMessage() {
+      const input = document.getElementById('chicoAssistantInput');
+      if (!input) return;
+      const userText = input.value.trim();
+      if (!userText) return;
+
+      input.value = '';
+      appendAssistantMessage('user', userText);
+
+      const response = processAssistantIntent(userText);
+      appendAssistantMessage('assistant', response.reply);
+      speakAssistantText(response.reply);
+
+      if (typeof response.action === 'function') {
+        setTimeout(() => {
+          response.action();
+        }, 350);
+      }
+    }
+
     // --- CONFIGURAÇÃO INICIAL ---
     // Usuário e Senha
     let WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzYpyzD80XnRBr_PpBYHALEYJyjuD9Y0Yx2dlzZvtA6ePM8ihcqMMInlgtorEB_I0_-sw/exec";
@@ -4348,6 +4822,976 @@
     let cardAccuracy = {};
     let isReviewErrorsMode = false;
     let loadedSettingsCards = []; // NOVA VARIÁVEL
+
+    // ═══════════════════════════════════════════════════════════════════
+    // 🎧 SENSOR DE CONTEXTO DE BOTÕES + ESCUTA ATIVA ("CHICO, ...")
+    // ═══════════════════════════════════════════════════════════════════
+    let lastHoveredElementInfo = null;
+    let isWakeWordActive = false;
+    let wakeWordRecognition = null;
+    let isWakeWordPausedForSpeech = false;
+    let wakeWordRestartTimer = null;
+
+    // Dicionário didático que explica detalhadamente o que cada botão da tela faz
+    const BUTTON_EXPLANATIONS_MAP = {
+      "ocultar os menus": "Esse botão recolhe a barra superior para deixar o card em tela quase cheia.",
+      "mostrar os menus": "Esse botão abre novamente a barra superior de ferramentas.",
+      "menu principal": "Esse é o Menu Principal. Nele você altera cores do card, tamanho da fonte, abre configurações, estatísticas, manual e reporta erros.",
+      "filtrar cards": "Esse é o botão de Filtro Inteligente. Serve para escolher uma disciplina, tópico específico, foco ou filtrar por peso mínimo.",
+      "buscar (ctrl+f)": "Esse botão abre a barra de pesquisa para encontrar qualquer palavra na frente ou no verso dos cards.",
+      "ofensiva (dias seguidos)": "Esse foguinho mostra a sua Ofensiva: quantos dias seguidos você estudou sem falhar.",
+      "professor chico": "Esse botão chama o Professor Chico, a inteligência artificial que explica o conteúdo deste card, dá exemplos e cria macetes de memorização.",
+      "chico assistente (comandos e ajuda)": "Esse é o meu botão! Abre o painel do Chico Assistente e mostra em verde quando estou ouvindo você em segundo plano.",
+      "zerar tempo": "Esse é o cronômetro da sessão. Se você clicar nele, o tempo é zerado.",
+      "anotações (atalho: a)": "Esse botão abre o seu caderno de anotações na nuvem para salvar resumos desta matéria.",
+      "ler em voz alta": "Esse botão ativa a leitura em voz alta dos cards e o modo mãos livres.",
+      "destacar palavras (atalho: *)": "Esse marcador ativa ou desativa o destaque colorido nas palavras-chave importantes do card.",
+      "destaque ativo (atalho: *)": "O marcador está verde indicando que as palavras-chave do card estão destacadas.",
+      "revisar erros": "Esse botão filtra o baralho para mostrar apenas os cards que você errou nesta sessão.",
+      "minha conta": "Esse ícone mostra o seu e-mail conectado e permite sair do sistema com segurança.",
+      "iniciar temporizador": "Essa ampulheta inicia o avanço automático de cards a cada poucos segundos.",
+      "menu de avaliação": "Esse botão permite alternar os botões do rodapé entre Certo e Errado, Repetição Espaçada S-R-S ou ocultar os botões.",
+      "acertei (tecla 1)": "Esse botão registra que você acertou o card e avança para o próximo.",
+      "errei (tecla 2)": "Esse botão registra que você errou o card para revisar depois e avança para o próximo.",
+      "embaralhar cartas": "Esse botão mistura a ordem dos cards de forma aleatória.",
+      "virar card / anterior (alt)": "Esse botão volta para a pergunta se você estiver na resposta, ou volta para o card anterior.",
+      "voltar": "Esse botão volta diretamente para o card anterior.",
+      "resposta/perg.": "Esse botão gira o flashcard para mostrar a resposta ou voltar para a pergunta.",
+      "avançar": "Esse botão pula diretamente para o próximo card.",
+      "virar card / próximo (enter)": "Esse botão vira o card para mostrar a resposta e, se já estiver na resposta, avança para o próximo card."
+    };
+
+    // Rastreador invisível: guarda o último botão ou controle apontado pelo mouse
+    document.addEventListener('mouseover', (e) => {
+      const target = e.target.closest('button, select, input, [data-tooltip], [title], [aria-label], .menu-item-row');
+      if (!target) return;
+
+      const rawLabel = target.getAttribute('data-tooltip') ||
+                       target.getAttribute('aria-label') ||
+                       target.getAttribute('title') ||
+                       target.innerText || '';
+      const cleanLabel = rawLabel.replace(/\s+/g, ' ').trim();
+
+      if (cleanLabel) {
+        lastHoveredElementInfo = {
+          label: cleanLabel,
+          normKey: cleanLabel.toLowerCase(),
+          timestamp: Date.now()
+        };
+      }
+    }, { passive: true });
+
+    function updateWakeWordUI() {
+      const topBtn = document.getElementById('chicoAssistantBtn');
+      const modalBtn = document.getElementById('assistantWakeWordBtn');
+      const modalLabel = document.getElementById('assistantWakeWordLabel');
+
+      if (isWakeWordActive) {
+        if (topBtn) {
+          topBtn.classList.add('wake-word-active');
+          topBtn.setAttribute('data-tooltip', 'Chico Assistente (Escuta Ativa: Diga "Chico...")');
+        }
+        if (modalBtn) modalBtn.classList.add('wake-word-btn-active');
+        if (modalLabel) modalLabel.textContent = 'Ouvindo "Chico": ON';
+      } else {
+        if (topBtn) {
+          topBtn.classList.remove('wake-word-active');
+          topBtn.setAttribute('data-tooltip', 'Chico Assistente (Comandos e Ajuda)');
+        }
+        if (modalBtn) modalBtn.classList.remove('wake-word-btn-active');
+        if (modalLabel) modalLabel.textContent = 'Ouvir "Chico": OFF';
+      }
+    }
+
+    function toggleWakeWordMode() {
+      if (!requireAuth()) return;
+      ensurePiperAudioCtx();
+
+      if (isWakeWordActive) {
+        stopWakeWordEngine();
+        showToast("Escuta contínua ('Chico') desativada.", "info");
+      } else {
+        startWakeWordEngine();
+      }
+    }
+
+// Variáveis do Motor Contínuo com Pre-Roll para Firefox / Brave (Whisper Local)
+    let vadStream = null;
+    let vadAudioCtx = null;
+    let vadScriptNode = null;
+    let isUsingFallbackVAD = false;
+
+    // Normalizador fonético para corrigir erros clássicos do modelo compacto whisper-tiny
+    function normalizeWhisperTranscript(rawText) {
+      if (!rawText) return '';
+      let t = rawText.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+
+      // Corrige variações de "card" que o whisper-tiny costuma trocar em português
+      t = t.replace(/\b(carne|carnes|carro|carros|cardo|tarde|parte|carga|carta|cartas|casa)\b/g, 'card');
+      // Corrige variações de verbos de comando
+      t = t.replace(/\b(vira o|vira a|virao|vira|virou|girar|gira)\b/g, 'virar');
+      t = t.replace(/\b(proxima|proximos|proximo)\b/g, 'proximo');
+      t = t.replace(/\b(explicam|explicar|explique)\b/g, 'explica');
+      t = t.replace(/\b(escura|escuros)\b/g, 'escuro');
+      return t;
+    }
+
+    async function startWakeWordEngine() {
+      if (isAssistantListening) {
+        stopAssistantMicRecording();
+      }
+
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      // ROTA 1: Chrome / Edge (API Nativa)
+      if (SpeechRec && !window.forceLocalWhisperMic) {
+        isUsingFallbackVAD = false;
+        isWakeWordActive = true;
+        isWakeWordPausedForSpeech = false;
+        updateWakeWordUI();
+        initWakeWordInstance();
+        showToast("🎙️ Escuta ativa! Fale 'Chico' seguido do comando a qualquer momento.", "success", 4000);
+        return;
+      }
+
+      // ROTA 2: Firefox / Brave / Opera (Captura direta em 16kHz com Pre-Roll + Whisper Local)
+      await startFirefoxWakeWordFallback();
+    }
+
+    async function startFirefoxWakeWordFallback() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast("Permissão de microfone bloqueada neste navegador.", "error", 4500);
+        return;
+      }
+
+      const transcriber = await getOrInitLocalWhisper();
+      if (!transcriber) {
+        showToast("Não foi possível carregar o ouvido neural no Firefox.", "error");
+        return;
+      }
+
+      try {
+        vadStream = await navigator.mediaDevices.getUserMedia({
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+        });
+
+        vadAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (vadAudioCtx.state === 'suspended') {
+          await vadAudioCtx.resume();
+        }
+
+        const nativeRate = vadAudioCtx.sampleRate;
+        const source = vadAudioCtx.createMediaStreamSource(vadStream);
+        vadScriptNode = vadAudioCtx.createScriptProcessor(4096, 1, 1);
+
+        // Buffer de Pre-Roll (guarda os últimos ~0.8s antes da voz disparar para nunca cortar "Chico")
+        const maxPreRollChunks = Math.ceil((0.8 * nativeRate) / 4096);
+        let preRollBuffer = [];
+        let activeSpeechBuffer = [];
+        let isSpeaking = false;
+        let silenceSamples = 0;
+        let speechSamples = 0;
+        let isTranscribingNow = false;
+        let noiseFloor = 0.008; // Piso de ruído adaptativo
+
+        vadScriptNode.onaudioprocess = (audioEvent) => {
+          if (!isWakeWordActive || isWakeWordPausedForSpeech || isTranscribingNow || isAssistantListening) return;
+          if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+          if (typeof piperSourceNode !== 'undefined' && piperSourceNode) return;
+
+          const input = audioEvent.inputBuffer.getChannelData(0);
+          const chunkCopy = new Float32Array(input);
+
+          // Calcula energia RMS real da voz no domínio do tempo
+          let sumSq = 0;
+          for (let i = 0; i < chunkCopy.length; i++) {
+            sumSq += chunkCopy[i] * chunkCopy[i];
+          }
+          const rms = Math.sqrt(sumSq / chunkCopy.length);
+
+          // Calibra suavemente o ruído de fundo quando em silêncio
+          if (!isSpeaking && rms < noiseFloor * 1.5) {
+            noiseFloor = 0.95 * noiseFloor + 0.05 * Math.max(0.003, rms);
+          }
+
+          const dynamicThreshold = Math.max(0.015, Math.min(0.045, noiseFloor * 2.8));
+
+          if (rms > dynamicThreshold) {
+            silenceSamples = 0;
+            if (!isSpeaking) {
+              isSpeaking = true;
+              speechSamples = 0;
+              // Inclui o Pre-Roll para pegar o início da palavra "Chico"
+              activeSpeechBuffer = [...preRollBuffer];
+              preRollBuffer = [];
+            }
+            activeSpeechBuffer.push(chunkCopy);
+            speechSamples += chunkCopy.length;
+
+            // Se falar por mais de 4,5 segundos seguidos, fecha o pacote e processa
+            if (speechSamples >= nativeRate * 4.5) {
+              finalizeAndTranscribeSpeech();
+            }
+          } else {
+            if (isSpeaking) {
+              activeSpeechBuffer.push(chunkCopy);
+              silenceSamples += chunkCopy.length;
+
+              // 0,75 segundos de silêncio após falar encerra a frase e transcreve
+              if (silenceSamples >= nativeRate * 0.75) {
+                finalizeAndTranscribeSpeech();
+              }
+            } else {
+              // Mantém o Pre-Roll sempre atualizado com os últimos 0,8s
+              preRollBuffer.push(chunkCopy);
+              if (preRollBuffer.length > maxPreRollChunks) {
+                preRollBuffer.shift();
+              }
+            }
+          }
+        };
+
+        async function finalizeAndTranscribeSpeech() {
+          isSpeaking = false;
+          const totalLen = activeSpeechBuffer.reduce((acc, cur) => acc + cur.length, 0);
+          const rawBuffers = activeSpeechBuffer;
+          activeSpeechBuffer = [];
+          silenceSamples = 0;
+
+          // Ignora cliques curtos no microfone (menos de 0,5s de voz real)
+          if (speechSamples < nativeRate * 0.45) return;
+
+          isTranscribingNow = true;
+          updateAssistantVoiceBadge("🎧 Processando comando...", "#00FF00");
+
+          try {
+            // Junta todos os pedaços de áudio em um único Float32Array
+            const merged = new Float32Array(totalLen);
+            let offset = 0;
+            for (const b of rawBuffers) {
+              merged.set(b, offset);
+              offset += b.length;
+            }
+
+            // Reamostragem ultrarrápida em memória para 16.000 Hz (padrão do Whisper)
+            const targetRate = 16000;
+            let audio16k = merged;
+            if (nativeRate !== targetRate) {
+              const ratio = nativeRate / targetRate;
+              const newLen = Math.round(merged.length / ratio);
+              audio16k = new Float32Array(newLen);
+              for (let i = 0; i < newLen; i++) {
+                audio16k[i] = merged[Math.min(merged.length - 1, Math.floor(i * ratio))];
+              }
+            }
+
+            const result = await transcriber(audio16k, {
+              language: 'portuguese',
+              task: 'transcribe'
+            });
+
+            const rawTranscript = (result && result.text) ? result.text.trim() : '';
+            if (rawTranscript) {
+              const norm = normalizeWhisperTranscript(rawTranscript);
+              console.log("🎙️ [Firefox Ouvido Neural] Bruto:", rawTranscript, "| Normalizado:", norm);
+
+              // 1. Verifica se falou "Chico" (ou variações fonéticas do whisper-tiny: chica, chicas, xico, tico, quico)
+              const wakeRegex = /\b(?:chico|xico|chica|chicas|chicos|tico|quico|kiko|cico|checo)\b[\s,.:;!?-]*(.*)/i;
+              const wakeMatch = norm.match(wakeRegex);
+
+              if (wakeMatch) {
+                const cmdPart = (wakeMatch[1] || '').trim();
+                handleWakeWordCommand(cmdPart);
+              } else if (
+                // 2. Se falou um comando direto inequívoco com o modo verde ativo, executa na hora!
+                norm.includes('proximo card') || norm.includes('virar card') || norm.includes('card anterior') ||
+                norm.includes('voltar card') || norm.includes('mostrar resposta') || norm.includes('explica') ||
+                norm.includes('modo escuro') || norm.includes('modo claro') || norm.includes('modo livro') ||
+                norm.includes('meu resumo') || norm.includes('aumentar fonte') || norm.includes('diminuir fonte') ||
+                norm.includes('embaralhar') || norm.includes('acertei') || norm.includes('errei')
+              ) {
+                handleWakeWordCommand(norm);
+              }
+            }
+          } catch (err) {
+            console.warn("Erro ao transcrever fala no Firefox:", err);
+          } finally {
+            isTranscribingNow = false;
+            updateAssistantVoiceBadge();
+          }
+        }
+
+        source.connect(vadScriptNode);
+        vadScriptNode.connect(vadAudioCtx.destination);
+
+        isUsingFallbackVAD = true;
+        isWakeWordActive = true;
+        isWakeWordPausedForSpeech = false;
+        updateWakeWordUI();
+        showToast("🎙️ Escuta Neural ativa! Diga 'Chico, virar card' ou 'Chico, próximo card'.", "success", 4500);
+
+      } catch (err) {
+        console.error("Erro ao iniciar escuta no Firefox:", err);
+        stopWakeWordEngine();
+        showToast("Não foi possível acessar o microfone no Firefox.", "error");
+      }
+    }
+
+    function stopWakeWordEngine() {
+      isWakeWordActive = false;
+      isWakeWordPausedForSpeech = false;
+      isUsingFallbackVAD = false;
+
+      if (wakeWordRestartTimer) {
+        clearTimeout(wakeWordRestartTimer);
+        wakeWordRestartTimer = null;
+      }
+      if (wakeWordRecognition) {
+        try {
+          wakeWordRecognition.onend = null;
+          wakeWordRecognition.stop();
+        } catch (e) {}
+        wakeWordRecognition = null;
+      }
+      if (vadScriptNode) {
+        try { vadScriptNode.disconnect(); } catch (e) {}
+        vadScriptNode = null;
+      }
+      if (vadStream) {
+        vadStream.getTracks().forEach(t => t.stop());
+        vadStream = null;
+      }
+      if (vadAudioCtx) {
+        try { vadAudioCtx.close(); } catch (e) {}
+        vadAudioCtx = null;
+      }
+      updateWakeWordUI();
+    }
+
+    function pauseWakeWordForSpeech() {
+      if (!isWakeWordActive) return;
+      isWakeWordPausedForSpeech = true;
+      if (wakeWordRestartTimer) {
+        clearTimeout(wakeWordRestartTimer);
+        wakeWordRestartTimer = null;
+      }
+      if (wakeWordRecognition && !isUsingFallbackVAD) {
+        try { wakeWordRecognition.stop(); } catch (e) {}
+      }
+    }
+
+    function resumeWakeWordAfterSpeech() {
+      if (!isWakeWordActive) return;
+      isWakeWordPausedForSpeech = false;
+      if (wakeWordRestartTimer) clearTimeout(wakeWordRestartTimer);
+
+      // Só reinicia o SpeechRecognition se estivermos no Chrome/Edge (no Firefox o vadScriptNode já volta sozinho)
+      if (!isUsingFallbackVAD) {
+        wakeWordRestartTimer = setTimeout(() => {
+          if (isWakeWordActive && !isWakeWordPausedForSpeech && !isAssistantListening) {
+            initWakeWordInstance();
+          }
+        }, 400);
+      }
+    }
+
+    function initWakeWordInstance() {
+      if (!isWakeWordActive || isWakeWordPausedForSpeech || isAssistantListening) return;
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRec) return;
+
+      if (wakeWordRecognition) {
+        try {
+          wakeWordRecognition.onend = null;
+          wakeWordRecognition.stop();
+        } catch (e) {}
+      }
+
+      try {
+        wakeWordRecognition = new SpeechRec();
+        wakeWordRecognition.lang = 'pt-BR';
+        wakeWordRecognition.continuous = true;
+        wakeWordRecognition.interimResults = false;
+        wakeWordRecognition.maxAlternatives = 1;
+
+        wakeWordRecognition.onresult = (event) => {
+          // Ignora se o leitor automático de cards (TTS) estiver falando no momento
+          if (window.speechSynthesis && window.speechSynthesis.speaking) return;
+          if (typeof piperSourceNode !== 'undefined' && piperSourceNode) return;
+
+          const lastResultIdx = event.results.length - 1;
+          const transcript = (event.results[lastResultIdx][0].transcript || '').trim();
+          if (!transcript) return;
+
+          const normTranscript = transcript.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+          // Verifica se a frase falada contém a palavra-gatilho "chico" (ou "xico")
+          const wakeMatch = normTranscript.match(/\b(?:chico|xico)\b[\s,.:;!?-]*(.*)/i);
+          if (!wakeMatch) return;
+
+          const commandPart = (wakeMatch[1] || '').trim();
+          handleWakeWordCommand(commandPart);
+        };
+
+        wakeWordRecognition.onerror = (event) => {
+          if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            stopWakeWordEngine();
+            showToast("Permissão de microfone negada pelo navegador.", "error");
+          }
+        };
+
+        wakeWordRecognition.onend = () => {
+          // Reconecta silenciosamente enquanto a Escuta Contínua estiver ligada
+          if (isWakeWordActive && !isWakeWordPausedForSpeech && !isAssistantListening && !document.hidden) {
+            if (wakeWordRestartTimer) clearTimeout(wakeWordRestartTimer);
+            wakeWordRestartTimer = setTimeout(() => {
+              initWakeWordInstance();
+            }, 350);
+          }
+        };
+
+        wakeWordRecognition.start();
+      } catch (e) {
+        // Caso o navegador ainda esteja liberando o microfone, tenta novamente em 1s
+        if (wakeWordRestartTimer) clearTimeout(wakeWordRestartTimer);
+        wakeWordRestartTimer = setTimeout(() => {
+          if (isWakeWordActive && !isWakeWordPausedForSpeech) initWakeWordInstance();
+        }, 1000);
+      }
+    }
+
+    function handleWakeWordCommand(commandText) {
+      // Se o usuário falou apenas "Chico!" sem comando depois
+      if (!commandText) {
+        const msg = "Oi! Estou ouvindo. Pode falar o comando, como: próximo card, virar card, ou apontar para um botão e perguntar o que ele faz.";
+        showToast("🎧 " + msg, "info", 4000);
+        speakAssistantText(msg);
+        return;
+      }
+
+      const response = processAssistantIntent(commandText);
+
+      // Se a janela do Assistente estiver aberta na tela, registra no histórico também
+      const modal = document.getElementById('chicoAssistantModal');
+      const isModalOpen = modal && modal.style.display === 'flex';
+      if (isModalOpen) {
+        appendAssistantMessage('user', "🎙️ Chico, " + commandText);
+        appendAssistantMessage('assistant', response.reply);
+      } else {
+        // Com a janela fechada, mostra um aviso elegante no topo sem tampar o card
+        showToast("🎧 " + response.reply.replace(/\n/g, ' '), "info", 4000);
+      }
+
+      // Executa a ação (ex: virar card, próximo card, mudar cor)
+      if (typeof response.action === 'function') {
+        response.action();
+      }
+
+      // Para comandos rápidos de navegação, executa em silêncio para não atrapalhar a leitura do card.
+      // Para perguntas (ex: "o que esse botão faz?", "meu resumo"), responde em voz alta!
+      if (!response.silentOnWakeWord) {
+        speakAssistantText(response.reply);
+      }
+    }
+
+      // ═══════════════════════════════════════════════════════════════════
+    // CÉREBRO 100% LOCAL EXPANDIDO (COMANDOS + FAQ + PONTE PROFESSOR CHICO)
+    // ═══════════════════════════════════════════════════════════════════
+    function processAssistantIntent(rawInput) {
+      let norm = rawInput.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+      // Remove a palavra "chico" do início caso a pessoa também fale "Chico" no botão normal
+      norm = norm.replace(/^(?:ei\s+|oi\s+|ola\s+)?(?:chico|xico)\b[\s,.:;!?-]*/, '').trim();
+
+      // ─── 1. PONTE DIRETA E ISOLADA PARA O PROFESSOR CHICO ───
+      if (
+        norm.includes('explica') || norm.includes('professor') || norm.includes('nao entendi') ||
+        norm.includes('duvida no card') || norm.includes('duvida na questao') || norm.includes('duvida nessa') ||
+        norm.includes('por que a letra') || norm.includes('porque a letra') || norm.includes('por que a resposta') ||
+        norm.includes('me ensina') || norm.includes('exemplo disso') || norm.includes('aprofundar') ||
+        norm.includes('comentar questao') || norm.includes('destrincha') || norm.includes('resuma este card') ||
+        norm.includes('macete') || norm.includes('mnemonico')
+      ) {
+        return {
+          reply: "Boa! Acionei o Professor Chico para te explicar este card em detalhes.",
+          action: () => {
+            closeChicoAssistant(true);
+            const profBtn = document.getElementById('aiBtn');
+            if (profBtn) {
+              profBtn.click();
+            } else if (typeof explainWithAI === 'function') {
+              explainWithAI();
+            }
+          }
+        };
+      }
+
+      // ─── 2. RESUMO AO VIVO DO ALUNO (BOLETIM FALADO EM TEMPO REAL) ───
+      if (
+        norm.includes('meu resumo') || norm.includes('como estou') || norm.includes('meu progresso') ||
+        norm.includes('quantos faltam') || norm.includes('quantos acertei') || norm.includes('placar')
+      ) {
+        const posAtual = currentCard + 1;
+        const totalFila = cards.length;
+        const restantes = Math.max(0, totalFila - posAtual);
+        let acertos = 0, erros = 0;
+        Object.values(cardAccuracy).forEach(acc => {
+          acertos += (acc.correct || 0);
+          erros += (acc.incorrect || 0);
+        });
+        const tentativas = acertos + erros;
+        const taxa = tentativas > 0 ? Math.round((acertos / tentativas) * 100) : 0;
+        const streakEl = document.getElementById('streakDisplay');
+        const diasOfensiva = streakEl ? streakEl.textContent.trim() : '1';
+        return {
+          reply: `Aqui está o seu resumo atual: você está no card ${posAtual} de ${totalFila}, faltando ${restantes} cards para concluir este bloco. Até agora você acumula ${acertos} acertos e ${erros} erros, com aproveitamento de ${taxa} por cento e ofensiva de ${diasOfensiva} dias seguidos!`
+        };
+      }
+
+      // ─── 3. PULAR PARA UM CARD ESPECÍFICO (EX: "IR PARA O CARD 35") ───
+      const matchCardNum = norm.match(/(?:card|carta|questao|numero|ir para|pular para)\s*(\d+)/);
+      if (matchCardNum && !norm.includes('segundo') && !norm.includes('peso')) {
+        const num = parseInt(matchCardNum[1], 10);
+        if (num >= 1 && num <= cards.length) {
+          return {
+            reply: `Indo direto para o card número ${num}.`,
+            action: () => {
+              closeChicoAssistant(true);
+              currentCard = num - 1;
+              showingFront = true;
+              updateCard();
+              saveFlashcardState();
+            }
+          };
+        } else {
+          return { reply: `O número ${num} está fora do limite. O baralho atual vai do card 1 até o ${cards.length}.` };
+        }
+      }
+
+      // ─── 4. BUSCA POR PALAVRA-CHAVE (EX: "BUSCAR PRISÃO EM FLAGRANTE") ───
+      const matchBusca = norm.match(/^(?:buscar|procurar|pesquisar|achar)\s+(?:por\s+|sobre\s+|termo\s+|palavra\s+)?(.+)$/);
+      if (matchBusca && matchBusca[1] && !norm.includes('onde fica')) {
+        const termo = matchBusca[1].trim();
+        return {
+          reply: `Buscando todos os cards que mencionam "${termo}".`,
+          action: () => {
+            closeChicoAssistant(true);
+            const searchBar = document.getElementById('topSearchBar');
+            if (searchBar) { searchBar.style.display = 'inline-block'; searchBar.value = termo; }
+            if (typeof runRealTimeSearch === 'function') { runRealTimeSearch(termo); }
+          }
+        };
+      }
+
+      // ─── 5. TEMPORIZADOR COM SEGUNDOS DINÂMICOS (EX: "TEMPORIZADOR 10 SEGUNDOS") ───
+      const matchTimerSec = norm.match(/(?:temporizador|timer|avanco automatico).*?(\d+)\s*(?:s|seg|segundos)?/);
+      if (matchTimerSec && matchTimerSec[1]) {
+        const secs = Math.max(1, Math.min(120, parseInt(matchTimerSec[1], 10)));
+        return {
+          reply: `Iniciando o avanço automático a cada ${secs} segundos.`,
+          action: () => { closeChicoAssistant(true); startAutoAdvanceWithDelay(secs); }
+        };
+      }
+
+      // ─── 6. APARÊNCIA, TEMAS, FONTES E VISUAL ───
+      if (norm.includes('modo escuro') || norm.includes('fundo preto') || norm.includes('tema escuro') || norm.includes('noturno') || norm.includes('cansando a vista') || norm.includes('escurecer')) {
+        return { reply: "Pronto! Ativei o modo escuro com fundo preto suave e letras brancas para descansar sua vista.", action: () => { changeCardColor('#121212'); changeTextColor('white'); } };
+      }
+      if (norm.includes('modo claro') || norm.includes('fundo branco') || norm.includes('tema claro') || norm.includes('clarear')) {
+        return { reply: "Feito! Voltei o cartão para o fundo branco com letras pretas.", action: () => { changeCardColor('white'); changeTextColor('black'); } };
+      }
+      if (norm.includes('fundo azul') || norm.includes('azul escuro')) {
+        return { reply: "Alterei o cartão para azul escuro com letras brancas.", action: () => { changeCardColor('darkblue'); changeTextColor('white'); } };
+      }
+      if (norm.includes('fundo vermelho') || norm.includes('vermelho escuro')) {
+        return { reply: "Alterei o cartão para vermelho escuro com letras brancas.", action: () => { changeCardColor('darkred'); changeTextColor('white'); } };
+      }
+      if (norm.includes('fundo dourado') || norm.includes('card dourado')) {
+        return { reply: "Alterei o cartão para o tema dourado com letras pretas.", action: () => { changeCardColor('gold'); changeTextColor('black'); } };
+      }
+      if (norm.includes('letra dourada') || norm.includes('fonte dourada') || norm.includes('texto dourado')) {
+        return { reply: "Coloquei a cor da fonte em dourado.", action: () => changeTextColor('gold') };
+      }
+      if ((norm.includes('aumentar') && (norm.includes('fonte') || norm.includes('letra') || norm.includes('texto'))) || norm.includes('letra maior') || norm.includes('letra miuda') || norm.includes('muito pequeno')) {
+        return { reply: "Aumentei o tamanho da letra do flashcard.", action: () => adjustFontSize(1) };
+      }
+      if ((norm.includes('diminuir') && (norm.includes('fonte') || norm.includes('letra') || norm.includes('texto'))) || norm.includes('letra menor') || norm.includes('muito grande')) {
+        return { reply: "Diminuí o tamanho da letra do flashcard.", action: () => adjustFontSize(-1) };
+      }
+      if (norm.includes('modo livro') || norm.includes('serif') || norm.includes('fonte de livro')) {
+        return { reply: "Ativei o Modo Livro com fonte serifada, excelente para leituras longas.", action: () => setFontMode('serif') };
+      }
+      if (norm.includes('modo padrao') || norm.includes('fonte padrao') || norm.includes('fonte normal')) {
+        return { reply: "Voltei a tipografia para o Modo Padrão.", action: () => setFontMode('roboto') };
+      }
+      if (norm.includes('destacar') || norm.includes('asterisco') || norm.includes('marca texto') || norm.includes('grifar') || norm.includes('palavras chave')) {
+        return { reply: "Alternei o destaque colorido das palavras-chave marcadas no card.", action: () => toggleHighlightAsterisks() };
+      }
+      if (norm.includes('ocultar menu') || norm.includes('esconder menu') || norm.includes('recolher barra') || norm.includes('mostrar menu')) {
+        return { reply: "Alternei a visibilidade da barra superior para ganhar mais espaço na tela.", action: () => { if (typeof toggleTopBarMenu === 'function') toggleTopBarMenu(); } };
+      }
+
+      // ─── 7. NAVEGAÇÃO, AVALIAÇÃO E EMBARALHAMENTO ───
+      if (norm.includes('virar') || norm.includes('mostrar resposta') || norm.includes('ver resposta') || norm.includes('ver verso')) {
+        return { reply: "Virando o card agora.", silentOnWakeWord: true, action: () => { closeChicoAssistant(true); flipCard(); } };
+      }
+      if (norm.includes('proximo card') || norm.includes('avancar') || norm.includes('pular card') || norm.includes('carta seguinte')) {
+        return { reply: "Avançando para o próximo card.", silentOnWakeWord: true, action: () => { closeChicoAssistant(true); nextCard(); } };
+      }
+      if (norm.includes('card anterior') || norm.includes('voltar card') || norm.includes('carta anterior')) {
+        return { reply: "Voltando para o card anterior.", silentOnWakeWord: true, action: () => { closeChicoAssistant(true); prevCard(); } };
+      }
+      if (norm.includes('marcar como certo') || norm === 'acertei' || norm.includes('registrar acerto')) {
+        return { reply: "Boa! Registrei seu acerto e avancei para o próximo card.", action: () => { closeChicoAssistant(true); markAsCorrect(); } };
+      }
+      if (norm.includes('marcar como errado') || norm === 'errei' || norm.includes('registrar erro')) {
+        return { reply: "Registrei como erro para você revisar depois e avancei o card.", action: () => { closeChicoAssistant(true); markAsIncorrect(); } };
+      }
+      if (norm.includes('embaralhar') || norm.includes('misturar') || norm.includes('ordem aleatoria')) {
+        return { reply: "Pronto! Alterei o modo de embaralhamento das cartas.", action: () => toggleShuffleMode() };
+      }
+      if (norm.includes('recomecar') || norm.includes('voltar para o inicio') || norm.includes('reiniciar bloco')) {
+        return { reply: "Reiniciando o bloco atual a partir do primeiro card.", action: () => { closeChicoAssistant(true); restartFlashcards(); } };
+      }
+      if (norm.includes('resetar tudo') || norm.includes('limpar sessao')) {
+        return { reply: "Abrindo a confirmação para resetar a sessão ao baralho completo.", action: () => { closeChicoAssistant(true); resetToFullDeck(); } };
+      }
+
+      // ─── 8. MODOS DE AVALIAÇÃO, FILTROS E FERRAMENTAS ───
+      if ((norm.includes('ativar') || norm.includes('ligar') || norm.includes('mudar') || norm.includes('usar') || norm.includes('botoes')) && norm.includes('srs')) {
+        return { reply: "Ativei a barra de avaliação S-R-S de Repetição Espaçada no rodapé.", action: () => setEvalMode('srs') };
+      }
+      if (norm.includes('certo e errado') || norm.includes('botoes normais') || norm.includes('avaliacao normal')) {
+        return { reply: "Mudei o rodapé para os botões clássicos de Certo e Errado.", action: () => setEvalMode('normal') };
+      }
+      if (norm.includes('ocultar botoes') || norm.includes('esconder botoes') || norm.includes('limpar botoes')) {
+        return { reply: "Ocultei os botões de avaliação do rodapé para leitura limpa.", action: () => setEvalMode('hidden') };
+      }
+      if (norm.includes('limpar filtro') || norm.includes('tirar filtro') || norm.includes('mostrar tudo') || norm.includes('ver todos os cards')) {
+        return { reply: "Removi os filtros ativos e restaurei o baralho completo.", action: () => { closeChicoAssistant(true); clearAndCloseFilter(); closeFilterModal(); } };
+      }
+      if (norm.includes('filtrar') || norm.includes('estudar so ') || norm.includes('disciplina') || norm.includes('materia')) {
+        const allDiscs = [...new Set(initialCards.map(c => c.disciplina).filter(Boolean))];
+        const foundDisc = allDiscs.find(d => { const normD = d.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase(); return norm.includes(normD); });
+        if (foundDisc) {
+          return {
+            reply: `Filtrei o baralho para exibir apenas a disciplina ${foundDisc}. Bons estudos!`,
+            action: () => { const filtered = initialCards.filter(c => c.disciplina === foundDisc); currentCategory = foundDisc; finishFilterApplication(filtered); closeChicoAssistant(true); }
+          };
+        }
+        return { reply: "Abrindo a janela de Filtros Inteligentes para você escolher disciplina, tópico, foco ou peso mínimo.", action: () => { closeChicoAssistant(true); openFilterModal(); } };
+      }
+      if (norm.includes('anotac') || norm.includes('bloco de notas') || norm.includes('minhas notas') || norm.includes('criar nota')) {
+        return { reply: "Abrindo o seu caderno de anotações sincronizado na nuvem.", action: () => { closeChicoAssistant(true); openNotesModal(); } };
+      }
+      if (norm.includes('estatistica') || norm.includes('desempenho') || norm.includes('taxa de acerto')) {
+        return { reply: "Abrindo o painel com suas estatísticas de tempo por card e porcentagem de acertos.", action: () => { closeChicoAssistant(true); toggleStatsModal(); } };
+      }
+      if (norm.includes('configurac') || norm.includes('montar simulado') || norm.includes('provas anteriores')) {
+        return { reply: "Abrindo o painel de Configurações de Estudo.", action: () => { closeChicoAssistant(true); openSettingsModal(); } };
+      }
+      if (norm.includes('revisar erro') || norm.includes('cards que errei') || norm.includes('meus erros')) {
+        return { reply: "Filtrando apenas os cards que você errou para revisão.", action: () => { closeChicoAssistant(true); reviewIncorrectCards(); } };
+      }
+      if (norm.includes('reportar') || norm.includes('informar erro') || norm.includes('erro no card')) {
+        return { reply: "Abrindo a janela para você reportar uma correção neste card sem interromper seu estudo.", action: () => { closeChicoAssistant(true); reportCurrentCard(); } };
+      }
+
+      // ─── 9. CONTROLE DE VOZ, VELOCIDADE E TEMPORIZADORES ───
+      if (norm.includes('falar mais rapido') || norm.includes('aumentar velocidade')) {
+        const rateEl = document.getElementById('rateRange');
+        const nextRate = rateEl ? Math.min(3.0, Number((parseFloat(rateEl.value) + 0.2).toFixed(1))) : 1.3;
+        return { reply: `Aumentei a velocidade da voz para ${nextRate} vezes.`, action: () => { if (typeof syncHfRateChange === 'function') syncHfRateChange(nextRate); } };
+      }
+      if (norm.includes('falar mais devagar') || norm.includes('diminuir velocidade') || norm.includes('falar mais lento')) {
+        const rateEl = document.getElementById('rateRange');
+        const nextRate = rateEl ? Math.max(0.5, Number((parseFloat(rateEl.value) - 0.2).toFixed(1))) : 0.9;
+        return { reply: `Reduzi a velocidade da voz para ${nextRate} vezes.`, action: () => { if (typeof syncHfRateChange === 'function') syncHfRateChange(nextRate); } };
+      }
+      if (norm.includes('ler card') || norm.includes('maos livres') || norm.includes('leitura em voz alta') || norm.includes('ler automatico')) {
+        return { reply: "Abrindo o painel de leitura em voz alta e modo mãos livres.", action: () => { closeChicoAssistant(true); toggleSpeech(); } };
+      }
+      if (norm.includes('parar temporizador') || norm.includes('desligar temporizador')) {
+        return { reply: "Parei o temporizador de avanço automático.", action: () => stopAutoAdvance() };
+      }
+      if (norm.includes('pausar temporizador') || norm.includes('continuar temporizador')) {
+        return { reply: "Alternei a pausa do temporizador automático.", action: () => pauseOrResumeAutoAdvance() };
+      }
+      if (norm.includes('temporizador') || norm.includes('avanco automatico')) {
+        return { reply: "Iniciando o temporizador de avanço automático.", action: () => { closeChicoAssistant(true); startAutoAdvanceSmart(); } };
+      }
+      if (norm.includes('zerar relogio') || norm.includes('zerar cronometro') || norm.includes('zerar tempo')) {
+        return { reply: "Zerei o cronômetro da sessão lá no topo.", action: () => resetTimer() };
+      }
+      if (norm.includes('abrir manual') || norm.includes('ver manual')) {
+        return { reply: "Abrindo o Manual Completo do Usuário.", action: () => { closeChicoAssistant(true); toggleManualModal(); } };
+      }
+      if (norm.includes('significado dos icones') || norm.includes('janela de ajuda')) {
+        return { reply: "Abrindo o guia com o significado de todos os ícones.", action: () => { closeChicoAssistant(true); toggleHelpModal(); } };
+      }
+      if (norm.includes('sair da conta') || norm.includes('fazer logout') || norm.includes('encerrar sessao')) {
+        return { reply: "Salvando seu progresso e encerrando a sessão com segurança. Até logo!", action: () => { closeChicoAssistant(true); logout(); } };
+      }
+
+      // ─── 10. BASE DE CONHECIMENTO PROFUNDA (TIRA-DÚVIDAS DA PLATAFORMA) ───
+      if (norm.includes('srs') || norm.includes('repeticao espacada') || norm.includes('botoes coloridos')) {
+        const agora = new Date();
+        let atrasados = 0, novos = 0;
+        if (typeof initialCards !== 'undefined') {
+          initialCards.forEach(c => {
+            const prog = userSRSProgress[generateCardId(c)];
+            if (!prog || !prog.nextReview) novos++;
+            else if (new Date(prog.nextReview) <= agora) atrasados++;
+          });
+        }
+        return { reply: `O modo S-R-S usa o algoritmo F-S-R-S de Repetição Espaçada com retenção de 90%. Ao virar o card, você avalia como Não Sei ou Errei (repete em 10 minutos), Difícil, Bom ou Fácil. Neste baralho, você tem hoje ${atrasados} revisões pendentes e ${novos} cards inéditos!` };
+      }
+      if (norm.includes('modo foco') || norm.includes('adaptativo')) {
+        return { reply: "O Modo Foco mede sua velocidade de leitura em cada card. Quando você demora além da sua média em um assunto, o sistema detecta a dificuldade e injeta automaticamente cards extras daquele mesmo tópico na sua fila para fixar a matéria." };
+      }
+      if (norm.includes('sanguessuga') || norm.includes('5 vezes') || norm.includes('cinco vezes') || norm.includes('revisar teoria')) {
+        return { reply: "Um card Sanguessuga é aquele que você erra 5 vezes consecutivas. Ao atingir o quinto erro seguido, o sistema trava o avanço automático e avisa para você reler a teoria antes de continuar tentando decorar." };
+      }
+      if (norm.includes('peso') || norm.includes('ponderado') || norm.includes('sequencial')) {
+        return { reply: "Nas Configurações, você tem 3 formas de ordenar os cards: Sequencial (segue a ordem didática da planilha), Aleatório Ponderado (temas mais cobrados aparecem mais vezes) e Peso Mínimo (filtra apenas os cards mais importantes, como Peso 2 ou 3)." };
+      }
+      if (norm.includes('atalho') || norm.includes('tecla') || norm.includes('teclado')) {
+        return { reply: "Principais atalhos do teclado: Enter (vira o card ou avança), Alt (volta ao card anterior), teclas 1 a 4 (avaliam o card), tecla 0 (Não Sei no S-R-S), tecla A (abre Anotações), tecla S (leitura em voz alta), Asterisco (destaca palavras-chave), P (pausa o timer) e Esc (fecha qualquer janela)." };
+      }
+      if (norm.includes('celular') || norm.includes('gesto') || norm.includes('arrastar') || norm.includes('swipe')) {
+        return { reply: "No celular, toque no canto direito do card para avançar, no canto esquerdo para voltar ou no centro para virar. Você também pode deslizar o dedo para a Direita quando acertar ou para a Esquerda quando errar!" };
+      }
+      if (norm.includes('salvar') || norm.includes('nuvem') || norm.includes('offline') || norm.includes('onde parei')) {
+        return { reply: "A plataforma possui um Galpão Offline e sincronização em lotes a cada 15 segundos com o banco de dados na nuvem. Mesmo que a internet oscile, nada se perde, e ao reabrir o curso você retoma exatamente do card onde parou." };
+      }
+      if (norm.includes('ofensiva') || norm.includes('foguinho') || norm.includes('dias seguidos')) {
+        return { reply: "O foguinho no topo marca a sua Ofensiva: quantos dias seguidos você estudou na plataforma. Estudar todos os dias mantém o foguinho aceso!" };
+      }
+      if (norm.includes('lacuna') || norm.includes('colchete') || norm.includes('multipla escolha') || norm.includes('alternativa')) {
+        return { reply: "A plataforma aceita tanto Flashcards clássicos e de lacuna oculta quanto questões de Múltipla Escolha de A a E. Nas questões com alternativas, basta clicar na letra desejada para ver na hora se acertou ou errou!" };
+      }
+
+      // ─── 11. GUIA AMIGÁVEL PADRÃO ───
+      return {
+        reply: "Posso executar comandos na plataforma ou chamar o Professor Chico! Experimente pedir:\n• 'Explica este card' (chama o Professor Chico)\n• 'Qual meu resumo de hoje?' ou 'Ir para o card 20'\n• 'Buscar [assunto]' ou 'Filtrar [disciplina]'\n• 'Modo escuro', 'Modo livro' ou 'Aumentar fonte'\n• 'Ativar modo SRS', 'Embaralhar' ou 'Temporizador 10 segundos'\n• 'Como funciona o SRS?', 'O que é Modo Foco?' ou 'Atalhos'"
+      };
+    }
+
+    // ═════════════════════════════════════════════════════════════════
+    // MICROFONE HÍBRIDO UNIVERSAL (NATIVO + WHISPER NEURAL LOCAL WASM)
+    // Funciona em Chrome, Edge, Firefox, Brave, Opera e Safari (Custo Zero)
+    // ══════════════════════════════════════════════════════════════════
+    function stopAssistantMicRecording() {
+      if (recordingAutoStopTimer) {
+        clearTimeout(recordingAutoStopTimer);
+        recordingAutoStopTimer = null;
+      }
+      if (isAssistantListening && assistantRecognition) {
+        try { assistantRecognition.stop(); } catch (e) {}
+      }
+      if (mediaRecorderInstance && mediaRecorderInstance.state === 'recording') {
+        try { mediaRecorderInstance.stop(); } catch (e) {}
+      }
+      isAssistantListening = false;
+      const micBtn = document.getElementById('assistantMicBtn');
+      const micIcon = document.getElementById('assistantMicIcon');
+      if (micBtn) micBtn.classList.remove('mic-recording-active');
+      if (micIcon) {
+        micIcon.className = 'fas fa-microphone';
+        micIcon.style.color = '#FFD700';
+      }
+    }
+
+    async function toggleAssistantMic() {
+      const micBtn = document.getElementById('assistantMicBtn');
+      const micIcon = document.getElementById('assistantMicIcon');
+
+      // Se já estiver ouvindo/gravando, clicar de novo finaliza e processa na hora
+      if (isAssistantListening || (mediaRecorderInstance && mediaRecorderInstance.state === 'recording')) {
+        stopAssistantMicRecording();
+        return;
+      }
+
+      stopAssistantSpeech();
+
+      // 1. Tenta usar SpeechRecognition nativo se existir e não estiver bloqueado
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (SpeechRec && !window.forceLocalWhisperMic) {
+        try {
+          assistantRecognition = new SpeechRec();
+          assistantRecognition.lang = 'pt-BR';
+          assistantRecognition.interimResults = false;
+          assistantRecognition.maxAlternatives = 1;
+
+          assistantRecognition.onstart = () => {
+            isAssistantListening = true;
+            if (micBtn) micBtn.classList.add('mic-recording-active');
+            if (micIcon) micIcon.style.color = '#fff';
+            showToast("Pode falar! Estou ouvindo...", "info", 2500);
+          };
+
+          assistantRecognition.onresult = (event) => {
+            const transcript = event.results[0][0].transcript;
+            const input = document.getElementById('chicoAssistantInput');
+            if (input && transcript) {
+              input.value = transcript;
+              sendChicoAssistantMessage();
+            }
+          };
+
+          assistantRecognition.onerror = (event) => {
+            stopAssistantMicRecording();
+            // Se o navegador bloquear o serviço do Google (ex: Brave), ativa o motor local Whisper automaticamente
+            if (event.error === 'network' || event.error === 'service-not-allowed' || event.error === 'not-allowed') {
+              window.forceLocalWhisperMic = true;
+              startUniversalLocalMic();
+            } else {
+              showToast("Não captei sua voz. Tente falar mais perto do microfone.", "warning");
+            }
+          };
+
+          assistantRecognition.onend = () => {
+            stopAssistantMicRecording();
+          };
+
+          assistantRecognition.start();
+          return;
+        } catch (err) {
+          window.forceLocalWhisperMic = true;
+        }
+      }
+
+      // 2. Fallback Universal: Gravação HTML5 + Transcrição Neural Local (Firefox, Brave, Opera, etc.)
+      await startUniversalLocalMic();
+    }
+
+    async function getOrInitLocalWhisper() {
+      if (localWhisperTranscriber) return localWhisperTranscriber;
+      if (localWhisperLoading) return null;
+
+      localWhisperLoading = true;
+      updateAssistantVoiceBadge("⏳ Preparando Ouvido Neural (1ª vez)...", "#FFD700");
+      showToast("Ativando reconhecimento de voz neural local...", "info", 3500);
+
+      try {
+        const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+        env.allowLocalModels = false;
+        env.useBrowserCache = true;
+
+        localWhisperTranscriber = await pipeline('automatic-speech-recognition', 'Xenova/whisper-tiny', {
+          quantized: true
+        });
+
+        localWhisperLoading = false;
+        updateAssistantVoiceBadge();
+        return localWhisperTranscriber;
+      } catch (err) {
+        console.error("Erro ao carregar Ouvido Neural Local:", err);
+        localWhisperLoading = false;
+        updateAssistantVoiceBadge();
+        return null;
+      }
+    }
+
+    async function startUniversalLocalMic() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        showToast("Permissão de microfone bloqueada neste quadro. Verifique o cadeado na barra de endereço.", "warning");
+        return;
+      }
+
+      const micBtn = document.getElementById('assistantMicBtn');
+      const micIcon = document.getElementById('assistantMicIcon');
+
+      try {
+        // Garante que o modelo neural local esteja pronto (fica salvo no cache do navegador)
+        const transcriber = await getOrInitLocalWhisper();
+        if (!transcriber) {
+          showToast("Não foi possível carregar o motor de voz local.", "error");
+          return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordedAudioChunks = [];
+        mediaRecorderInstance = new MediaRecorder(stream);
+
+        mediaRecorderInstance.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) recordedAudioChunks.push(e.data);
+        };
+
+        mediaRecorderInstance.onstop = async () => {
+          stream.getTracks().forEach(t => t.stop());
+          isAssistantListening = false;
+          if (micBtn) micBtn.classList.remove('mic-recording-active');
+          if (micIcon) {
+            micIcon.className = 'fas fa-spinner fa-spin';
+            micIcon.style.color = '#FFD700';
+          }
+          updateAssistantVoiceBadge("⏳ Transcrevendo sua fala...", "#FFD700");
+
+          try {
+            const audioBlob = new Blob(recordedAudioChunks);
+            const arrayBuf = await audioBlob.arrayBuffer();
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const decoded = await audioCtx.decodeAudioData(arrayBuf);
+
+            // Converte para 16.000 Hz Mono exigido pelo motor Whisper
+            const targetSampleRate = 16000;
+            const numFrames = Math.ceil(decoded.duration * targetSampleRate);
+            const offlineCtx = new OfflineAudioContext(1, numFrames, targetSampleRate);
+            const src = offlineCtx.createBufferSource();
+            src.buffer = decoded;
+            src.connect(offlineCtx.destination);
+            src.start(0);
+            const resampled = await offlineCtx.startRendering();
+            const float32Data = resampled.getChannelData(0);
+
+            const result = await transcriber(float32Data, {
+              language: 'portuguese',
+              task: 'transcribe'
+            });
+
+            const text = (result && result.text) ? result.text.trim() : '';
+            const input = document.getElementById('chicoAssistantInput');
+            if (text && input) {
+              input.value = text;
+              sendChicoAssistantMessage();
+            } else {
+              showToast("Não consegui ouvir nenhuma frase. Tente novamente.", "warning");
+            }
+          } catch (transcribeErr) {
+            console.error("Erro na transcrição local:", transcribeErr);
+            showToast("Não consegui entender o áudio. Tente falar novamente.", "warning");
+          } finally {
+            if (micIcon) {
+              micIcon.className = 'fas fa-microphone';
+              micIcon.style.color = '#FFD700';
+            }
+            updateAssistantVoiceBadge();
+          }
+        };
+
+        isAssistantListening = true;
+        if (micBtn) micBtn.classList.add('mic-recording-active');
+        if (micIcon) {
+          micIcon.className = 'fas fa-stop';
+          micIcon.style.color = '#fff';
+        }
+
+        mediaRecorderInstance.start();
+        showToast("🎙️ Gravando! Fale seu comando e clique no botão vermelho para enviar.", "info", 4000);
+
+        // Para automaticamente após 5 segundos caso o usuário não clique para parar
+        recordingAutoStopTimer = setTimeout(() => {
+          if (mediaRecorderInstance && mediaRecorderInstance.state === 'recording') {
+            stopAssistantMicRecording();
+          }
+        }, 5000);
+
+      } catch (err) {
+        console.error("Erro ao acessar microfone:", err);
+        stopAssistantMicRecording();
+        showToast("Permissão de microfone negada pelo navegador. Clique no ícone de cadeado ao lado da URL para permitir.", "warning", 5000);
+      }
+    }
   </script>
 
   <!-- ═══════════════════════════════════════════════════════════════ -->
@@ -5449,8 +6893,8 @@
       }
 
       if (showingFront) {
-        // Atenua visualmente o texto de ancoragem [Tema] mantendo na mesma linha
-        textToShow = textToShow.replace(/^(\s*\[[^\]\r\n]+\])/, '<span style="opacity: 0.70; font-size: 0.9em; font-weight: normal;">$1</span>');
+        // Atenua visualmente o texto de ancoragem [Tema] mantendo na mesma linha (0.8em discreto)
+        textToShow = textToShow.replace(/^(\s*\[[^\]\r\n]+\])/, '<span style="opacity: 0.70; font-size: 0.8em; font-weight: normal;">$1</span>');
 
         // Na FRENTE: Substitui {{texto}} por uma caixa [...]
         // Regex explica: Pega tudo entre {{ e }}
@@ -6211,7 +7655,7 @@
     }
 
     function updateTimer() {
-      if (!isAuthenticated) return;
+      if (typeof isAuthenticated === 'undefined' || !isAuthenticated) return;
       timerSeconds++;
       const minutes = String(Math.floor(timerSeconds / 60)).padStart(2, '0');
       const seconds = String(timerSeconds % 60).padStart(2, '0');
@@ -8401,7 +9845,7 @@
       if (!isAutoAdvanceActive || isAutoAdvancePaused) return;
       isAutoAdvancePaused = true;
       clearInterval(autoAdvanceInterval);
-      document.getElementById('pauseResumeBtn').textContent = "▶️";
+      document.getElementById('pauseResumeBtn').innerHTML = '<i class="fas fa-play" aria-hidden="true"></i>';
       autoAdvanceTimerDisplay.textContent = `${autoAdvanceSeconds}s`;
       autoAdvanceTimerDisplay.style.color = "#FFD700"; // Amarelo ao pausar
     }
@@ -8419,9 +9863,9 @@
           updateAutoAdvanceDisplay();
         }
       }, 1000);
-      document.getElementById('pauseResumeBtn').textContent = "⏸️";
+      document.getElementById('pauseResumeBtn').innerHTML = '<i class="fas fa-pause" aria-hidden="true"></i>';
       updateAutoAdvanceDisplay();
-      autoAdvanceTimerDisplay.style.color = "white"; // Volta à cor normal
+      autoAdvanceTimerDisplay.style.color = "#FFD700";
     }
 
     function resetAutoAdvanceTimer() {
@@ -8455,10 +9899,10 @@
       if (!isAutoAdvanceActive) return;
       if (isAutoAdvancePaused) {
         resumeAutoAdvance();
-        document.getElementById('pauseResumeBtn').textContent = '⏸️';
+        document.getElementById('pauseResumeBtn').innerHTML = '<i class="fas fa-pause" aria-hidden="true"></i>';
       } else {
         pauseAutoAdvance();
-        document.getElementById('pauseResumeBtn').textContent = '▶️';
+        document.getElementById('pauseResumeBtn').innerHTML = '<i class="fas fa-play" aria-hidden="true"></i>';
       }
     }
 
@@ -9035,7 +10479,7 @@
       // Busca disciplinas únicas
       const uniqueDisc = [...new Set(initialCards.map(c => c.disciplina).filter(d => d))].sort();
 
-      discSelect.innerHTML = '<option value="">Selecione a Disciplina...</option>';
+      discSelect.innerHTML = '<option value="">Selecione a Disciplina...</option><option value="todas">Todas as Disciplinas</option>';
       uniqueDisc.forEach(disc => {
         const option = document.createElement('option');
         option.value = disc;
@@ -9109,8 +10553,10 @@
 
       if (!selectedDisc) return;
 
-      // Filtra tópicos apenas desta disciplina
-      const cardsOfDisc = initialCards.filter(c => c.disciplina === selectedDisc);
+      // Filtra tópicos desta disciplina (ou de todas, se escolheu "todas")
+      const cardsOfDisc = (selectedDisc === 'todas')
+        ? initialCards
+        : initialCards.filter(c => c.disciplina === selectedDisc);
       const uniqueTopics = [...new Set(cardsOfDisc.map(c => c.topico).filter(t => t))].sort();
 
       topicSelect.innerHTML = '<option value="todos">Todos os Tópicos</option>';
@@ -9131,7 +10577,9 @@
     function getModalCardsPool() {
       const disc = document.getElementById('modalDisciplineSelect')?.value;
       if (!disc) return [];
-      let pool = initialCards.filter(c => c.disciplina === disc);
+      let pool = (disc === 'todas')
+        ? [...initialCards]
+        : initialCards.filter(c => c.disciplina === disc);
       const topic = document.getElementById('modalTopicSelect')?.value;
       if (topic && topic !== 'todos') {
         pool = pool.filter(c => c.topico === topic);
@@ -9210,8 +10658,10 @@
 
       if (!selectedTopic) return;
 
-      // Busca cards que batem com a Disciplina
-      let cardsOfTopic = initialCards.filter(c => c.disciplina === selectedDisc);
+      // Busca cards que batem com a Disciplina (ou todas as disciplinas)
+      let cardsOfTopic = (selectedDisc === 'todas')
+        ? [...initialCards]
+        : initialCards.filter(c => c.disciplina === selectedDisc);
 
       // Se o usuário escolheu um tópico específico (diferente de 'todos'), filtra mais uma vez
       if (selectedTopic !== 'todos') {
@@ -9271,15 +10721,17 @@
       };
       // ------------------------
 
-      // Inicia filtro pela Disciplina
-      let filtered = initialCards.filter(card => card.disciplina === disc);
+      // Inicia filtro pela Disciplina (ou pega o baralho completo se escolheu "todas")
+      let filtered = (disc === 'todas')
+        ? [...initialCards]
+        : initialCards.filter(card => card.disciplina === disc);
 
       // Filtra por Tópico
       if (topic && topic !== 'todos') {
         filtered = filtered.filter(card => card.topico === topic);
         currentCategory = topic;
       } else {
-        currentCategory = disc;
+        currentCategory = (disc === 'todas') ? "Todas" : disc;
       }
 
       // Filtra pelo Refinamento (Passo 3)
@@ -10157,7 +11609,7 @@
       }
 
       // Atualiza a tela
-      streakDisplay.innerHTML = `🔥 ${currentStreak}`;
+      streakDisplay.innerHTML = `<i class="fas fa-fire" aria-hidden="true"></i> ${currentStreak}`;
     }
     // --- CONTROLE DE OCULTAR / MOSTRAR MENUS (ESTILO GOOGLE PLANILHAS) ---
     function toggleTopBarMenu() {

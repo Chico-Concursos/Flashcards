@@ -175,6 +175,41 @@
     }
 
     /* ============================================================ */
+    /* --- FAIXA DE TÍTULO INTERNA (PRETO #0a0a0a + FIO DOURADO) --- */
+    /* ============================================================ */
+    #appHeaderBanner {
+      background-color: #0a0a0a;
+      border-bottom: 1px solid rgba(210, 172, 71, 0.35);
+      padding: 3px 12px;
+      text-align: center;
+      line-height: 1.15;
+      z-index: 101;
+      transition: all 0.25s ease;
+      display: none; /* Aparece automaticamente assim que tiver título */
+    }
+
+    #appHeaderBanner.collapsed-banner {
+      display: none !important;
+    }
+
+    #appHeaderTitle {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      font-size: 1.05em;
+      font-weight: 700;
+      line-height: 1.15;
+      letter-spacing: 0.4px;
+      background: linear-gradient(135deg, #D2AC47, #F7EF8A, #AE8625);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      color: #FFD700;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* ============================================================ */
     /* --- BARRA SUPERIOR ULTRACOMPACTA (COLADA NO CONTEÚDO) --- */
     /* ============================================================ */
     .top-bar {
@@ -3372,6 +3407,9 @@
    <button onclick="reviewAndAdvance()">▶</button>
   </div>
   <button id="topScrollAnchor" type="button" tabindex="-1" aria-hidden="true" style="position:absolute; top:-95px; left:0; width:1px; height:1px; scroll-margin-top:95px; opacity:0; pointer-events:none; border:none; padding:0; margin:0; outline:none;"></button>
+  <header id="appHeaderBanner">
+    <h1 id="appHeaderTitle"></h1>
+  </header>
   <div class="top-bar" role="toolbar" aria-label="Barra de ferramentas principal">
     
     <!-- NOVO: BOTÃO OCULTAR / MOSTRAR MENUS (ESTILO GOOGLE PLANILHAS) -->
@@ -6778,6 +6816,33 @@
 
     const SHEET_ID = getQueryParam('sheetId') || (getQueryParam('id') && getQueryParam('id').length > 25 ? getQueryParam('id') : '');
     const GID = getQueryParam('gid') || '0';
+    const URL_CUSTOM_TITLE = getQueryParam('titulo') || getQueryParam('title') || '';
+
+    // Limpa prefixos de controle (ex: "FC - ", "Q_M - ", "SIM - ") e exibe o título dourado
+    function setCleanAppHeaderTitle(rawTitle) {
+      const banner = document.getElementById('appHeaderBanner');
+      const titleEl = document.getElementById('appHeaderTitle');
+      if (!banner || !titleEl) return;
+
+      let cleaned = (rawTitle || '').toString().trim();
+      // Remove prefixos como "FC - ", "Q_M - ", "SIM - ", "FC_", etc.
+      cleaned = cleaned.replace(/^(?:FC|Q_M|QM|SIM|FLASHCARDS?)\s*[-_:]\s*/i, '').trim();
+
+      if (cleaned) {
+        titleEl.textContent = cleaned;
+        document.title = `${cleaned} - Chico Concursos`;
+        banner.style.display = 'block';
+      } else {
+        banner.style.display = 'none';
+      }
+    }
+
+    // Se o título veio pela URL (&titulo=...), aplica imediatamente
+    document.addEventListener('DOMContentLoaded', () => {
+      if (URL_CUSTOM_TITLE) {
+        setCleanAppHeaderTitle(URL_CUSTOM_TITLE);
+      }
+    });
 
     function saveFlashcardState() {
       if (!requireAuth()) return;
@@ -7086,6 +7151,12 @@
     // Função auxiliar para carregar cards na memória e preparar a tela
     function processLoadedCards(cardsData, isFromCache) {
       window.customCardIdsByFront = {};
+
+      // Se não veio título fixo na URL, puxa automaticamente da Disciplina da planilha
+      if (!URL_CUSTOM_TITLE && cardsData && cardsData.length > 0) {
+        const autoDisc = cardsData.find(c => c.disciplina && c.disciplina !== 'Geral')?.disciplina || cardsData[0].disciplina || '';
+        if (autoDisc) setCleanAppHeaderTitle(autoDisc);
+      }
       // --- NOVO: ETIQUETA PERMANENTE (Garante que o número nunca se perca) ---
       cardsData.forEach((card, index) => {
         card._originalIndex = index;
@@ -11938,6 +12009,8 @@
       if (userMenu) userMenu.classList.remove('active');
 
       const isCollapsed = topBar.classList.toggle('collapsed');
+      const headerBanner = document.getElementById('appHeaderBanner');
+      if (headerBanner) headerBanner.classList.toggle('collapsed-banner', isCollapsed);
 
       if (isCollapsed) {
         icon.className = 'fas fa-chevron-down';
